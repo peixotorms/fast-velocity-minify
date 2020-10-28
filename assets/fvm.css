@@ -1,0 +1,29 @@
+#fastvelocity-min{margin-top:10px;}
+#fastvelocity-min .clear { clear:both; }
+.fvm-settings label { font-size: 15px; color: #222; padding-top: 1px; }
+.fvm-settings span.note-info { font-size: 15px; margin-left: 8px; color: #666; font-style: italic; }
+.fvm-settings p.description { font-size: 15px; color: #666; font-style: italic; }
+#tab-info h4{font-size: 15px; margin-bottom:-10px; }
+.fvm-hide { max-height: 1px; overflow: none; position: absolute; top: -9999px; left: -9999px; visibility: hidden; }
+.fvm-warning { font-weight: 500; color: #AA0000; }
+h3.fvm-bold-green { font-weight: 500; font-size: 15px; color: #1196A3; }
+.fvm-bold-green { font-weight: 500; color: #1196A3; }
+.fvm-label-special { line-height: 38px; }
+.fvm-label-pad { line-height: 21px; }
+.fvm-rowintro { padding-bottom: 10px; font-size: 15px; }
+table.fvm-settings td, table.fvm-settings td p, table.fvm-settings th {font-size: 15px;}
+
+.fvm-wrapper { font-size: 16px; padding: 18px; }
+.fvm-wrapper h4 { font-size: 16px; margin: 0; color: #1196A3; }
+.fvm-wrapper .accordion p, .fvm-wrapper .accordion code { font-size: 16px; line-height: 1.5; }
+.fvm-code-full { width: 100%; padding: 8px; background: #F3F3F3; box-sizing: border-box; font-family: Consolas,Monaco,monospace; font-size: 13px; line-height: 1.5; margin-bottom: 15px; }
+
+#status .fvm-cache-stats { margin: 10px 0 0 0; }
+#status textarea.row-log { display: block; margin: 0; padding: 6px; border: none; background:#23282d; color: #ccc; height:300px; max-width: 100%; overflow: auto; line-height: 1.5; font-size: .8125rem; white-space: pre; font-family: monospace; }
+#status textarea.row-log::-webkit-scrollbar { width: 8px; height: 8px; background-color: #222; }
+#status textarea.row-log::-webkit-scrollbar-thumb { background-color: #000; }
+#status textarea.row-log::-webkit-scrollbar-track { background-color: #999;}
+
+@media screen and (max-width:520px) {
+.fvm-label-special { line-height: inherit; }
+}
