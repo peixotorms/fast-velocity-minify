@@ -12,13 +12,13 @@ if( $at == 'status' ) {
 
 <div style="height: 40px;"></div>
 <h2 class="title">CSS Logs</h2>
-<h3 class="fvm-bold-green">In this section, you can check the latest logs for the merged CSS files</h3>
+<h3 class="fvm-bold-green">In this section, you can check the latest CSS merging logs</h3>
 <textarea rows="10" cols="50" class="large-text code row-log log-css" disabled></textarea>
 
 
 <div style="height: 40px;"></div>
 <h2 class="title">JS Logs</h2>
-<h3 class="fvm-bold-green">In this section, you can check the latest logs for the merged JS files</h3>
+<h3 class="fvm-bold-green">In this section, you can check the latest JS merging logs</h3>
 <textarea rows="10" cols="50" class="large-text code row-log log-js" disabled></textarea>
 <div style="height: 20px;"></div>
 

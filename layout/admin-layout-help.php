@@ -151,11 +151,11 @@
 	<p>Some plugins such as gravity forms may also require to be render blocking, so you should look out for browser console log errors in incognito mode.</p>
 	<p><strong>Recommended Default Settings:</strong></p>
 	<p class="fvm-code-full">
-	/jquery.js<br>
-	/jquery.min.js<br>
+	/jquery-migrate-<br>
 	/jquery-migrate.js<br>
 	/jquery-migrate.min.js<br>
-	/jquery-migrate-
+	/jquery.js<br>
+	/jquery.min.js<br>
 	</p>
   </div>
   <h3>Merge and Defer Scripts</h3>
@@ -167,6 +167,10 @@
 	<p>Note that this is an advanced feature that can stop your scripts from working, hence it requires manual configuration.</p>
 	<p><strong>Recommended Default Settings:</strong></p>
 	<p class="fvm-code-full">
+	/ajax.aspnetcdn.com/ajax/<br>
+	/ajax.googleapis.com/ajax/libs/<br>
+	/cdnjs.cloudflare.com/ajax/libs/<br>
+	/stackpath.bootstrapcdn.com/bootstrap/<br>
 	/wp-admin/<br>
 	/wp-content/<br>
 	/wp-includes/
@@ -317,7 +321,7 @@
   <h3>How can I download an older version of FVM for testing purposes?</h3>
   <div>
     <p><strong>Notes:</strong></p>
-	<p>It's not recommended you do so, but if you want to test something, you can do so from the <a target="_blank" href="https://plugins.svn.wordpress.org/fast-velocity-minify/tags/">SVN repository</a> on WordPress.</p>
+	<p>It's not recommended you do that, but if you want to test something, you can do so from the <a target="_blank" href="https://plugins.svn.wordpress.org/fast-velocity-minify/tags/">SVN repository</a> on WordPress.</p>
   </div>
   <h3>How do I undo all optimizations done by FVM?</h3>
   <div>
@@ -342,19 +346,21 @@
   <h3>How do I report a security issue or file a bug report?</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>If you are sure it's a bug, and not a misconfiguration specific to your site, thank you for taking the time to do so.</p>
+    <p>If you are sure it's a bug and not a misconfiguration specific to your site, thank you for taking the time to report it.</p>
 	<p>You can contact me on <a href="https://fastvelocity.com/">https://fastvelocity.com/</a> using the contact form.</p>
+	<p>You are also welcome to submit patches and fixes via <a href="https://github.com/peixotorms/fast-velocity-minify">https://github.com/peixotorms/fast-velocity-minify</a> if you are a developer.</p>
+	
   </div>
   <h3>I'm not a developer, can I hire you for a more complete speed optimization?</h3>
   <div>
-    <p><strong>Notes:</strong></p>
-	<p><code>My work starts from $650 per site</code>, but I offer a much more complete auditing and optimization than the one provided by this plugin.</p>
 	<p>You can contact me on <a href="https://fastvelocity.com/">https://fastvelocity.com/</a> using the contact form, providing me your site URL and what issues you are trying to fix, for a more exact quote.</p>
+	<p>My speed optimization starts from $500 for small sites, and from $800 for woocommerce and membership sites.</p>
+	<p>I do not use the free FVM for my professional work, but I'll do what the site needs to get as best performance as possible.</p>
   </div>
   <h3>How can I donate to the plugin author?</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>While not required, if you are relly happy with my work and would like to buy me a <del>beer</del> green tea, you can do it via PayPal at <a target="_blank" href="https://goo.gl/vpLrSV">https://goo.gl/vpLrSV</a> and thank you in advance :)</p> 
+    <p>While not required, if you are happy with my work and would like to buy me a <del>beer</del> green tea, you can do it via PayPal at <a target="_blank" href="https://goo.gl/vpLrSV">https://goo.gl/vpLrSV</a> and thank you in advance :)</p> 
   </div>
 </div>
 

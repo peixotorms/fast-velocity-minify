@@ -38,6 +38,7 @@ $fvm_var_inc_lib = $fvm_var_dir_path . DIRECTORY_SEPARATOR . 'libs' . DIRECTORY_
 
 # global functions for backend, frontend, ajax, etc
 require_once($fvm_var_inc_dir . 'common.php');
+require_once($fvm_var_inc_dir . 'updates.php');
 
 # wp-cli support
 if (defined('WP_CLI') && WP_CLI) {

@@ -142,7 +142,7 @@ add_filter("plugin_action_links_".$fvm_var_basename, 'fvm_min_settings_link' );
 function fvm_min_settings_link($links) {
 	global $fvm_var_basename;
 	if (is_plugin_active($fvm_var_basename)) { 
-		$settings_link = '<a href="'.admin_url('options-general.php?page=fvm#html').'">Settings</a>'; 
+		$settings_link = '<a href="'.admin_url('options-general.php?page=fvm').'">Settings</a>'; 
 		array_unshift($links, $settings_link); 
 	}
 return $links;
@@ -159,11 +159,12 @@ function fvm_add_admin_jscss($hook) {
 		wp_enqueue_script( 'jquery-ui-core' );
 		wp_enqueue_script( 'jquery-ui-accordion' );
 		
-		# assets
+		# js
 		wp_enqueue_script('fvm', $fvm_var_url_path . 'assets/fvm.js', array('jquery'), filemtime($fvm_var_dir_path.'assets'. DIRECTORY_SEPARATOR .'fvm.js'));
 		
+		# css
 		wp_enqueue_style('fvm', $fvm_var_url_path . 'assets/fvm.css', array(), filemtime($fvm_var_dir_path.'assets'. DIRECTORY_SEPARATOR .'fvm.css'));
-		wp_enqueue_style('fvm-jqueryuicss', 'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css', array(), null);
+		
 	}
 }
 

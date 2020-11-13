@@ -40,6 +40,14 @@ function fvm_admintoolbar() {
 			'title' => __("Upgrade", 'fvm'),
 			'href'  => admin_url('options-general.php?page=fvm&tab=upgrade')
 		));
+		
+		# Add submenu
+		$wp_admin_bar->add_node(array(
+			'id'    => 'fvm_submenu_help',
+			'parent'    => 'fvm_menu', 
+			'title' => __("Help", 'fvm'),
+			'href'  => admin_url('options-general.php?page=fvm&tab=help')
+		));
 
 	}
 }
@@ -166,7 +174,7 @@ function fvm_purge_minification() {
 	$wpdb->query("TRUNCATE TABLE {$wpdb->prefix}fvm_logs");
 	
 	# get cache and min directories
-	global $fvm_cache_paths;
+	global $fvm_cache_paths, $fvm_settings;
 	
 	# purge html directory?
 	if(isset($fvm_cache_paths['cache_dir_min']) && is_dir($fvm_cache_paths['cache_dir_min']) && is_writable($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
@@ -179,7 +187,7 @@ function fvm_purge_minification() {
 			# schedule purge for 24 hours later, only once
 			add_action( 'fvm_purge_minification_later', 'fvm_purge_minification_expired' );
 			wp_schedule_single_event(time() + 3600 * 24, 'fvm_purge_minification_later');
-			return 'Expired minification files are set to expire in 24 hours from now.';
+			return 'Expired minification files are set to expire up to 24 hours from now.';
 		}
 		
 	} else {
@@ -637,17 +645,22 @@ function fvm_fix_permission_bits($file){
 
 # get options into an array
 function fvm_get_settings() {
+
 	$fvm_settings = json_decode(get_option('fvm_settings'), true);
-	if(!is_null($fvm_settings) && is_array($fvm_settings) && count($fvm_settings) > 1){
-		
-		# mandatory default exclusions
-		$fvm_settings = fvm_get_default_settings($fvm_settings);
-				
-		# return
-		return $fvm_settings;
+
+	# mandatory default exclusions
+	$fvm_settings_default = fvm_get_default_settings($fvm_settings);
+	
+	# check if there are any pending field update routines
+	$fvm_settings_default = fvm_get_updated_field_routines($fvm_settings_default);
+	
+	# update database if needed
+	if($fvm_settings != $fvm_settings_default) {
+		update_option('fvm_settings', json_encode($fvm_settings_default), false);
 	}
-				
-	return false;				
+	
+	# return
+	return $fvm_settings;	
 }
 
 # return value from section and key name
@@ -665,29 +678,24 @@ function fvm_get_settings_value($fvm_settings, $section, $key) {
 function fvm_get_default_settings($fvm_settings) {
 	if(!is_null($fvm_settings) && is_array($fvm_settings) && count($fvm_settings) > 1){
 		
-		# js merging paths
-		if(!isset($fvm_settings['js']['allow']) || empty($fvm_settings['js']['allow'])) { 
-			$arr = fvm_string_toarray($fvm_settings['js']['allow']);
-			$fvm_settings['js']['allow'] = implode(PHP_EOL, fvm_array_order($arr));
-		}
+		# initialize
+		$fvm_settings = array();
 		
-		# alternative cache directory
-		if(isset($fvm_settings['cache']['path']) && !empty($fvm_settings['cache']['path'])) {
-			$fvm_settings['cache']['path'] = rtrim($fvm_settings['cache']['path'], '/');
-		}
+		# html
+		$fvm_settings['html']['enable'] = 1;
+		$fvm_settings['html']['nocomments'] = 1;
+		$fvm_settings['html']['cleanup_header'] = 1;
+		$fvm_settings['html']['disable_emojis'] = 1;
 		
-		# alternative cache url
-		if(isset($fvm_settings['cache']['url']) && !empty($fvm_settings['cache']['url'])) {
-			$fvm_settings['cache']['url'] = rtrim($fvm_settings['cache']['url'], '/');
-		}
+		# css
+		$fvm_settings['css']['enable'] = 1;
+		$fvm_settings['css']['noprint'] = 1;
+		$fvm_settings['css']['fonts'] = 1;
 		
-		# cdn default integration
-		if(!isset($fvm_settings['cdn']['integration']) || empty($fvm_settings['cdn']['integration'])) {
-			$arr = array('img[src*=/wp-content/], img[data-src*=/wp-content/], img[data-srcset*=/wp-content/]', 'picture source[srcset*=/wp-content/]', 'video source[type*=video]', 'image[height]', 'link[rel=icon]', 'a[data-interchange*=/wp-content/]');
-			$arr = array_merge($arr, fvm_string_toarray($fvm_settings['cdn']['integration']));
-			$fvm_settings['cdn']['integration'] = implode(PHP_EOL, fvm_array_order($arr));
-		}
-		
+		# cdn
+		$arr = array('img[src*=/wp-content/], img[data-src*=/wp-content/], img[data-srcset*=/wp-content/]', 'picture source[srcset*=/wp-content/]', 'video source[type*=video]', 'image[height]', 'link[rel=icon]', 'a[data-interchange*=/wp-content/]');
+		$arr = array_merge($arr, fvm_string_toarray($fvm_settings['cdn']['integration']));
+
 	}
 	
 	# return	

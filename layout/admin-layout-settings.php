@@ -90,7 +90,7 @@ Remove "Print" stylesheets <span class="note-info">[ Will remove CSS files of me
 <th scope="row">CSS Ignore List</th>
 <td><fieldset>
 <label for="fvm_settings_css_ignore"><span class="fvm-bold-green fvm-rowintro">Ignore the following CSS URL's</span></label>
-<p><textarea name="fvm_settings[css][ignore]" rows="7" cols="50" id="fvm_settings_css_ignore" class="large-text code" placeholder="ex: /plugins/something/assets/problematic.css"><?php echo fvm_get_settings_value($fvm_settings, 'css', 'ignore'); ?></textarea></p>
+<p><textarea name="fvm_settings[css][ignore]" rows="7" cols="50" id="fvm_settings_css_ignore" class="large-text code" placeholder="ex: /plugins/something/assets/problem.css"><?php echo fvm_get_settings_value($fvm_settings, 'css', 'ignore'); ?></textarea></p>
 <p class="description">[ CSS files are merged and grouped automatically by mediatype, hence you have an option to exclude files. ]</p>
 <p class="description">[ Will match using <code>PHP stripos</code> against the <code>href attribute</code> on the <code>link tag</code> ]</p>
 </fieldset></td>
