@@ -74,10 +74,7 @@ I can offer you aditional `custom made` optimization on top of this plugin. If y
 
 == Screenshots ==
 
-1. The Status and Logs page.
-2. The Settings page.
-3. The Pro settings.
-4. The Developers settings.
+1. The Settings page.
 
 
 == Upgrade Notice ==
