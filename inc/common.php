@@ -122,16 +122,7 @@ function fvm_cachepath() {
 	}
 	
 	# get requested hostname
-	if (isset($_SERVER['HTTP_HOST'])) {
-        $host = $_SERVER['HTTP_HOST'];
-    } elseif (isset($_SERVER['SERVER_NAME'])) {
-        $host = $_SERVER['SERVER_NAME'];
-	} else {
-		$host = 'localhost';
-	}
-	
-	# sanitize
-	$host = str_replace('//', '/', str_replace('..', '', preg_replace( '/[ <>\'\"\r\n\t\(\)]/', '', $host)));
+	$host = fvm_get_domain();
 	
 	$cache_dir_min  = $cache_base_dir . DIRECTORY_SEPARATOR . 'min' . DIRECTORY_SEPARATOR . $host;
 	$cache_url_min  = $cache_base_dirurl . '/min/' .$host;
@@ -207,7 +198,7 @@ function fvm_purge_minification_now() {
 		$result = fvm_rrmdir($fvm_cache_paths['cache_dir_min']);
 		return $result;
 	} else {
-		return 'The cache directory is not rewritable!';
+		return 'The cache directory is not writeable!';
 	}
 }
 
@@ -457,13 +448,7 @@ function fvm_can_minify() {
 	if(function_exists('ampforwp_is_amp_endpoint') && ampforwp_is_amp_endpoint()){ return false; }
 	
 	# get requested hostname
-	if (isset($_SERVER['HTTP_HOST'])) {
-        $host = $_SERVER['HTTP_HOST'];
-    } elseif (isset($_SERVER['SERVER_NAME'])) {
-        $host = $_SERVER['SERVER_NAME'];
-	} else {
-		$host = 'localhost';
-	}
+	$host = fvm_get_domain();
 	
 	# only for hosts matching the site_url
 	if(isset($fvm_urls['wp_domain']) && !empty($fvm_urls['wp_domain'])) {
