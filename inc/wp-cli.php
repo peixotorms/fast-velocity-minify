@@ -1,5 +1,8 @@
 <?php
 
+# Exit if accessed directly				
+if (!defined('ABSPATH')){ exit(); }	
+
 ###################################################
 # extend wp-cli to purge cache, usage: wp fvm purge
 ###################################################

@@ -27,6 +27,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 # Exit if accessed directly				
 if (!defined('ABSPATH')){ exit(); }	
 
+# Invalidate OPCache for current file on WP 5.5+
+if(function_exists('wp_opcache_invalidate') && stripos(__FILE__, '/fvm.php') !== false) {
+	wp_opcache_invalidate(__FILE__, true);
+}
+
 # info, variables, paths
 $fvm_var_file = __FILE__;                                           # /home/path/plugins/pluginname/wpr.php
 $fvm_var_basename = plugin_basename($fvm_var_file);                 # pluginname/wpr.php
@@ -52,7 +57,7 @@ $fvm_settings = fvm_get_settings();
 $fvm_cache_paths = fvm_cachepath();
 
 # site url, domain name
-$fvm_urls = array('wp_home'=>site_url(), 'wp_domain'=>str_ireplace(array('http://', 'https://'), '', site_url()));
+$fvm_urls = array('wp_home'=>site_url(), 'wp_domain'=>fvm_get_domain());
 
 
 # only on backend

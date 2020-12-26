@@ -1,5 +1,8 @@
 <?php
 
+# Exit if accessed directly				
+if (!defined('ABSPATH')){ exit(); }	
+
 # check for minimum requirements and prevent activation or disable if not fully compatible
 function fvm_check_minimum_requirements() {
 	if(current_user_can('manage_options')) {
@@ -470,3 +473,22 @@ function fvm_initialize_database() {
 	if(!$check1){ fvm_plugin_activate(); }
 }
 
+
+# get all known roles
+function fvm_get_user_roles_checkboxes() {
+	
+	global $wp_roles, $fvm_settings;
+	$roles_list = array();
+	if(is_object($wp_roles)) {
+		$roles = (array) $wp_roles->get_names();
+		foreach ($roles as $role=>$rname) {
+			
+			$roles_list[] = '<label for="fvm_settings_minify_'.$role.'"><input name="fvm_settings[minify]['.$role.']" type="checkbox" id="fvm_settings_minify_'.$role.'" value="1" '. fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'minify', $role)).'> '.$rname.' </label><br />';
+		
+		}
+	}
+	
+	# return
+	if(!empty($roles_list)) { return implode(PHP_EOL, $roles_list); } else { return 'No roles detected!'; }
+
+}

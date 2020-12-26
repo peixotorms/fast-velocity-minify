@@ -1,7 +1,7 @@
 <?php
 /**
 *
-* Website: https://fvm.com/
+* Website: https://wpraiser.com/
 * Author: Raul Peixoto (https://www.upwork.com/fl/raulpeixoto)
 * Licensed under GPLv2 (or later)
 * Version 1.0
@@ -66,40 +66,92 @@ function fvm_min_remove_utf8_bom($text) {
 
 
 # minify html, don't touch certain tags
-function fvm_raisermin_html($html) {
+function fvm_raisermin_html($html, $xtra) {
 
-			# clone
-			$content = $html;
-			
-			# get all scripts
-			$allscripts = array();
-			preg_match_all('/\<script(.*?)\<(\s*)\/script(\s*)\>/uis', $html, $allscripts);
-			
-			# replace all scripts and styles with a marker
-			if(is_array($allscripts) && isset($allscripts[0]) && count($allscripts[0]) > 0) {
-				foreach ($allscripts[0] as $k=>$v) {
-					$content = str_replace($v, '<!-- SCRIPT '.$k.' -->', $content);
-				}
-			}
-			
-			# remove linebreaks, and colapse two or more white spaces into one
-			$content = preg_replace('/\s+/u', " ", $content);
-			
-			# remove space between tags
-			$content = str_replace('> <', '><', $content);
-			
-			# replace markers with scripts and styles			
-			if(is_array($allscripts) && isset($allscripts[0]) && count($allscripts[0]) > 0) {
-				foreach ($allscripts[0] as $k=>$v) {
-					$content = str_replace('<!-- SCRIPT '.$k.' -->', $v, $content);
-				}
-			}
-			
-			# save as html, if not empty
-			if(!empty($content)) {
-				$html = $content;
-			}
+	# clone
+	$content = $html;
+		
+	# get all scripts
+	$allscripts = array();
+	preg_match_all('/\<script(.*?)\<(\s*)\/script(\s*)\>/uis', $html, $allscripts);
 	
+	# replace all scripts and styles with a marker
+	if(is_array($allscripts) && isset($allscripts[0]) && count($allscripts[0]) > 0) {
+		foreach ($allscripts[0] as $k=>$v) {
+			$content = str_replace($v, '<!-- SCRIPT '.$k.' -->', $content);
+		}
+	}
+			
+	# remove line breaks, and colapse two or more white spaces into one
+	$content = preg_replace('/\s+/u', " ", $content);
+	
+	# remove space between tags
+	$content = str_replace('> <', '><', $content);
+		
+	# add extra line breaks to code?
+	if($xtra === true) {
+	
+		# add linebreaks after meta tags, for readability
+		$allmeta = array();
+		preg_match_all('/\<meta(.*?)\>/uis', $html, $allmeta);
+		
+		# replace all scripts and styles with a marker
+		if(is_array($allmeta) && isset($allmeta[0]) && count($allmeta[0]) > 0) {
+			foreach ($allmeta[0] as $k=>$v) {
+				$content = str_replace($v,  PHP_EOL . $v . PHP_EOL, $content);
+			}
+		}
+		
+		# add linebreaks after link tags, for readability
+		$alllink = array();
+		preg_match_all('/\<link(.*?)\>/uis', $html, $alllink);
+		
+		# replace all scripts and styles with a marker
+		if(is_array($alllink) && isset($alllink[0]) && count($alllink[0]) > 0) {
+			foreach ($alllink[0] as $k=>$v) {
+				$content = str_replace($v,  PHP_EOL . $v . PHP_EOL, $content);
+			}
+		}
+	
+		# add linebreaks after style tags, for readability
+		$allstyles = array();
+		preg_match_all('/\<s(.*?)\<(\s*)\/style(\s*)\>/uis', $html, $allstyles);
+		
+		# replace all scripts and styles with a marker
+		if(is_array($allstyles) && isset($allstyles[0]) && count($allstyles[0]) > 0) {
+			foreach ($allstyles[0] as $k=>$v) {
+				$content = str_replace($v,  PHP_EOL . $v . PHP_EOL, $content);
+			}
+		}
+
+		# add linebreaks after html and head tags, for readability
+		$content = str_replace('<head>',  PHP_EOL . '<head>' . PHP_EOL, $content);
+		$content = str_replace('</head>',  PHP_EOL . '</head>' . PHP_EOL, $content);
+		$content = str_replace('<html',  PHP_EOL . '<html', $content);
+		$content = str_replace('</html>',  PHP_EOL . '</html>', $content);
+	
+	}
+	
+	# replace markers with scripts and styles			
+	if(is_array($allscripts) && isset($allscripts[0]) && count($allscripts[0]) > 0) {
+		foreach ($allscripts[0] as $k=>$v) {
+			if($xtra === true) { 
+				$content = str_replace('<!-- SCRIPT '.$k.' -->',  PHP_EOL . $v . PHP_EOL, $content);
+			} else {
+				$content = str_replace('<!-- SCRIPT '.$k.' -->', $v, $content);
+			}
+		}
+	}
+	
+	
+	# no more than 1 linebreak
+	$content = preg_replace('/\v{2,}/u', PHP_EOL, $content);
+		
+	# save as html, if not empty
+	if(!empty($content)) {
+		$html = $content;
+	}
+			
 	# return
 	return $html;
 }

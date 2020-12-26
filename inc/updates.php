@@ -1,5 +1,8 @@
 <?php
 
+# Exit if accessed directly				
+if (!defined('ABSPATH')){ exit(); }	
+
 # update routines for new fields and replacements
 function fvm_get_updated_field_routines($fvm_settings) {
 	
@@ -19,6 +22,15 @@ function fvm_get_updated_field_routines($fvm_settings) {
 		if (get_option("fastvelocity_min_change_cache_base_url") !== false) { 
 			$fvm_settings['cache']['url'] = get_option("fastvelocity_min_change_cache_base_url");
 			delete_option('fastvelocity_min_change_cache_base_url');
+		}
+		
+		# cdn url
+		if (get_option("fastvelocity_min_fvm_cdn_url") !== false) {
+			$fvm_settings['cdn']['enable'] = 1;
+			$fvm_settings['cdn']['cssok'] = 1;
+			$fvm_settings['cdn']['jsok'] = 1;
+			$fvm_settings['cdn']['domain'] = get_option("fastvelocity_min_fvm_cdn_url");
+			delete_option('fastvelocity_min_fvm_cdn_url');
 		}
 				
 		# cleanup
@@ -54,7 +66,6 @@ function fvm_get_updated_field_routines($fvm_settings) {
 		delete_option('fastvelocity_min_fvm_fix_editor');
 		delete_option('fastvelocity_min_loadcss');
 		delete_option('fastvelocity_min_fvm_removecss');
-		delete_option('fastvelocity_min_fvm_cdn_url');
 		delete_option('fastvelocity_enabled_css_preload');
 		delete_option('fastvelocity_enabled_js_preload');
 		delete_option('fastvelocity_fontawesome_method');

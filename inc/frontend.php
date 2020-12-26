@@ -54,6 +54,7 @@ function fvm_process_page($html) {
 		$now = time();
 		$htmlpreloader = array();
 		$htmlcssheader = array();
+		$lp_css_last_ff_inline = '';
 			
 		# get html into an object
 		# https://simplehtmldom.sourceforge.io/manual.htm
@@ -173,23 +174,33 @@ function fvm_process_page($html) {
 					if ($css === false) {
 						
 						# open or download file, get contents
-						$css = fvm_maybe_download($href);
-						$css = fvm_maybe_minify_css_file($css, $href, $enable_css_minification);
+						$ddl = array();
+						$ddl = fvm_maybe_download($href);
 										
-						# quick integrity check
-						if(!empty($css) && $css != false) {
-
-							# trim code
-							$css = trim($css);
-							
-							# execution time in ms, size in bytes
-							$fs = strlen($css);
-							$ur = str_replace($fvm_urls['wp_home'], '', $href);
-							$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur), 'mt'=>$media);
+						# if success
+						if(isset($ddl['content'])) {
 												
-							# save
-							fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'css', 'content'=>$css, 'meta'=>$tkey_meta));
+							# contents
+							$css = $ddl['content'];
+						
+							# open or download file, get contents
+							$css = fvm_maybe_minify_css_file($css, $href, $enable_css_minification);
+											
+							# quick integrity check
+							if(!empty($css) && $css != false) {
 
+								# trim code
+								$css = trim($css);
+								
+								# execution time in ms, size in bytes
+								$fs = strlen($css);
+								$ur = str_replace($fvm_urls['wp_home'], '', $href);
+								$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur), 'mt'=>$media);
+													
+								# save
+								fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'css', 'content'=>$css, 'meta'=>$tkey_meta));
+
+							}
 						}
 					}
 					
@@ -220,7 +231,38 @@ function fvm_process_page($html) {
 					$css = $tag->innertext;
 					if($enable_css_minification) {
 						$css = fvm_minify_css_string($css); 
-					}	
+					}
+					
+					# handle import rules
+					$css = fvm_replace_css_imports($css);
+					
+					# remove fonts and icons and collect for later
+					if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
+						$mff = array();
+						preg_match_all('/(\@font-face)([^}]+)(\})/', $css, $mff);
+						if(isset($mff[0]) && is_array($mff[0])) {
+							foreach($mff[0] as $ff) {
+								$css = str_replace($ff, '', $css);
+								$lp_css_last_ff_inline.= $ff . PHP_EOL;
+							}
+						}
+					}
+					
+					# add cdn support
+					if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
+					isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
+						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
+								
+							# scheme + site url
+							$fcdn = str_replace($fvm_urls['wp_domain'], $fvm_settings['cdn']['domain'], $fvm_urls['wp_home']);
+								
+							# replacements
+							$css = str_ireplace('url(/wp-content/', 'url('.$fcdn.'/wp-content/', $css);
+							$css = str_ireplace('url("/wp-content/', 'url("'.$fcdn.'/wp-content/', $css);
+							$css = str_ireplace('url(\'/wp-content/', 'url(\''.$fcdn.'/wp-content/', $css);
+
+						}
+					}
 					
 					# trim code
 					$css = trim($css);
@@ -265,12 +307,14 @@ function fvm_process_page($html) {
 					$file_css_url = $fvm_cache_paths['cache_url_min'].'/'.$css_uid.'.min.css';
 					
 					# remove fonts and icons from final css
-					$mff = array();
-					preg_match_all('/(\@font-face)([^}]+)(\})/', $file_css_code, $mff);
-					if(isset($mff[0]) && is_array($mff[0])) {
-						foreach($mff[0] as $ff) {
-							$file_css_code = str_replace($ff, '', $file_css_code);
-							$lp_css_last_ff.= $ff . PHP_EOL;
+					if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
+						$mff = array();
+						preg_match_all('/(\@font-face)([^}]+)(\})/', $file_css_code, $mff);
+						if(isset($mff[0]) && is_array($mff[0])) {
+							foreach($mff[0] as $ff) {
+								$file_css_code = str_replace($ff, '', $file_css_code);
+								$lp_css_last_ff.= $ff . PHP_EOL;
+							}
 						}
 					}
 					
@@ -278,10 +322,7 @@ function fvm_process_page($html) {
 					if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 					isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
-							$pos = strpos($file_css_url, $fvm_urls['wp_domain']);
-							if ($pos !== false) {
-								$file_css_url = substr_replace($file_css_url, $fvm_settings['cdn']['domain'], $pos, strlen($fvm_urls['wp_domain']));
-							}
+							$file_css_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $file_css_url);
 						}
 					}
 					
@@ -320,10 +361,13 @@ function fvm_process_page($html) {
 				
 				
 				# generate merged css files, foreach mediatype
-				if(!empty($lp_css_last) || !empty($lp_css_last_ff)) {
+				if(!empty($lp_css_last) || !empty($lp_css_last_ff) || !empty($lp_css_last_ff_inline)) {
+					
+					# reset to all
+					$mediatype = 'all';
 					
 					# merge code, generate cache file paths and urls
-					$file_css_code = implode('', $lp_css_last).$lp_css_last_ff;
+					$file_css_code = implode('', $lp_css_last).$lp_css_last_ff.$lp_css_last_ff_inline;
 					$css_uid = $tvers.'-'.hash('sha1', $file_css_code);
 					$file_css = $fvm_cache_paths['cache_dir_min'] . DIRECTORY_SEPARATOR .  $css_uid.'.min.css';
 					$file_css_url = $fvm_cache_paths['cache_url_min'].'/'.$css_uid.'.min.css';
@@ -332,10 +376,7 @@ function fvm_process_page($html) {
 					if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 					isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
-							$pos = strpos($file_css_url, $fvm_urls['wp_domain']);
-							if ($pos !== false) {
-								$file_css_url = substr_replace($file_css_url, $fvm_settings['cdn']['domain'], $pos, strlen($fvm_urls['wp_domain']));
-							}
+							$file_css_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $file_css_url);
 						}
 					}
 						
@@ -360,9 +401,17 @@ function fvm_process_page($html) {
 						# preload and save for html implementation (with priority order prefix)
 						$htmlpreloader['b_'.$css_uid] = '<link rel="preload" href="'.$file_css_url.'" as="style" media="'.$mediatype.'" />';
 								
-						# Load CSS Asynchronously with javascript
-						# https://www.filamentgroup.com/lab/load-css-simpler/
-						$htmlcssheader['a_'.$css_uid] = '<link rel="stylesheet" href="'.$file_css_url.'" media="print" onload="this.media=\'all\'">';
+						# async or render block css
+						if(isset($fvm_settings['css']['async']) && $fvm_settings['css']['async'] == true) {
+							
+							# Load CSS Asynchronously with javascript
+							# https://www.filamentgroup.com/lab/load-css-simpler/
+							$htmlcssheader['a_'.$css_uid] = '<link rel="stylesheet" href="'.$file_css_url.'" media="print" onload="this.media=\''.$mediatype.'\'">';
+							
+						} else {
+							$htmlcssheader['b_'.$css_uid] = '<link rel="stylesheet" href="'.$file_css_url.'" media="'.$mediatype.'" />';
+						}			
+					
 					}
 						
 				}	
@@ -442,7 +491,7 @@ function fvm_process_page($html) {
 								if(is_array($arr) && count($arr) > 0) {
 									foreach ($arr as $b) {
 										if(stripos($js, $b) !== false) {
-											$js = 'window.addEventListener("load",function(){var c=setTimeout(b,5E3),d=["mouseover","keydown","touchmove","touchstart"];d.forEach(function(a){window.addEventListener(a,e,{passive:!0})});function e(){b();clearTimeout(c);d.forEach(function(a){window.removeEventListener(a,e,{passive:!0})})}function b(){console.log("FVM: Loading Third Party Script!");'.$js.'};});';
+											$js = 'window.addEventListener("load",function(){var c=setTimeout(b,5E3),d=["mouseover","keydown","touchmove","touchstart"];d.forEach(function(a){window.addEventListener(a,e,{passive:!0})});function e(){b();clearTimeout(c);d.forEach(function(a){window.removeEventListener(a,e,{passive:!0})})}function b(){console.log("FVM: Loading Third Party Script (inline)!");'.$js.'};});';
 											break;
 										}
 									}
@@ -496,6 +545,42 @@ function fvm_process_page($html) {
 						}
 						
 						
+						# Delay third party scripts and tracking codes
+						# uses PHP stripos against the script src, if it's async or deferred
+						if(isset($tag->async) || isset($tag->defer)) {
+							if(isset($fvm_settings['js']['thirdparty']) && !empty($fvm_settings['js']['thirdparty'])) {
+								if(isset($fvm_settings['js']['thirdparty']) && !empty($fvm_settings['js']['thirdparty'])) {
+									$arr = fvm_string_toarray($fvm_settings['js']['thirdparty']);
+									if(is_array($arr) && count($arr) > 0) {
+										foreach ($arr as $b) {
+											if(stripos($tag->src, $b) !== false) {
+												
+												# get all extra attributes into $rem
+												$rem = '';
+												foreach($tag->getAllAttributes() as $k=>$v){
+													$k = trim($k); $v = trim($v);
+													if($k != 'async' && $k != 'defer' && $k != 'src' && $k != 'type') {
+														$rem.= "b.setAttribute('$k','$v');";
+													}
+												}
+												
+												# defer attribute? (async is always by default)
+												if(isset($tag->defer)) {
+													$rem.= 'b.async=false;';
+												}
+																						
+												# generate and set delayed script tag
+												$tag->outertext = "<script data-cfasync='false'>".'window.addEventListener("load",function(){var c=setTimeout(b,5E3),d=["mouseover","keydown","touchmove","touchstart"];d.forEach(function(a){window.addEventListener(a,e,{passive:!0})});function e(){b();clearTimeout(c);d.forEach(function(a){window.removeEventListener(a,e,{passive:!0})})}function b(){'."(function(a){var b=a.createElement('script'),c=a.scripts[0];b.src='".trim($tag->src)."';".$rem."c.parentNode.insertBefore(b,c);}(document));".'};});'."</script>";
+												unset($allscripts[$k]);
+												continue 2;												
+												
+											}
+										}
+									}
+								}
+							}
+						}						
+						
 						# render blocking scripts in the header
 						if(isset($fvm_settings['js']['merge_header']) && !empty($fvm_settings['js']['merge_header'])) {
 							$arr = fvm_string_toarray($fvm_settings['js']['merge_header']);
@@ -509,25 +594,33 @@ function fvm_process_page($html) {
 										if ($js === false) {
 
 											# open or download file, get contents
-											$js = fvm_maybe_download($href);
+											$ddl = array();
+											$ddl = fvm_maybe_download($href);
+										
+											# if success
+											if(isset($ddl['content'])) {
+												
+												# contents
+												$js = $ddl['content'];
+																
+												# minify, save and wrap
+												$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
 															
-											# minify, save and wrap
-											$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
-														
-											# try catch
-											$js = fvm_try_catch_wrap($js);
-														
-											# quick integrity check
-											if(!empty($js) && $js != false) {
+												# try catch
+												$js = fvm_try_catch_wrap($js);
 															
-												# execution time in ms, size in bytes
-												$fs = strlen($js);
-												$ur = str_replace($fvm_urls['wp_home'], '', $href);
-												$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur));
-															
-												# save
-												fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'js', 'content'=>$js, 'meta'=>$tkey_meta));	
-															
+												# quick integrity check
+												if(!empty($js) && $js != false) {
+																
+													# execution time in ms, size in bytes
+													$fs = strlen($js);
+													$ur = str_replace($fvm_urls['wp_home'], '', $href);
+													$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur));
+																
+													# save
+													fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'js', 'content'=>$js, 'meta'=>$tkey_meta));	
+																
+												}
 											}
 										}
 													
@@ -559,25 +652,33 @@ function fvm_process_page($html) {
 										if ($js === false) {
 
 											# open or download file, get contents
-											$js = fvm_maybe_download($href);
+											$ddl = array();
+											$ddl = fvm_maybe_download($href);
+										
+											# if success
+											if(isset($ddl['content'])) {
+												
+												# contents
+												$js = $ddl['content'];
 															
-											# minify, save and wrap
-											$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
-														
-											# try catch
-											$js = fvm_try_catch_wrap($js);
-														
-											# quick integrity check
-											if(!empty($js) && $js != false) {
+												# minify, save and wrap
+												$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
 															
-												# execution time in ms, size in bytes
-												$fs = strlen($js);
-												$ur = str_replace($fvm_urls['wp_home'], '', $href);
-												$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur));
+												# try catch
+												$js = fvm_try_catch_wrap($js);
 															
-												# save
-												fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'js', 'content'=>$js, 'meta'=>$tkey_meta));	
-															
+												# quick integrity check
+												if(!empty($js) && $js != false) {
+																
+													# execution time in ms, size in bytes
+													$fs = strlen($js);
+													$ur = str_replace($fvm_urls['wp_home'], '', $href);
+													$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur));
+																
+													# save
+													fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'js', 'content'=>$js, 'meta'=>$tkey_meta));	
+																
+												}
 											}
 										}
 													
@@ -615,10 +716,7 @@ function fvm_process_page($html) {
 				if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 				isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 					if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
-						$pos = strpos($fheader_url, $fvm_urls['wp_domain']);
-						if ($pos !== false) {
-							$fheader_url = substr_replace($fheader_url, $fvm_settings['cdn']['domain'], $pos, strlen($fvm_urls['wp_domain']));
-						}
+						$fheader_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $fheader_url);
 					}
 				}
 
@@ -656,10 +754,8 @@ function fvm_process_page($html) {
 				if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 				isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 					if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
-						$pos = strpos($ffooter_url, $fvm_urls['wp_domain']);
-						if ($pos !== false) {
-							$ffooter_url = substr_replace($ffooter_url, $fvm_settings['cdn']['domain'], $pos, strlen($fvm_urls['wp_domain']));
-						}
+						$ffooter_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $ffooter_url);
+
 					}
 				}
 				
@@ -709,59 +805,65 @@ function fvm_process_page($html) {
 		
 		# cdn rewrites, when needed
 		$html = fvm_rewrite_assets_cdn($html);
-		
-		# get charset meta tag
-		$metacharset = '';
-		foreach($html->find('meta[charset]') as $element) {
-			$metacharset = $element->outertext;
-			$element->outertext = '';
-		}
-		
 
-		# add markers for files in the header
-		$html->find('head', 0)->innertext = '<!-- fvm_add_preheader --><!-- fvm_add_cssheader --><!-- fvm_add_jsheader -->' . $html->find('head', 0)->innertext;
+		# build extra head and footer ###############################	
 		
-		# add markers for files in the footer
-		$html->find('body', -1)->innertext = $html->find('body', -1)->innertext . '<!-- fvm_add_footer_lozad -->';
-				
-		# convert html object to string
-		$html = trim($html->save());
+		# header and footer markers
+		$hm = '<!-- h_preheader --><!-- h_header_function --><!-- h_cssheader --><!-- h_jsheader -->';
+		$fm = '<!-- h_footer_lozad -->';
 		
-		# move charset to the top, if found
-		if(!empty($metacharset)) {
-			$html = str_replace('<!-- fvm_add_preheader -->', $metacharset.'<!-- fvm_add_preheader -->', $html);
+		# remove charset meta tag and collect it to first position
+		if(!is_null($html->find('meta[charset]', 0))) {
+			$hm = str_replace('<!-- h_preheader -->', $html->find('meta[charset]', 0)->outertext.'<!-- h_preheader -->', $hm);
+			foreach($html->find('meta[charset]') as $element) { $element->outertext = ''; }
 		}
-				
-		# add preload headers to header
+
+		# add preload headers
 		if(is_array($htmlpreloader)) {
 			ksort($htmlpreloader); # priority
-			$html = str_replace('<!-- fvm_add_preheader -->', implode('', $htmlpreloader), $html);
+			$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $htmlpreloader), $hm);
 		}		
-		
+			
 		# add stylesheets
 		if(is_array($htmlcssheader) && count($htmlcssheader) > 0) {
 			ksort($htmlcssheader); # priority
-			$html = str_replace('<!-- fvm_add_cssheader -->', implode('', $htmlcssheader).'<!-- fvm_add_cssheader -->', $html);
+			$hm = str_replace('<!-- h_cssheader -->', implode(PHP_EOL, $htmlcssheader).'<!-- h_cssheader -->', $hm);
 		}
 		
 		# add header scripts
 		if(is_array($htmljscodeheader) && count($htmljscodeheader) > 0) {
 			ksort($htmljscodeheader); # priority
-			$html = str_replace('<!-- fvm_add_jsheader -->', implode('', $htmljscodeheader).'<!-- fvm_add_jsheader -->', $html);
+			$hm = str_replace('<!-- h_jsheader -->', implode(PHP_EOL, $htmljscodeheader).'<!-- h_jsheader -->', $hm);
 		}
-		
-		# add footer scripts
+			
+		# add defer scripts
 		if(is_array($htmljscodedefer) && count($htmljscodedefer) > 0) {
 			ksort($htmljscodedefer); # priority
-			$html = str_replace('<!-- fvm_add_jsheader -->', implode('', $htmljscodedefer), $html);
+			$hm = str_replace('<!-- h_jsheader -->', implode(PHP_EOL, $htmljscodedefer), $hm);
+		}
+			
+		# cleanup leftover markers
+		$hm = str_replace(
+			  array('<!-- h_preheader -->', '<!-- h_header_function -->', '<!-- h_cssheader -->', '<!-- h_jsheader -->'), '', $hm); 
+		$fm = str_replace('<!-- h_footer_lozad -->', '', $fm);
+		
+			
+		# Save HTML and output page ###############################	
+		
+		# append header and footer, if available
+		if(!is_null($html->find('head', 0)) && !is_null($html->find('body', -1))) {
+			if(!is_null($html->find('head', 0)->first_child()) && !is_null($html->find('body', -1)->last_child())) {
+				$html->find('head', 0)->first_child()->outertext = $hm . $html->find('head', 0)->first_child()->outertext;
+				$html->find('body', -1)->last_child()->outertext = $html->find('body', -1)->last_child ()->outertext . $fm;
+			}
 		}
 		
-		# cleanup markers
-		$html = str_replace(array('<!-- fvm_add_preheader -->', '<!-- fvm_add_cssheader -->', '<!-- fvm_add_jsheader -->', '<!-- fvm_add_footer_lozad -->'), '', $html);
+		# convert html object to string
+		$html = trim($html->save());
 		
 		# minify HTML, if not disabled
-		if(!isset($fvm_settings['html']['min_disable']) || $fvm_settings['html']['min_disable'] != 1) {
-			$html = fvm_raisermin_html($html);
+		if(!isset($fvm_settings['html']['min_disable']) || (isset($fvm_settings['html']['min_disable']) && $fvm_settings['html']['min_disable'] != true)) {
+			$html = fvm_raisermin_html($html, true);
 		}
 		
 	}

@@ -10,7 +10,7 @@
     <p><strong>Notes:</strong></p>
     <p>JavaScript merging functionality went through a significant change on FVM 3 and it now requires manual configuration to work.</p>
 	<p>If you are upgrading from FVM 2 please refer to the help section below, to understand how to reconfigure the plugin settings.</p>
-	<p>If you just installed the plugin, please note that JS is not being optimized yet. You have to choose which files to be render blocking and which ones to be deferred, plus it's dependencies.</p>
+	<p>Please note that this plugin is usually for advanced users and developers. If you just installed the plugin, please note that JS is not being optimized yet. You have to choose which files to be render blocking and which ones to be deferred, plus it's dependencies. </p>
 	<p>Previously, FVM merged everything and relied on having options to filter out, or ignore scripts. This option frequently created issues after some plugin updates (most notably elementor, gravity forms and other plugins).</p>
 	<p>The new method only merges what you tell it to merge, hence it's safer. Please understand, this plugin is and it has always been, aimed at advanced users and developers, so it's not meant to work fully without manual settings in place.</p>
 	<p>On FVM 2 we were merging all scripts automatically which caused many scripts and plugins to stop working (we cannot test every single plugin). With the new method, you now have full control of your scripts.</p>
@@ -91,6 +91,18 @@
     <p><strong>Notes:</strong></p>
     <p>As a generic rule, it's safe to remove it for the vast majority of sites, unless your users often need to print pages from your site, and you have customized styles for when they do so.</p>
   </div>
+  <h3>Merge Fonts and Icons Separately</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>This will try to collect all your icon and animation know files into a separate file.</p>
+	<p>It may be useful for debugging purposes or to evaluate how many fonts are in use.</p>
+  </div>
+  <h3>Load generated CSS files Async</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>This will load the generated CSS files Async, however, without a manually added critical path code, you will likely see a Flash of Unstyled Content before that CSS finishes loading.</p>
+	<p>Use your own PHP code or another plugin to add the critical path CSS code using conditional tags, filters, hooks or other method.</p>
+  </div>
   <h3>CSS Ignore List</h3>
   <div>
     <p><strong>Notes:</strong></p>
@@ -98,18 +110,6 @@
 	<p>This uses uses PHP stripos against the href attribute on the link tag, to decide if a CSS should be left alone or not.</p>
 	<p>If you are having issues with a CSS file being merged, please make sure that the file being merged doesn't have any <code>@import</code> rules (remove and enqueue those files properly instead).</p>
 	<p>This should be left empty if there are no CSS issues breaking your layout.</p>
-  </div>
-  <h3>Load Fonts and Icons Async</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>This will try to collect all your icon and animation know files into a separate file, and load them Async.</p>
-	<p>It doesn't extract fonts from inside css files, as it only separate by known file names from commonly used plugins.</p>
-  </div>
-  <h3>Load generated CSS files Async</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>This will load the generated CSS files Async, however, without a manually added critical path code, you will see a Flash of Unstyled Content before that CSS finishes loading.</p>
-	<p>Use your own PHP code to add the critical path CSS code using conditional tags, filters, hooks or other method.</p>
   </div>
   <h3>Remove CSS files</h3>
   <div>
@@ -189,14 +189,16 @@
   <div>
     <p><strong>Notes:</strong></p>
 	<p>Scripts like analytics, ads, tracking codes, etc, consume important CPU and Network resources needed for the initial pageview.</p>
-	<p>This option uses PHP stripos against the script <code>innerHTML</code> and what this feature does, is to delay the specified inline code execution until the user interacts with the page, on the first <code>'mouseover','keydown','touchmove','touchstart'</code> event, or <code>up to 5 seconds after page load</code>(whichever happens first).</p>
+	<p>This option uses PHP stripos against the script <code>innerHTML</code> or <code>src</code> attribute for async/defer scripts.</p>
+	<p>It will delay the specified script execution until the user interacts with the page, on the first <code>'mouseover','keydown','touchmove','touchstart'</code> event, or <code>up to 5 seconds after page load</code>(whichever happens first).</p>
 	<p>Most Async and Defer scripts can be rewritten to support this feature with the <code>HTML DOM createElement() Method</code>, however, note that if you blindly use this method for render blocking scripts, it may trigger "undefined" errors on the browser console log or some elements may stop working (some scripts only work in render blocking mode).</p>
 	<p>If you have render blocking third party scripts, ask your provider if they can provide you with an async implementation (else remove them, because render blocking scripts are not recommended for speed).</p>
 	<p><strong>Example Settings:</strong></p>
 	<p class="fvm-code-full">
 	function(w,d,s,l,i)<br>
 	function(f,b,e,v,n,t,s)<br>
-	function(h,o,t,j,a,r)
+	function(h,o,t,j,a,r)<br>
+	www.googletagmanager.com/gtm.js
 	</p>
   </div>
   <h3>Remove JavaScript Scripts</h3>
@@ -296,7 +298,7 @@
   <h3>How do I know if the plugin is working?</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>For compatibility reasons, the plugin only optimizes anonymous users. That means, you need to open another browser window, or use incognito mode to test and see what it's doing. Logged in users will not see the optimizations for compatibility reasons.</p> 
+    <p>For compatibility reasons, the plugin only optimizes anonymous users by default. That means, you need to open another browser window, or use incognito mode to test and see what it's doing. Logged in users will not see the optimizations, unless you manually enable certain user roles (not recommended for complex websites, unless you know what you are doing).</p> 
   </div>
   <h3>How do I purge the cache?</h3>
   <div>
@@ -330,6 +332,13 @@
 	<p>Note that some hosts rate limit the amount of times you can purge caches to once every few minutes, so you may be purging and it doesn't work, because you are being rate limited by your hosting cache system. If that happens, jsut ask your hosting to manually purge all caches on the server.</p>
 	<p>FVM does not modify your site. It runs after your template loads and filters the final HTML to present it to your users, in a more optimized way.</p>
   </div>
+  <h3>I have disabled FVM but somehow the cache files are still being generated?</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>If you have disabled the plugin and purged all caches available, this is simply not possible.</p>
+	<p>Please ensure you have delete the plugin on the correct site location and that all caches are emptied.</p>
+	<p>A few hosting providers will cache your disk in memory to speed things up when they use remote disk locations, which may cause code to be cached even if you have deleted it completely from the disk. In that case, restart the server or ask your hosting to purge all disk caches.</p>
+  </div>
   <h3>Where can I get support or ask questions about the plugin?</h3>
   <div>
     <p><strong>Notes:</strong></p>
@@ -338,9 +347,9 @@
   <h3>How is it possible that some scan is showing malware on the plugin?</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>I can guarantee that if you only download the plugin from the official WordPress source, that it's 100% clean of malware.</p>
-	<p>Malware can infect any plugin you may have on your site (even security plugins), regardless of the point of entry. Sometimes it propagates to/from different areas (including other sites you may have on the same server). </p>
-	<p>If there is, or was malware on any scripts bing merged by FVM, they would be merged as they are until your next cache purge. </p>
+    <p>I guarantee that the plugin is 100% clean of malware, provided you have downloaded the plugin from the official WordPress source.</p>
+	<p>Understand that Malware can infect any plugin you have on your site (even security plugins), regardless of the point of entry. Sometimes it propagates to/from different areas (including other sites you may have on the same server). </p>
+	<p>If there is any malware on any scripts being merged by FVM, they would be merged as they are until your next cache purge. </p>
 	<p>If you are seeing malware on any file related to FVM, simply delete the plugin, purge all cache files and make sure to only download the plugin from the official source on wordpress.org or via wp-admin.</p>
   </div>
   <h3>How do I report a security issue or file a bug report?</h3>
@@ -354,8 +363,8 @@
   <h3>I'm not a developer, can I hire you for a more complete speed optimization?</h3>
   <div>
 	<p>You can contact me on <a href="https://fastvelocity.com/">https://fastvelocity.com/</a> using the contact form, providing me your site URL and what issues you are trying to fix, for a more exact quote.</p>
-	<p>My speed optimization starts from $500 for small sites, and from $800 for woocommerce and membership sites.</p>
-	<p>I do not use the free FVM for my professional work, but I'll do what the site needs to get as best performance as possible.</p>
+	<p>My speed optimization starts from $500 for small sites and from $850 for woocommerce and membership sites.</p>
+	<p>I do not use the free FVM for my professional work, but I guarantee as best performance as possible for your site content.</p>
   </div>
   <h3>How can I donate to the plugin author?</h3>
   <div>

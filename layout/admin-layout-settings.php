@@ -83,6 +83,16 @@ Disable CSS Minification <span class="note-info">[ Will allow merging but withou
 Remove "Print" stylesheets <span class="note-info">[ Will remove CSS files of mediatype "print" from the frontend ]</span></label>
 <br />
 
+<label for="fvm_settings_css_fonts">
+<input name="fvm_settings[css][fonts]" type="checkbox" id="fvm_settings_css_fonts" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'fonts')); ?>>
+Merge Fonts and Icons Separately<span class="note-info">[ Will merge fonts and icons into a separate CSS file ]</span></label>
+<br />
+
+<label for="fvm_settings_css_async">
+<input name="fvm_settings[css][async]" type="checkbox" id="fvm_settings_css_async" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'async')); ?>>
+Load generated CSS files Async <span class="note-info">[ Will load the merged CSS files Async (use your own inline code for the critical path) ]</span></label>
+<br />
+
 </fieldset></td>
 </tr>
 
@@ -95,27 +105,6 @@ Remove "Print" stylesheets <span class="note-info">[ Will remove CSS files of me
 <p class="description">[ Will match using <code>PHP stripos</code> against the <code>href attribute</code> on the <code>link tag</code> ]</p>
 </fieldset></td>
 </tr>
-
-
-<tr>
-<th scope="row">CSS Async Options</th>
-<td>
-<p class="fvm-bold-green fvm-rowintro">Select your options below</p>
-
-<fieldset>
-<label for="fvm_settings_css_fonts">
-<input name="fvm_settings[css][fonts]" type="checkbox" id="fvm_settings_css_fonts" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'fonts')); ?>>
-Load Fonts and Icons Async<span class="note-info">[ Will try to merge known font and icon CSS files and load them Async ]</span></label>
-<br />
-
-<label for="fvm_settings_css_async">
-<input name="fvm_settings[css][async]" type="checkbox" id="fvm_settings_css_async" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'async')); ?>>
-Load generated CSS file Async <span class="note-info">[ Will load the merged CSS files Async (use your own inline code for the critical path) ]</span></label>
-<br />
-
-</fieldset></td>
-</tr>
-
 
 <tr>
 <th scope="row">Remove CSS files</th>
@@ -199,23 +188,24 @@ Upgrade to jQuery 3 <span class="note-info">[ Will use jQuery 3.5.1 and jQuery M
 <th scope="row">Inline JavaScript Dependencies</th>
 <td><fieldset>
 <label for="fvm_settings_defer_dependencies"><span class="fvm-bold-green fvm-rowintro">Delay Inline JavaScript until after the deferred scripts merged above finish loading</span></label>
-<p><textarea name="fvm_settings[js][defer_dependencies]" rows="7" cols="50" id="fvm_settings_js_defer_dependencies" class="large-text code" placeholder="--- any inline scripts that should load, only after the merged deferred scripts above ---"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'defer_dependencies'); ?></textarea></p>
+<p><textarea name="fvm_settings[js][defer_dependencies]" rows="7" cols="50" id="fvm_settings_js_defer_dependencies" class="large-text code" placeholder="--- a small, partial snippet that should match on inline scripts and load them after the deferred scripts above ---"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'defer_dependencies'); ?></textarea></p>
 <p class="description">[ Inline JavaScript matching these rules, will wait until after the window.load event ]</p>
 <p class="description">[ Will match using <code>PHP stripos</code> against the script <code>innerHTML</code> ]</p>
 </fieldset></td>
 </tr>
 
 <tr>
-<th scope="row">Execute third party inline scripts after user interaction</th>
+<th scope="row">Execute matching third party scripts after user interaction</th>
 <td><fieldset>
 <label for="fvm_settings_js_thirdparty"><span class="fvm-bold-green fvm-rowintro">Delay the following inline scripts until after user interaction</span></label>
 <p><textarea name="fvm_settings[js][thirdparty]" rows="7" cols="50" id="fvm_settings_js_thirdparty" class="large-text code" placeholder="--- example --- 
 
 function(w,d,s,l,i) 
 function(f,b,e,v,n,t,s)
-function(h,o,t,j,a,r)"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'thirdparty'); ?></textarea></p>
+function(h,o,t,j,a,r)
+www.googletagmanager.com/gtm.js"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'thirdparty'); ?></textarea></p>
 <p class="description">[ If there is no interaction from the user, scripts will still load after 5 seconds automatically. ]</p>
-<p class="description">[ Will match using <code>PHP stripos</code> against the script <code>innerHTML</code> ]</p>
+<p class="description">[ Will match using <code>PHP stripos</code> against the script <code>innerHTML</code> or <code>src</code> attribute for async/defer scripts (only) ]</p>
 </fieldset></td>
 </tr>
 
@@ -288,13 +278,14 @@ Enable CDN for merged JS files <span class="note-info">[ Will serve the FVM gene
 
 <div style="height: 60px;"></div>
 <h2 class="title">Cache Settings</h2>
-<h3 class="fvm-bold-green">You can adjust your FVM cache settings here</h3>
+<h3 class="fvm-bold-green">FVM does not have page caching, so these settings are for the generated CSS and JS files only</h3>
 <table class="form-table fvm-settings">
 <tbody>
-<tr>
-<th scope="row">Instant Cache Purge</th>
-<td>
 
+<tr>
+<th scope="row">Cache Preferences</th>
+<td>
+<p class="fvm-bold-green fvm-rowintro">Select your options below</p>
 
 <fieldset>
 <label for="fvm_settings_cache_min_instant_purge">
@@ -302,12 +293,10 @@ Enable CDN for merged JS files <span class="note-info">[ Will serve the FVM gene
 Purge Minified CSS/JS files instantly <span class="note-info">[ Cache files can take up to 24 hours to be deleted by default, for compatibility reasons with certain hosts. ]</span></label>
 <br />
 
-
-
 </fieldset></td>
 </tr>
 <tr>
-<th scope="row"><span class="fvm-label-special">Public Cache Path</span></th>
+<th scope="row"><span class="fvm-label-special">Public Files Cache Path</span></th>
 <td><fieldset>
 <label for="fvm_settings_cache_path">
 <p><input type="text" name="fvm_settings[cache][path]" id="fvm_settings_cache_path" value="<?php echo fvm_get_settings_value($fvm_settings, 'cache', 'path'); ?>" size="80" /></p>
@@ -317,7 +306,7 @@ Purge Minified CSS/JS files instantly <span class="note-info">[ Cache files can 
 </fieldset></td>
 </tr>
 <tr>
-<th scope="row"><span class="fvm-label-special">Public Cache URL</span></th>
+<th scope="row"><span class="fvm-label-special">Public Files Cache URL</span></th>
 <td><fieldset>
 <label for="fvm_settings_cache_url">
 <p><input type="text" name="fvm_settings[cache][url]" id="fvm_settings_cache_url" value="<?php echo fvm_get_settings_value($fvm_settings, 'cache', 'url'); ?>" size="80" /></p>
@@ -329,7 +318,24 @@ Purge Minified CSS/JS files instantly <span class="note-info">[ Cache files can 
 </tbody></table>
 
 
+<div style="height: 60px;"></div>
+<h2 class="title">User Settings</h2>
+<h3 class="fvm-bold-green">For compatibility reasons, only anonymous users should be optimized by default.</h3>
+<table class="form-table fvm-settings">
+<tbody>
 
+<tr>
+<th scope="row">User Options</th>
+<td>
+<p class="fvm-bold-green fvm-rowintro">Force optimization for the following user roles</p>
+
+<fieldset>
+<?php
+# output user roles checkboxes
+echo fvm_get_user_roles_checkboxes();
+?>
+</fieldset></td>
+</tbody></table>
 
 
 <input type="hidden" name="fvm_action" value="save_settings" />
