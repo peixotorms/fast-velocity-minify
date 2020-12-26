@@ -976,28 +976,25 @@ function fvm_normalize_url($src, $wp_domain, $wp_home) {
 	if (stripos($hurl, '.js?') !== false) { $hurl = stristr($hurl, '.js?', true).'.js'; } # no query strings
 	if (stripos($hurl, '.css?') !== false) { $hurl = stristr($hurl, '.css?', true).'.css'; } # no query strings
 
-	return fvm_remove_cssjs_ver($hurl);	
-}
+	# add filter for developers
+	$hurl = apply_filters('fvm_get_url', $hurl);
 
-
-# Remove default wordpress query string from static files
-function fvm_remove_cssjs_ver($href) {
-	if (stripos($href, '?ver=') !== false) {
-		$href = stristr($href, '?ver=', true);  
-	}
-	if (stripos($href, '&ver=') !== false) {
-		$href = stristr($href, '&ver=', true);  
-	}
-	return $href;
+	return $hurl;	
 }
 
 
 # minify ld+json scripts
 function fvm_minify_microdata($data) {
+	# remove // comments
+	$data = trim(preg_replace('/(\v)+(\h)+[\/]{2}(.*)+(\v)+/u', '', $data));
+	
+	# minify
 	$data = trim(preg_replace('/\s+/u', ' ', $data));
 	$data = str_replace(array('" ', ' "'), '"', $data);
 	$data = str_replace(array('[ ', ' ['), '[', $data);
 	$data = str_replace(array('] ', ' ]'), ']', $data);
+	$data = str_replace(array('} ', ' }'), '}', $data);
+	$data = str_replace(array('{ ', ' {'), '{', $data);
 	return $data;
 }
 
@@ -1322,6 +1319,9 @@ function fvm_replace_css_imports($css, $rq=null) {
 						
 						# minify
 						$subcss = fvm_maybe_minify_css_file($subcss, $href, $enable_css_minification);
+						
+						# developers filter
+						$subcss = apply_filters( 'fvm_after_download_and_minify_code', $subcss, 'css');
 
 						# remove specific, minified CSS code
 						if(isset($fvm_settings['css']['remove_code']) && !empty($fvm_settings['css']['remove_code'])) {

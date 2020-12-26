@@ -185,6 +185,9 @@ function fvm_process_page($html) {
 						
 							# open or download file, get contents
 							$css = fvm_maybe_minify_css_file($css, $href, $enable_css_minification);
+							
+							# developers filter
+							$css = apply_filters( 'fvm_after_download_and_minify_code', $css, 'css');
 											
 							# quick integrity check
 							if(!empty($css) && $css != false) {
@@ -608,6 +611,9 @@ function fvm_process_page($html) {
 															
 												# try catch
 												$js = fvm_try_catch_wrap($js);
+												
+												# developers filter
+												$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
 															
 												# quick integrity check
 												if(!empty($js) && $js != false) {
@@ -666,6 +672,9 @@ function fvm_process_page($html) {
 															
 												# try catch
 												$js = fvm_try_catch_wrap($js);
+												
+												# developers filter
+												$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
 															
 												# quick integrity check
 												if(!empty($js) && $js != false) {
