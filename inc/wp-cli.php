@@ -14,7 +14,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 		# purge files + cache
 		public function purge() {
-			WP_CLI::success('FVM and other caches were purged.');
+			WP_CLI::success( __( 'FVM and other caches were purged.', 'fast-velocity-minify' ) );
 			fvm_purge_minification();
 			fvm_purge_others();	
 			
@@ -23,15 +23,15 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			$others = fvm_purge_others();
 			
 			# notices
-			WP_CLI::success('FVM: All Caches are now cleared. ('.date("D, d M Y @ H:i:s e").')');
-			if(is_string($cache)) { WP_CLI::error($cache); }
+			WP_CLI::success( __( 'FVM: All Caches are now cleared.', 'fast-velocity-minify' ) .' ('.date("D, d M Y @ H:i:s e").')');
+			if(is_string($cache)) { WP_CLI::warning($cache); }
 			if(is_string($others)) { WP_CLI::success($others); }
 					
 		}
 		
 		# get cache size
 		public function stats() {
-			WP_CLI::error('This feature is currently under development.');
+			WP_CLI::error( __( 'This feature is currently under development.', 'fast-velocity-minify' ) );
 		}	
 		
 	}

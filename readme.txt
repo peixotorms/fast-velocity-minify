@@ -3,8 +3,9 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.7
 Requires PHP: 5.6
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 Tested up to: 5.6
+Text Domain: fast-velocity-minify
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -24,45 +25,10 @@ Kindly read the HELP section after installing the plugin, about possible issues 
 I can offer you aditional `custom made` optimization on top of this plugin. If you would like to hire me, please visit my profile links for further information.
 
 
-= Features =
-
-*	Merge JS and CSS files into groups to reduce the number of HTTP requests
-*	Google Fonts merging, inlining and optimization
-*	Handles scripts loaded both in the header & footer separately
-*	Keeps the order of the scripts even if you exclude some files from minification
-*	Supports localized scripts (https://codex.wordpress.org/Function_Reference/wp_localize_script)
-*	Minifies CSS and JS with PHP Minify only, no third party software or libraries needed.
-*	Option to defer JavaScript and CSS files, either globally or pagespeed insights only.
-*	Creates static cache files in the uploads directory.
-*	Preserves your original files, by duplicating and copying those files to the uploads directory 
-*	View the status and detailed logs on the WordPress admin page.
-*	Option to Minify HTML, remove extra info from the header and other optimizations.
-*	Ability to turn off minification for JS, CSS or HTML (purge the cache to see it)
-*	Ability to turn off CSS or JS merging completely (so you can debug which section causes conflicts and exclude the offending files)
-*	Ability to manually ignore JavaScript or CSS files that conflict when merged together (please report if you find some)
-*	Support for conditional scripts and styles, as well as inlined code that depends on the handles
-*	Support for multisite installations (each site has its own settings)
-*	Support for gzip_static on Nginx
-*	Support for preconnect and preload headers
-*	CDN option, to rewrite all static assets inside the JS or CSS files
-*	WP CLI support to check stats and purge the cache
-*	Auto purging of cache files for W3 Total Cache, WP Supercache, WP Rocket, Cachify, Comet Cache, Zen Cache, LiteSpeed Cache, Nginx Cache (by Till Krüss ), SG Optimizer, HyperCache, Cache Enabler, Breeze (Cloudways), Godaddy Managed WordPress Hosting and WP Engine (read the FAQs)
-*	and some more...
-
-
 = WP-CLI Commands =
 *	Purge all caches: `wp fvm purge`
 *	Purge all caches on a network site: `wp --url=blog.example.com fvm purge`
 *	Purge all caches on the entire network (linux): `wp site list --field=url | xargs -n1 -I % wp --url=% fvm purge`
-*	Get cache size: `wp fvm stats`
-*	Get cache size on a network site: `wp --url=blog.example.com fvm stats`
-*	Get cache size on each site (linux): `wp site list --field=url | xargs -n1 -I % wp --url=% fvm stats`
-
-
-= Notes =
-*	The JavaScript minification is by [PHP Minify](https://github.com/matthiasmullie/minify)
-*	Compatible with Nginx, HHVM and PHP 7
-*	Minimum requirements are PHP 5.5 and WP 4.4, from version 1.4.0 onwards
 
 
 == Installation ==
@@ -80,10 +46,14 @@ I can offer you aditional `custom made` optimization on top of this plugin. If y
 == Upgrade Notice ==
 
 = 3.0.0 =
-Please backup your site before updating. Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requires JS settings to be readjusted after the update. 
+Please backup your site before updating. 
+Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requires JS settings to be readjusted after the update. 
 
 
 == Changelog ==
+
+= 3.0.1 [2020.12.27] =
+* Added initial translation support under the "fast-velocity-minify" text domain.
 
 = 3.0.0 [2020.12.26] =
 * New version has been remade from scratch

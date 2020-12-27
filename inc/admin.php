@@ -12,23 +12,23 @@ function fvm_check_minimum_requirements() {
 
 		# php version requirements
 		if (version_compare( PHP_VERSION, '5.6', '<' )) { 
-			$error = 'FVM requires PHP 5.6 or higher. You’re still on '. PHP_VERSION; 
+			$error = __( 'FVM requires PHP 5.6 or higher. You’re still on', 'fast-velocity-minify' ) .' '. PHP_VERSION; 
 		}
 
 		# php extension requirements	
 		if (!extension_loaded('mbstring')) { 
-			$error = 'FVM requires the PHP mbstring module to be installed on the server.'; 
+			$error = __( 'FVM requires the PHP mbstring module to be installed on the server.', 'fast-velocity-minify' ); 
 		}
 		
 		# wp version requirements
 		if ( version_compare( $GLOBALS['wp_version'], '4.5', '<' ) ) {
-			$error = 'FVM requires WP 4.5 or higher. You’re still on ' . $GLOBALS['wp_version']; 
+			$error = __( 'FVM requires WP 4.5 or higher. You’re still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version']; 
 		}
 		
 		# cache permissions		
 		global $fvm_cache_paths;
 		if(is_dir($fvm_cache_paths['cache_base_dir']) && !is_writable($fvm_cache_paths['cache_base_dir'])) {
-			$error = 'FVM needs writing permissions on '.$fvm_cache_paths['cache_base_dir'];
+		$error = __( 'FVM needs writing permissions.', 'fast-velocity-minify' ). ' ['.$fvm_cache_paths['cache_base_dir'].']';
 		}
 		
 		# deactivate plugin forcefully
@@ -51,12 +51,13 @@ function fvm_check_misconfiguration() {
 		
 		# check if custom cache directory exists
 		if(isset($fvm_settings['cache']['path']) && !empty($fvm_settings['cache']['path']) && !is_dir($fvm_settings['cache']['path']) && !is_writeable($fvm_settings['cache']['path'])) {
-			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', 'FVM needs writing permissions on '.$fvm_settings['cache']['path'] , 'success' );
+			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', __( 'FVM needs writing permissions.', 'fast-velocity-minify' ).
+		' ['.$fvm_settings['cache']['path'].']' , 'success' );
 		}
 		
 		# cache permissions		
 		if(!is_dir($fvm_cache_paths['cache_base_dir']) && !is_writeable($fvm_settings['cache']['path'])) {
-			$error = 'FVM needs writing permissions on '.$fvm_cache_paths['cache_base_dir'];
+			$error = __( 'FVM needs writing permissions.', 'fast-velocity-minify' ) . ' ['.$fvm_cache_paths['cache_base_dir'].']';
 		}
 
 		# initialize database routine if not available
@@ -75,11 +76,11 @@ function fvm_save_settings() {
 	if(isset($_POST['fvm_action']) && isset($_POST['fvm_settings_nonce']) && $_POST['fvm_action'] == 'save_settings') {
 		
 		if(!current_user_can('manage_options')) {
-			wp_die( __('You do not have sufficient permissions to access this page.'), __('Error:'), array('response'=>200)); 
+			wp_die( __('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 		
 		if(!wp_verify_nonce($_POST['fvm_settings_nonce'], 'fvm_settings_nonce')) {
-			wp_die( __('Invalid nounce. Please refresh and try again.'), __('Error:'), array('response'=>200)); 
+			wp_die( __('Invalid nounce. Please refresh and try again.', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 		
 		# update fvm_settings in the global scope
@@ -122,7 +123,7 @@ function fvm_save_settings() {
 			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', 'Settings saved successfully!', 'success' );
 		
 		} else {
-			wp_die( __('Invalid data!'), __('Error:'), array('response'=>200)); 
+			wp_die( __('Invalid data!', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 	}
 }
@@ -220,12 +221,12 @@ function fvm_get_logs_callback() {
 		
 	# must be able to cleanup cache
 	if (!current_user_can('manage_options')) {
-		wp_die( __('You do not have sufficient permissions to access this page.'), __('Error:'), array('response'=>200)); 
+		wp_die( __('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 	}
 	
 	# must have
 	if(!defined('WP_CONTENT_DIR')) { 
-		wp_die( __('WP_CONTENT_DIR is undefined!'), __('Error:'), array('response'=>200)); 
+		wp_die( __('WP_CONTENT_DIR is undefined!', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 	}
 	
 	# get info
@@ -331,8 +332,8 @@ function fvm_get_logs_callback() {
 			
 			# start log
 			$js_log.= '+++++++++' . PHP_EOL;
-			$js_log.= 'PROCESSED - ' . date('r', $log->date) . ' - VIA - '. $meta['loc'] . PHP_EOL;
-			$js_log.= 'GENERATED - ' . $meta['fl'] . PHP_EOL;
+			$js_log.= __( 'PROCESSED', 'fast-velocity-minify' ) . ' - ' . date('r', $log->date) . ' - VIA - '. $meta['loc'] . PHP_EOL;
+			$js_log.= __( 'GENERATED', 'fast-velocity-minify' ) . ' - ' . $meta['fl'] . PHP_EOL;
 			$js_log.= '---' . PHP_EOL;
 			
 			# generate uid's from json
@@ -345,7 +346,7 @@ function fvm_get_logs_callback() {
 					$rs = array(); $rs = $wpdb->get_results($wpdb->prepare("SELECT meta FROM ".$wpdb->prefix."fvm_cache WHERE uid IN (".$listuids.") ORDER BY FIELD(uid, '".implode("', '", $list)."')", $list));
 					foreach ($rs as $r) {
 						$imt = json_decode($r->meta, true);
-						$js_log.= '[Size: '.str_pad(fvm_format_filesize($imt['fs']), 10,' ',STR_PAD_LEFT).']'."\t". $imt['url'] . PHP_EOL;
+						$js_log.= '['.__( 'Size:', 'fast-velocity-minify' ).' '.str_pad(fvm_format_filesize($imt['fs']), 10,' ',STR_PAD_LEFT).']'."\t". $imt['url'] . PHP_EOL;
 					}
 				}
 				$js_log.= '+++++++++' . PHP_EOL . PHP_EOL;
@@ -356,8 +357,8 @@ function fvm_get_logs_callback() {
 		$js_log = trim($js_log);
 		
 		# default message
-		if(empty($css_log)) { $css_log = 'No CSS files generated yet.'; }
-		if(empty($js_log)) { $js_log = 'No JS files generated yet.'; }
+		if(empty($css_log)) { $css_log = __( 'No CSS files generated yet.', 'fast-velocity-minify' ); }
+		if(empty($js_log)) { $js_log = __( 'No JS files generated yet.', 'fast-velocity-minify' ); }
 		
 		# build info
 		$result = array(
@@ -377,7 +378,7 @@ function fvm_get_logs_callback() {
 	}
 	
 	# default
-	wp_die( __('Unknown cache path!'), __('Error:'), array('response'=>200)); 
+	wp_die( __('Unknown cache path!', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 }
 
 
@@ -489,6 +490,6 @@ function fvm_get_user_roles_checkboxes() {
 	}
 	
 	# return
-	if(!empty($roles_list)) { return implode(PHP_EOL, $roles_list); } else { return 'No roles detected!'; }
+	if(!empty($roles_list)) { return implode(PHP_EOL, $roles_list); } else { return __( 'No roles detected!', 'fast-velocity-minify' ); }
 
 }

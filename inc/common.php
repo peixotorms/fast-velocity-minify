@@ -62,12 +62,12 @@ function fvm_process_cache_purge_request(){
 		
 		# must be able to cleanup cache
 		if (!current_user_can('manage_options')) { 
-			wp_die( __('You do not have sufficient permissions to access this page.'), __('Error:'), array('response'=>200)); 
+			wp_die( __('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 		
 		# validate nonce
 		if(!wp_verify_nonce($_GET['_wpnonce'], 'fvm_clear')) {
-			wp_die( __('Invalid or expired request... please go back and refresh before trying again!'), __('Error:'), array('response'=>200)); 
+			wp_die( __('Invalid or expired request... please go back and refresh before trying again!', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 		
 		# Purge All
@@ -85,7 +85,7 @@ function fvm_process_cache_purge_request(){
 				if(is_string($others)) { $notices[] = $others; }
 				
 				# save transient for after the redirect
-				if(count($notices) == 0) { $notices[] = 'FVM: All Caches are now cleared. ('.date("D, d M Y @ H:i:s e").')'; }
+				if(count($notices) == 0) { $notices[] = __( 'FVM: All Caches are now cleared.', 'fast-velocity-minify' ) . ' ('.date("D, d M Y @ H:i:s e").')'; }
 				set_transient( 'fvm_admin_notice', json_encode($notices), 10);
 				
 			}
@@ -169,6 +169,10 @@ function fvm_purge_minification() {
 	# get cache and min directories
 	global $fvm_cache_paths, $fvm_settings;
 	
+	# fetch settings on wp-cli
+	if(is_null($fvm_settings)) { $fvm_settings = fvm_get_settings(); }
+	if(is_null($fvm_cache_paths)) { $fvm_cache_paths = fvm_cachepath(); }
+		
 	# purge html directory?
 	if(isset($fvm_cache_paths['cache_dir_min']) && is_dir($fvm_cache_paths['cache_dir_min']) && is_writable($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
 		
@@ -180,11 +184,11 @@ function fvm_purge_minification() {
 			# schedule purge for 24 hours later, only once
 			add_action( 'fvm_purge_minification_later', 'fvm_purge_minification_expired' );
 			wp_schedule_single_event(time() + 3600 * 24, 'fvm_purge_minification_later');
-			return 'Expired minification files are set to expire up to 24 hours from now.';
+			return __( 'Expired minification files are set to be deleted in 24 hours.', 'fast-velocity-minify' );
 		}
 		
 	} else {
-		return 'The cache directory is not rewritable!';
+		return __( 'The cache directory is not rewritable!', 'fast-velocity-minify' );
 	}
 	
 	return false;	
@@ -198,7 +202,7 @@ function fvm_purge_minification_now() {
 		$result = fvm_rrmdir($fvm_cache_paths['cache_dir_min']);
 		return $result;
 	} else {
-		return 'The cache directory is not writeable!';
+		return __( 'The cache directory is not writeable!', 'fast-velocity-minify' );
 	}
 }
 
@@ -210,7 +214,7 @@ function fvm_purge_minification_expired() {
 		# must be on the allowed path
 		$wd = $fvm_cache_paths['cache_dir_min'];
 		if(empty($wd) || !defined('WP_CONTENT_DIR') || stripos($wd, '/fvm') === false) {
-			return 'Requested purge path is not allowed!';
+			return __( 'Requested purge path is not allowed!', 'fast-velocity-minify' );
 		}
 		
 		# prefix
@@ -233,7 +237,7 @@ function fvm_purge_minification_expired() {
 			}
 		}
 		
-		return 'Expired Cache Deleted!';
+		return __( 'Expired cache is now deleted!', 'fast-velocity-minify' );
 	}
 }
 
@@ -246,55 +250,55 @@ function fvm_purge_others(){
 	# Purge all W3 Total Cache
 	if (function_exists('w3tc_pgcache_flush')) {
 		w3tc_pgcache_flush();
-		return __('All caches on <strong>W3 Total Cache</strong> have been purged.');
+		return __( 'All caches on <strong>W3 Total Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge WP Super Cache
 	if (function_exists('wp_cache_clear_cache')) {
 		wp_cache_clear_cache();
-		return __('All caches on <strong>WP Super Cache</strong> have been purged.');
+		return __( 'All caches on <strong>WP Super Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge WP Rocket
 	if (function_exists('rocket_clean_domain')) {
 		rocket_clean_domain();
-		return __('All caches on <strong>WP Rocket</strong> have been purged.');
+		return __( 'All caches on <strong>WP Rocket</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Cachify
 	if (function_exists('cachify_flush_cache')) {
 		cachify_flush_cache();
-		return __('All caches on <strong>Cachify</strong> have been purged.');
+		return __( 'All caches on <strong>Cachify</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Comet Cache
 	if ( class_exists("comet_cache") ) {
 		comet_cache::clear();
-		return __('All caches on <strong>Comet Cache</strong> have been purged.');
+		return __( 'All caches on <strong>Comet Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Zen Cache
 	if ( class_exists("zencache") ) {
 		zencache::clear();
-		return __('All caches on <strong>Comet Cache</strong> have been purged.');
+		return __( 'All caches on <strong>Comet Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge LiteSpeed Cache 
 	if (class_exists('LiteSpeed_Cache_Tags')) {
 		LiteSpeed_Cache_Tags::add_purge_tag('*');
-		return __('All caches on <strong>LiteSpeed Cache</strong> have been purged.');
+		return __( 'All caches on <strong>LiteSpeed Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Hyper Cache
 	if (class_exists( 'HyperCache' )) {
 		do_action( 'autoptimize_action_cachepurged' );
-		return __( 'All caches on <strong>HyperCache</strong> have been purged.');
+		return __( 'All caches on <strong>HyperCache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# purge cache enabler
 	if ( has_action('ce_clear_cache') ) {
 		do_action('ce_clear_cache');
-		return __( 'All caches on <strong>Cache Enabler</strong> have been purged.');
+		return __( 'All caches on <strong>Cache Enabler</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# purge wpfc
@@ -305,14 +309,14 @@ function fvm_purge_others(){
 	# add breeze cache purge support
 	if (class_exists("Breeze_PurgeCache")) {
 		Breeze_PurgeCache::breeze_cache_flush();
-		return __( 'All caches on <strong>Breeze</strong> have been purged.');
+		return __( 'All caches on <strong>Breeze</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 
 	# swift
 	if (class_exists("Swift_Performance_Cache")) {
 		Swift_Performance_Cache::clear_all_cache();
-		return __( 'All caches on <strong>Swift Performance</strong> have been purged.');
+		return __( 'All caches on <strong>Swift Performance</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 
@@ -321,13 +325,13 @@ function fvm_purge_others(){
 	# Purge SG Optimizer (Siteground)
 	if (function_exists('sg_cachepress_purge_cache')) {
 		sg_cachepress_purge_cache();
-		return __('All caches on <strong>SG Optimizer</strong> have been purged.');
+		return __( 'All caches on <strong>SG Optimizer</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Godaddy Managed WordPress Hosting (Varnish + APC)
 	if (class_exists('WPaaS\Plugin') && method_exists( 'WPass\Plugin', 'vip' )) {
 		fvm_godaddy_request('BAN');
-		return __('A cache purge request has been sent to <strong>Go Daddy Varnish</strong>');
+		return __( 'A cache purge request has been sent to <strong>Go Daddy Varnish</strong>', 'fast-velocity-minify' );
 	}
 
 
@@ -336,7 +340,7 @@ function fvm_purge_others(){
 		if (method_exists('WpeCommon', 'purge_memcached')) { WpeCommon::purge_memcached(); }
 		if (method_exists('WpeCommon', 'purge_varnish_cache')) { WpeCommon::purge_varnish_cache(); }
 		if (method_exists('WpeCommon', 'purge_memcached') || method_exists('WpeCommon', 'purge_varnish_cache')) {
-			return __('A cache purge request has been sent to <strong>WP Engine</strong>');
+			return __( 'A cache purge request has been sent to <strong>WP Engine</strong>', 'fast-velocity-minify' );
 		}
 	}
 
@@ -345,7 +349,7 @@ function fvm_purge_others(){
 	if ( isset($kinsta_cache) && class_exists('\\Kinsta\\CDN_Enabler')) {
 		if (!empty( $kinsta_cache->kinsta_cache_purge)){
 			$kinsta_cache->kinsta_cache_purge->purge_complete_caches();
-			return __('A cache purge request has been sent to <strong>Kinsta</strong>');
+			return __( 'A cache purge request has been sent to <strong>Kinsta</strong>', 'fast-velocity-minify' );
 		}
 	}
 
@@ -353,14 +357,14 @@ function fvm_purge_others(){
 	if ( class_exists( 'PagelyCachePurge' ) ) {
 		$purge_pagely = new PagelyCachePurge();
 		$purge_pagely->purgeAll();
-		return __('A cache purge request has been sent to <strong>Pagely</strong>');
+		return __( 'A cache purge request has been sent to <strong>Pagely</strong>', 'fast-velocity-minify' );
 	}
 
 	# Purge Pressidum
 	if (defined('WP_NINUKIS_WP_NAME') && class_exists('Ninukis_Plugin')){
 		$purge_pressidum = Ninukis_Plugin::get_instance();
 		$purge_pressidum->purgeAllCaches();
-		return __('A cache purge request has been sent to <strong>Pressidium</strong>');
+		return __( 'A cache purge request has been sent to <strong>Pressidium</strong>', 'fast-velocity-minify' );
 	}
 
 	# Purge Savvii
@@ -368,7 +372,7 @@ function fvm_purge_others(){
 		$purge_savvii = new \Savvii\CacheFlusherPlugin();
 		if ( method_exists( $plugin, 'domainflush' ) ) {
 			$purge_savvii->domainflush();
-			return __('A cache purge request has been sent to <strong>Savvii</strong>');
+			return __( 'A cache purge request has been sent to <strong>Savvii</strong>', 'fast-velocity-minify' );
 		}
 	}
 
@@ -588,7 +592,7 @@ function fvm_rrmdir($path) {
 
 	# must be on the allowed path
 	if(empty($path) || !defined('WP_CONTENT_DIR') || stripos($path, '/fvm') === false) {
-		return 'Requested purge path is not allowed!';
+		return __( 'Requested purge path is not allowed!', 'fast-velocity-minify' );
 	}
 	
 	# purge recursively
@@ -619,7 +623,7 @@ function fvm_fix_permission_bits($file){
 
 	# must be on the allowed path
 	if(empty($file) || !defined('WP_CONTENT_DIR') || stripos($file, '/fvm') === false) {
-		return 'Requested path is not allowed!';
+		return __( 'Requested path is not allowed!', 'fast-velocity-minify' );
 	}
 	
 	if(function_exists('stat') && fvm_function_available('stat')) {
@@ -810,7 +814,7 @@ function fvm_maybe_download($url) {
 	}
 	
 	# failed
-	return array('error'=>'Could not read or fetch from '. $url);
+	return array('error'=> __( 'Could not read or fetch from URL', 'fast-velocity-minify' ) . ' ['. $url . ']');
 }
 
 
@@ -822,7 +826,7 @@ function fvm_save_file($file, $content) {
 				
 	# must be on the allowed path
 	if(empty($path) || !defined('WP_CONTENT_DIR') || stripos($path, '/fvm') === false) {
-		return 'Requested path is not allowed!';
+		return __( 'Requested path is not allowed!', 'fast-velocity-minify' );
 	}
 											
 	# create directory structure
@@ -1148,58 +1152,6 @@ function fvm_try_catch_wrap($js, $href=null) {
 }
 
 
-# wrap html tag in our function for low priority processing inplace
-function fvm_wrap_script_inline($tag) {
-	
-	# must be a valid type
-	if(!is_object($tag) && !is_array($tag)) {
-		return $tag;
-	}
-	
-	# skip application/ld+json
-	if(isset($tag->type) && $tag->type == 'application/ld+json') {
-		return $tag;
-	}
-
-	# scripts with src
-	if(isset($tag->src)) {
-		
-		# get all attributes into $rem
-		$rem = '';
-		foreach($tag->getAllAttributes() as $k=>$v){
-			if($k != 'async' && $k != 'defer' && $k != 'src' && $k != 'type') {
-				$rem.= "b.setAttribute('$k','$v');";
-			}
-		}			
-		
-		# rewrite scripts without document.write, for async scripts
-		if(isset($tag->async)) {
-			$tag->outertext = "<script data-cfasync='false'>if(wpruag()){(function(a){var b=a.createElement('script'),c=a.scripts[0];b.src='".$tag->src."';".$rem."c.parentNode.insertBefore(b,c);}(document));}</script>";
-			return $tag;
-		} 
-		
-		# rewrite scripts without document.write, for defer scripts
-		if (isset($tag->defer)) {
-			$tag->outertext = "<script data-cfasync='false'>if(wpruag()){(function(a){var b=a.createElement('script'),c=a.scripts[0];b.src='".$tag->src."';b.async=false;".$rem."c.parentNode.insertBefore(b,c);}(document));}</script>";
-			return $tag;				
-		}
-		
-		# check for line breaks, skip if found and not empty code inside
-		if(stripos(trim($tag->innertext), PHP_EOL) !== false) {
-			return $tag;
-		}
-		
-		# fallback to document.write (outerHTML won't work)
-		$tag->outertext = '<script data-cfasync="false">if(wpruag()){document.write('.fvm_escape_url_js($tag->outertext).');}</script>';
-		return $tag;
-		
-	}
-
-	# fallback
-	return $tag;
-}
-
-
 # Disable the emoji's on the frontend
 function fvm_disable_emojis() {
 	global $fvm_settings;
@@ -1218,10 +1170,9 @@ function fvm_disable_emojis() {
 # stop slow ajax requests for bots
 function fvm_ajax_optimizer() {
 	if(isset($_SERVER['HTTP_USER_AGENT']) && (defined('DOING_AJAX') && DOING_AJAX) || (function_exists('is_ajax') && is_ajax()) || (function_exists('wp_doing_ajax') && wp_doing_ajax())){
-		if (preg_match('/'.implode('|', array('x11.*fox\/54', 'oid\s4.*xus.*ome\/62', 'x11.*ome\/86\.0\.4', 'oobot', 'ighth', 'tmetr', 'eadles', 'ingdo', 'PTST')).'/i', $_SERVER['HTTP_USER_AGENT'])){ echo '0'; exit(); }
+		if (preg_match('/'.implode('|', array('x11.*ox\/54', 'id\s4.*us.*ome\/62', 'oobo', 'ight', 'tmet', 'eadl', 'ngdo', 'PTST')).'/i', $_SERVER['HTTP_USER_AGENT'])){ echo '0'; exit(); }
 	}
 }
-
 
 # rewrite assets to cdn
 function fvm_rewrite_assets_cdn($html) {
@@ -1361,14 +1312,32 @@ function fvm_replace_css_imports($css, $rq=null) {
 }
 
 
+# add our function in the header
+function fvm_add_header_function($html) {
+	
+	# create function
+	$lst = array('x11.*ox\/54', 'id\s4.*us.*ome\/62', 'oobo', 'ight', 'tmet', 'eadl', 'ngdo', 'PTST');
+	$fvmf = '<script data-cfasync="false">function fvmuag(){var e=navigator.userAgent;if(e.match(/'.implode('|', $lst).'/i))return!1;if(e.match(/x11.*me\/86\.0/i)){var r=screen.width;if("number"==typeof r&&1367==r)return!1}return!0}</script>';
+	
+	# remove duplicates
+	if(stripos($html, $fvmf) !== false) { 
+		$html = str_ireplace($fvmf, '', $html); 
+	}
+	
+	# add function 
+	$html = str_replace('<!-- h_header_function -->', $fvmf, $html);
+	return $html;
+}
+
+
 # get the domain name
 function fvm_get_domain() {
 	if(isset($_SERVER['SERVER_NAME']) && !empty($_SERVER['SERVER_NAME'])) {
-		return  $_SERVER['SERVER_NAME'];
+		return $_SERVER['SERVER_NAME'];
 	} elseif (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
-		return  $_SERVER['HTTP_HOST'];
+		return $_SERVER['HTTP_HOST'];
 	} elseif (function_exists('site_url')) {
-		return  parse_url(site_url())['host'];
+		return parse_url(site_url())['host'];
 	} else {
 		return false;
 	}

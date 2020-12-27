@@ -8,7 +8,7 @@ function fvm_get_generalinfo() {
 	
 	# check if user has admin rights
 	if(!current_user_can('manage_options')) {
-		echo 'You are not allowed to execute this function!';
+		echo __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 	}
 
 	echo'+++'. PHP_EOL;
@@ -61,7 +61,7 @@ if(!function_exists('fvm_get_php_upload_max')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         if(ini_get('upload_max_filesize')) {
@@ -80,7 +80,7 @@ if(!function_exists('fvm_get_php_post_max')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         if(ini_get('post_max_size')) {
@@ -99,7 +99,7 @@ if(!function_exists('fvm_get_php_max_execution')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         if(ini_get('max_execution_time')) {
@@ -119,7 +119,7 @@ if(!function_exists('fvm_get_php_memory_limit')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         if(ini_get('memory_limit')) {
@@ -138,7 +138,7 @@ if(!function_exists('fvm_get_mysql_version')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         global $wpdb;
@@ -153,7 +153,7 @@ if(!function_exists('fvm_get_mysql_data_usage')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         global $wpdb;
@@ -176,7 +176,7 @@ if(!function_exists('fvm_get_mysql_index_usage')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         global $wpdb;
@@ -199,7 +199,7 @@ if(!function_exists('fvm_get_mysql_max_allowed_packet')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         global $wpdb;
@@ -219,7 +219,7 @@ if(!function_exists('fvm_get_mysql_max_allowed_connections')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         global $wpdb;
@@ -240,7 +240,7 @@ if(!function_exists('fvm_get_serverload')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
         $server_load = 0;
@@ -288,7 +288,7 @@ if(!function_exists('fvm_get_servercpu')) {
 		
 		# check if user has admin rights
 		if(!current_user_can('manage_options')) {
-			return 'You are not allowed to execute this function!';
+			return __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
 		}
 		
 		$numCpus = 0;

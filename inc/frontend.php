@@ -401,19 +401,9 @@ function fvm_process_page($html) {
 					# if file exists
 					clearstatcache();
 					if (file_exists($file_css)) {
-						# preload and save for html implementation (with priority order prefix)
-						$htmlpreloader['b_'.$css_uid] = '<link rel="preload" href="'.$file_css_url.'" as="style" media="'.$mediatype.'" />';
-								
-						# async or render block css
-						if(isset($fvm_settings['css']['async']) && $fvm_settings['css']['async'] == true) {
-							
-							# Load CSS Asynchronously with javascript
-							# https://www.filamentgroup.com/lab/load-css-simpler/
-							$htmlcssheader['a_'.$css_uid] = '<link rel="stylesheet" href="'.$file_css_url.'" media="print" onload="this.media=\''.$mediatype.'\'">';
-							
-						} else {
-							$htmlcssheader['b_'.$css_uid] = '<link rel="stylesheet" href="'.$file_css_url.'" media="'.$mediatype.'" />';
-						}			
+						
+						# add file with js							
+						$htmlcssheader['a_'.$css_uid] = '<script data-cfasync="false" id="fvmlpcss">var a;fvmuag()&&((a=document.getElementById("fvmlpcss")).outerHTML='.fvm_escape_url_js("<link rel='stylesheet' href='". $file_css_url . "' media='".$mediatype."' />").');</script>'; # prepend		
 					
 					}
 						
@@ -421,9 +411,7 @@ function fvm_process_page($html) {
 				
 			}
 		}
-	
-		
-		
+			
 		
 		# always disable js minification in certain areas
 		$nojsmin = false;
@@ -494,7 +482,7 @@ function fvm_process_page($html) {
 								if(is_array($arr) && count($arr) > 0) {
 									foreach ($arr as $b) {
 										if(stripos($js, $b) !== false) {
-											$js = 'window.addEventListener("load",function(){var c=setTimeout(b,5E3),d=["mouseover","keydown","touchmove","touchstart"];d.forEach(function(a){window.addEventListener(a,e,{passive:!0})});function e(){b();clearTimeout(c);d.forEach(function(a){window.removeEventListener(a,e,{passive:!0})})}function b(){console.log("FVM: Loading Third Party Script (inline)!");'.$js.'};});';
+											$js = 'if(fvmuag()){window.addEventListener("load",function(){var c=setTimeout(b,5E3),d=["mouseover","keydown","touchmove","touchstart"];d.forEach(function(a){window.addEventListener(a,e,{passive:!0})});function e(){b();clearTimeout(c);d.forEach(function(a){window.removeEventListener(a,e,{passive:!0})})}function b(){console.log("FVM: Loading Third Party Script (inline)!");'.$js.'};});}';
 											break;
 										}
 									}
@@ -508,7 +496,7 @@ function fvm_process_page($html) {
 							if(is_array($arr) && count($arr) > 0) {
 								foreach ($arr as $e) { 
 									if(stripos($js, $e) !== false && stripos($js, 'FVM:') === false) {
-										$js = 'window.addEventListener("load",function(){console.log("FVM: Loading Inline Dependency!");'.$js.'});';
+										$js = 'if(fvmuag()){window.addEventListener("load",function(){console.log("FVM: Loading Inline Dependency!");'.$js.'});}';
 									} 
 								}
 							}
@@ -573,7 +561,7 @@ function fvm_process_page($html) {
 												}
 																						
 												# generate and set delayed script tag
-												$tag->outertext = "<script data-cfasync='false'>".'window.addEventListener("load",function(){var c=setTimeout(b,5E3),d=["mouseover","keydown","touchmove","touchstart"];d.forEach(function(a){window.addEventListener(a,e,{passive:!0})});function e(){b();clearTimeout(c);d.forEach(function(a){window.removeEventListener(a,e,{passive:!0})})}function b(){'."(function(a){var b=a.createElement('script'),c=a.scripts[0];b.src='".trim($tag->src)."';".$rem."c.parentNode.insertBefore(b,c);}(document));".'};});'."</script>";
+												$tag->outertext = "<script data-cfasync='false'>".'if(fvmuag()){window.addEventListener("load",function(){var c=setTimeout(b,5E3),d=["mouseover","keydown","touchmove","touchstart"];d.forEach(function(a){window.addEventListener(a,e,{passive:!0})});function e(){b();clearTimeout(c);d.forEach(function(a){window.removeEventListener(a,e,{passive:!0})})}function b(){'."(function(a){var b=a.createElement('script'),c=a.scripts[0];b.src='".trim($tag->src)."';".$rem."c.parentNode.insertBefore(b,c);}(document));".'};});}'."</script>";
 												unset($allscripts[$k]);
 												continue 2;												
 												
@@ -820,6 +808,9 @@ function fvm_process_page($html) {
 		# header and footer markers
 		$hm = '<!-- h_preheader --><!-- h_header_function --><!-- h_cssheader --><!-- h_jsheader -->';
 		$fm = '<!-- h_footer_lozad -->';
+		
+		# add our function to head
+		$hm = fvm_add_header_function($hm);
 		
 		# remove charset meta tag and collect it to first position
 		if(!is_null($html->find('meta[charset]', 0))) {
