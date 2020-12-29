@@ -18,13 +18,19 @@
  *   Vadim Voituk
  *   Antcs
  *
- * Version Rev. 1.9.1 (291)
+ * Version Rev. 1.9.1 (291) (edited for FVM)
  */
 
 # Exit if accessed directly				
 if (!defined('ABSPATH')){ exit(); }	
 
+# mod
+defined('FVM_MAX_FILE_SIZE') || define('FVM_MAX_FILE_SIZE', 2000000); # Process HTML up to 2 Mb
+defined('DEFAULT_TARGET_CHARSET') || define('DEFAULT_TARGET_CHARSET', 'UTF-8');
+defined('DEFAULT_BR_TEXT') || define('DEFAULT_BR_TEXT', "\r\n");
+defined('DEFAULT_SPAN_TEXT') || define('DEFAULT_SPAN_TEXT', ' ');
 
+# other
 define('HDOM_TYPE_ELEMENT', 1);
 define('HDOM_TYPE_COMMENT', 2);
 define('HDOM_TYPE_TEXT', 3);
@@ -42,13 +48,9 @@ define('HDOM_INFO_TEXT', 4);
 define('HDOM_INFO_INNER', 5);
 define('HDOM_INFO_OUTER', 6);
 define('HDOM_INFO_ENDSPACE', 7);
-
-defined('DEFAULT_TARGET_CHARSET') || define('DEFAULT_TARGET_CHARSET', 'UTF-8');
-defined('DEFAULT_BR_TEXT') || define('DEFAULT_BR_TEXT', "\r\n");
-defined('DEFAULT_SPAN_TEXT') || define('DEFAULT_SPAN_TEXT', ' ');
-defined('MAX_FILE_SIZE') || define('MAX_FILE_SIZE', 600000);
 define('HDOM_SMARTY_AS_TEXT', 1);
 
+# functions
 function file_get_html(
 	$url,
 	$use_include_path = false,
@@ -62,7 +64,7 @@ function file_get_html(
 	$defaultBRText = DEFAULT_BR_TEXT,
 	$defaultSpanText = DEFAULT_SPAN_TEXT)
 {
-	if($maxLen <= 0) { $maxLen = MAX_FILE_SIZE; }
+	if($maxLen <= 0) { $maxLen = FVM_MAX_FILE_SIZE; }
 
 	$dom = new simple_html_dom(
 		null,
@@ -114,7 +116,7 @@ function str_get_html(
 		$defaultSpanText
 	);
 
-	if (empty($str) || strlen($str) > MAX_FILE_SIZE) {
+	if (empty($str) || strlen($str) > FVM_MAX_FILE_SIZE) {
 		$dom->clear();
 		return false;
 	}

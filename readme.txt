@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.7
 Requires PHP: 5.6
-Stable tag: 3.0.2
+Stable tag: 3.0.3
 Tested up to: 5.6
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -30,6 +30,9 @@ I can offer you aditional `custom made` optimization on top of this plugin. If y
 *	Purge all caches on a network site: `wp --url=blog.example.com fvm purge`
 *	Purge all caches on the entire network (linux): `wp site list --field=url | xargs -n1 -I % wp --url=% fvm purge`
 
+= How to add your own critical path ? =
+You can create a style tag, with an ID equal to "critical-path" ex: `<style id="critical-path"> your code </style>` anywhere on the header and FVM will move it to before the CSS merged files.
+
 
 == Installation ==
 
@@ -51,6 +54,11 @@ Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requir
 
 
 == Changelog ==
+
+= 3.0.3 [2020.12.29] =
+* Prevent minification on XML content that do not trigger WordPress conditionals
+* Added support for critical path positioning before the CSS files when Async mode is enabled
+* Minor bugfixes
 
 = 3.0.2 [2020.12.29] =
 * Added option to preserve settings on uninstall

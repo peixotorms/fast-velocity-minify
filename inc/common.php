@@ -754,11 +754,12 @@ function fvm_save_log($arr) {
 
 
 # try to open the file from the disk, before downloading
-# try to open the file from the disk, before downloading
 function fvm_maybe_download($url) {
 	
 	# must have
-	if(is_null($url) || empty($url)) { return false; }
+	if(is_null($url) || empty($url)) { 
+		return array('error'=> __( 'Invalid URL', 'fast-velocity-minify' ));
+	}
 	
 	# get domain
 	global $fvm_urls;
@@ -772,7 +773,12 @@ function fvm_maybe_download($url) {
 		
 		# did it work?
 		if (file_exists($f)) {
-			return array('content'=>file_get_contents($f), 'src'=>'Disk');
+			
+			# check contents
+			$code = file_get_contents($f);
+			if(fvm_not_php_html($code)) {
+				return array('content'=>$code, 'src'=>'Disk');
+			}
 		}
 	}
 
@@ -990,9 +996,18 @@ function fvm_minify_microdata($data) {
 
 # check for php or html, skip if found
 function fvm_not_php_html($code) {
-	if((strtolower(substr($code, 0, 2)) != "<?" && stripos($code, "<?php") === false) || strtolower(substr($code, 0, 9)) != "<!doctype") {
+	
+	# return early if not html
+	$code = trim($code);
+	$a = '<!doctype';
+	$b = '<html';
+	$c = '<?xml';
+	$d = '<?php';
+	
+	if ( strcasecmp(substr($code, 0, strlen($a)), $a) != 0 && strcasecmp(substr($code, 0, strlen($b)), $b) != 0 && strcasecmp(substr($code, 0, strlen($c)), $c) != 0 && strcasecmp(substr($code, 0, strlen($d)), $d) != 0 ) {
 		return true;
 	}
+	
 	return false;
 }
 

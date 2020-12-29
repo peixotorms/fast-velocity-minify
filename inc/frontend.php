@@ -48,7 +48,16 @@ function fvm_process_page($html) {
 	
 	# can process minification?
 	if(fvm_can_minify()) {
-				
+		
+		# return early if not html
+		$html = trim($html);
+		$a = '<!doctype';
+		$b = '<html';
+		
+		if ( strcasecmp(substr($html, 0, strlen($a)), $a) != 0 && strcasecmp(substr($html, 0, strlen($b)), $b) != 0 ) {
+			return $html;
+		}
+						
 		# defaults
 		$tvers = get_option('fvm_last_cache_update', '0');
 		$now = time();
@@ -74,6 +83,7 @@ function fvm_process_page($html) {
 			# defaults
 			$fvm_styles = array();
 			$fvm_styles_log = array();
+			$critical_path = array();
 			$enable_css_minification = true;
 			
 			# exclude styles and link tags inside scripts, no scripts or html comments
@@ -238,7 +248,7 @@ function fvm_process_page($html) {
 					$css = '';
 					
 					# get minification settings for files
-					if(isset($fvm_settings['css']['min_disable']) && $fvm_settings['css']['min_disable'] == '1') {
+					if(isset($fvm_settings['css']['min_disable']) && $fvm_settings['css']['min_disable'] == true) {
 						$enable_css_minification = true;
 					}
 					
@@ -279,6 +289,14 @@ function fvm_process_page($html) {
 						}
 					}
 					
+					# critical path needs to come before the CSS file
+					if(isset($fvm_settings['css']['async']) && $fvm_settings['css']['async'] == true) {
+						if(isset($tag->id) && $tag->id == 'critical-path') {
+							$critical_path[] = $tag->outertext;
+							$tag->outertext = '';
+						}
+					}
+										
 					# trim code
 					$css = trim($css);
 					
@@ -615,39 +633,44 @@ function fvm_process_page($html) {
 												
 												# contents
 												$js = $ddl['content'];
-																
+																								
 												# minify, save and wrap
 												$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
-															
-												# try catch
-												$js = fvm_try_catch_wrap($js);
-												
-												# developers filter
-												$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
-															
+																								
 												# quick integrity check
 												if(!empty($js) && $js != false) {
+												
+													# try catch
+													$js = fvm_try_catch_wrap($js);
+													
+													# developers filter
+													$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
 																
 													# execution time in ms, size in bytes
 													$fs = strlen($js);
 													$ur = str_replace($fvm_urls['wp_home'], '', $href);
 													$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur));
-																
+																	
 													# save
 													fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'js', 'content'=>$js, 'meta'=>$tkey_meta));	
-																
+													
 												}
 											}
 										}
-													
-										# collect and mark as done for html removal
-										$scripts_header[$tkey] = $js;
-										$scripts_header_log[$tkey] = $tkey;
+
+										# processed successfully?
+										if ($js !== false) {
 										
-										# mark as processed, unset and break inner loop
-										$tag->outertext = '';
-										unset($allscripts[$k]);
-										continue 2;
+											# collect and mark as done for html removal
+											$scripts_header[$tkey] = $js;
+											$scripts_header_log[$tkey] = $tkey;
+											
+											# mark as processed, unset and break inner loop
+											$tag->outertext = '';
+											unset($allscripts[$k]);
+											continue 2;
+										
+										}
 										
 									} 
 								}
@@ -680,15 +703,15 @@ function fvm_process_page($html) {
 												# minify, save and wrap
 												$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
 															
-												# try catch
-												$js = fvm_try_catch_wrap($js);
-												
-												# developers filter
-												$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
-															
 												# quick integrity check
 												if(!empty($js) && $js != false) {
-																
+													
+													# try catch
+													$js = fvm_try_catch_wrap($js);
+												
+													# developers filter
+													$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
+																													
 													# execution time in ms, size in bytes
 													$fs = strlen($js);
 													$ur = str_replace($fvm_urls['wp_home'], '', $href);
@@ -700,15 +723,20 @@ function fvm_process_page($html) {
 												}
 											}
 										}
-													
-										# collect and mark as done for html removal
-										$scripts_footer[$tkey] = $js;
-										$scripts_footer_log[$tkey] = $tkey;
 										
-										# mark as processed, unset and break inner loop
-										$tag->outertext = '';
-										unset($allscripts[$k]);
-										continue 2;
+										# processed successfully?
+										if ($js !== false) {
+													
+											# collect and mark as done for html removal
+											$scripts_footer[$tkey] = $js;
+											$scripts_footer_log[$tkey] = $tkey;
+											
+											# mark as processed, unset and break inner loop
+											$tag->outertext = '';
+											unset($allscripts[$k]);
+											continue 2;
+											
+										}
 										
 									} 
 								}
@@ -756,7 +784,7 @@ function fvm_process_page($html) {
 				
 				# preload and save for html implementation (with priority order prefix)
 				$htmlpreloader['c_'.$fheader_url] = '<link rel="preload" href="'.$fheader_url.'" as="script" />';
-				$htmljscodeheader['c_'.$js_header_uid] = "<script data-cfasync='false' src='".$fheader_url."'></script>";
+				$htmljscodeheader['c_'.$js_header_uid] = '<script data-cfasync="false" src="'.$fheader_url.'"></script>';
 				
 			}
 			
@@ -795,7 +823,7 @@ function fvm_process_page($html) {
 						
 				# preload and save for html implementation (with priority order prefix)
 				$htmlpreloader['d_'.$ffooter_url] = '<link rel="preload" href="'.$ffooter_url.'" as="script" />';
-				$htmljscodedefer['d_'.$js_ffooter_uid] = "<script defer src='".$ffooter_url."'></script>";
+				$htmljscodedefer['d_'.$js_ffooter_uid] = '<script data-cfasync="false" defer src="'.$ffooter_url.'"></script>';
 						
 			}
 
@@ -843,7 +871,12 @@ function fvm_process_page($html) {
 		# add preload headers
 		if(is_array($htmlpreloader)) {
 			ksort($htmlpreloader); # priority
-			$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $htmlpreloader), $hm);
+			$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $htmlpreloader).'<!-- h_preheader -->', $hm);
+		}
+
+		# add critical path
+		if(is_array($critical_path) && count($critical_path) > 0) {
+			$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $critical_path).'<!-- h_preheader -->', $hm);
 		}		
 			
 		# add stylesheets
