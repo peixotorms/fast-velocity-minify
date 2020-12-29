@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.7
 Requires PHP: 5.6
-Stable tag: 3.0.1
+Stable tag: 3.0.2
 Tested up to: 5.6
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -51,6 +51,14 @@ Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requir
 
 
 == Changelog ==
+
+= 3.0.2 [2020.12.29] =
+* Added option to preserve settings on uninstall
+* Added option to inline all CSS (merging is still the recommended method)
+* Added option to force HTTPS on the generated cache file urls
+* Added an ignore list to the JS section (also imported from FVM 2 settings)
+* Improved compatibility with FVM 2 (you still need to specify what JS paths you want to merge)
+* Preserve the old FVM 2 settings on the database (will be removed on version 3.1)
 
 = 3.0.1 [2020.12.27] =
 * Added initial translation support under the "fast-velocity-minify" text domain.

@@ -455,9 +455,17 @@ register_uninstall_hook($fvm_var_file, 'fvm_plugin_uninstall');
 function fvm_plugin_uninstall() {
 	global $wpdb, $fvm_settings, $fvm_cache_paths;
 	
-	# remove options and tables
-	$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_settings'");
-	$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_last_cache_update'");
+	# fetch settings on wp-cli
+	if(is_null($fvm_settings)) { $fvm_settings = fvm_get_settings(); }
+	if(is_null($fvm_cache_paths)) { $fvm_cache_paths = fvm_cachepath(); }
+	
+	# remove settings, unless disabled
+	if(!isset($fvm_settings['global']['preserve_settings']) || ( isset($fvm_settings['global']['preserve_settings']) && $fvm_settings['global']['preserve_settings'] != true)) {		
+		$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_settings'");
+		$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_last_cache_update'");
+	}
+	
+	# remove cache
 	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_cache");
 	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_logs");
 	

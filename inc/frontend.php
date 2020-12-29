@@ -207,13 +207,25 @@ function fvm_process_page($html) {
 						}
 					}
 					
-					# success, get final contents to array
+					
+					# success
 					if($css !== false) {
-						$fvm_styles[$media][] = $css;
-						$fvm_styles_log[$media][] = $tkey;
-						$tag->outertext = '';
-						unset($allcss[$k]);
-						continue;
+						
+						# inline all css
+						if(isset($fvm_settings['css']['inline-all']) && $fvm_settings['css']['inline-all'] == true) {
+							$mt = ''; if(isset($tag->media)) { $mt = ' media="'.$tag->media.'"'; }
+							$tag->outertext = '<style type="text/css"'.$mt.'>'.$css.'</style>';
+							unset($allcss[$k]);
+							continue;
+						} else {
+							# collect for merging
+							$fvm_styles[$media][] = $css;
+							$fvm_styles_log[$media][] = $tkey;
+							$tag->outertext = '';
+							unset($allcss[$k]);
+							continue;
+						}
+					
 					}
 				
 				}
@@ -527,14 +539,24 @@ function fvm_process_page($html) {
 							}
 							# jquery migrate 3
 							if(stripos($tag->src, '/jquery-migrate.') !== false || stripos($tag->src, '/jquery-migrate-') !== false) { $href = 'https://cdnjs.cloudflare.com/ajax/libs/jquery-migrate/3.3.1/jquery-migrate.min.js'; }
-						}			
-						
+						}
 						
 						# get minification settings for files
 						if(isset($fvm_settings['js']['min_disable']) && $fvm_settings['js']['min_disable'] == true) {
 							$enable_js_minification = false;
 						}
 						
+						# ignore list, leave these alone
+						if(isset($fvm_settings['js']['ignore']) && !empty($fvm_settings['js']['ignore'])) {
+							$arr = fvm_string_toarray($fvm_settings['js']['ignore']);
+							if(is_array($arr) && count($arr) > 0) {
+								foreach ($arr as $e) { 
+									if(stripos($tag->src, $e) !== false) {
+										continue 2;
+									} 
+								}
+							}
+						}				
 						
 						# Delay third party scripts and tracking codes
 						# uses PHP stripos against the script src, if it's async or deferred

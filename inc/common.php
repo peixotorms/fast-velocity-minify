@@ -107,12 +107,22 @@ function fvm_cachepath() {
 	if(!defined('WP_CONTENT_DIR')) { return false; }
 	if(!defined('WP_CONTENT_URL')) { return false; }
 	
+	# to var
+	$wp_content_dir = WP_CONTENT_DIR;
+	$wp_content_url = WP_CONTENT_URL;
+	
+	# globals
 	global $fvm_settings;
+	
+	# force https option
+	if(isset($fvm_settings['global']['force-ssl']) && $fvm_settings['global']['force-ssl'] == true) {		
+		$wp_content_url = str_ireplace('http:', 'https:', $wp_content_url);
+	}
 
 	# define cache directory
-	$cache_dir    = WP_CONTENT_DIR . DIRECTORY_SEPARATOR . 'cache';
+	$cache_dir         = $wp_content_dir . DIRECTORY_SEPARATOR . 'cache';
 	$cache_base_dir    = $cache_dir . DIRECTORY_SEPARATOR .'fvm';
-	$cache_base_dirurl = WP_CONTENT_URL . '/cache/fvm';
+	$cache_base_dirurl = $wp_content_url . '/cache/fvm';
 	
 	# use alternative directory?
 	if(isset($fvm_settings['cache']['path']) && !empty($fvm_settings['cache']['path']) && isset($fvm_settings['cache']['url']) && !empty($fvm_settings['cache']['url']) && is_dir($fvm_settings['cache']['path'])) {
@@ -503,38 +513,10 @@ function fvm_can_minify() {
 
 # create a directory, recursively
 function fvm_create_dir($d) {
-	
-	# must have
-	if(!defined('WP_CONTENT_DIR')) { return false; }
-	
-	# use alternative directory?
-	if(isset($fvm_settings['cache']['path']) && !empty($fvm_settings['cache']['path']) && isset($fvm_settings['cache']['url']) && !empty($fvm_settings['cache']['url']) && is_dir($fvm_settings['cache']['path'])) {
-		$cache_dir         = rtrim($fvm_settings['cache']['path'], '/');
-		$cache_base_dir    = $cache_dir . DIRECTORY_SEPARATOR .'fvm';
-		$cache_base_dirurl = rtrim($fvm_settings['cache']['url'], '/') . '/fvm';
-	}
-	
-	
-	# get permissions from parent directory, or default to 777
-	$ch = 0777;
-	$parent = dirname($d);
-	if(is_dir($parent) && function_exists('stat') && fvm_function_available('stat')) {
-		if ($stat = @stat($parent)) { $ch = $stat['mode'] & 0007777; }
-	}
-	
+
 	# create recursively
-	if(!is_dir($d)) {
-		if ( @mkdir($d, $ch, true) ) {
-			if ( $ch != ($ch & ~umask()) ) {
-				$p = explode(DIRECTORY_SEPARATOR, substr($d, strlen(dirname($d)) + 1 ));
-					for ($i = 1, $c = count($p ); $i <= $c; $i++) {
-						@chmod(dirname($d) . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, array_slice($p, 0, $i)), $ch);
-				}
-			}
-		} else {
-			# fallback
-			wp_mkdir_p($d);
-		}
+	if(!is_dir($d) && function_exists('wp_mkdir_p')) {
+		wp_mkdir_p($d);
 	}
 	
 	return true;
@@ -692,6 +674,9 @@ function fvm_get_default_settings($fvm_settings) {
 		
 		# initialize
 		$fvm_settings = array();
+		
+		# global
+		$fvm_settings['global']['preserve_settings'] = 1;		
 		
 		# html
 		$fvm_settings['html']['enable'] = 1;

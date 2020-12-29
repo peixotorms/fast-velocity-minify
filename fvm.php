@@ -6,7 +6,7 @@ Description: Improve your speed score on GTmetrix, Pingdom Tools and Google Page
 Author: Raul Peixoto
 Author URI: http://fastvelocity.com
 Text Domain: fast-velocity-minify
-Version: 3.0.1
+Version: 3.0.2
 License: GPL2
 
 ------------------------------------------------------------------------
@@ -39,8 +39,8 @@ $fvm_var_basename = plugin_basename($fvm_var_file);                 # pluginname
 $fvm_var_dir_path = plugin_dir_path($fvm_var_file);                 # /home/path/plugins/pluginname/
 $fvm_var_url_path = plugins_url(dirname($fvm_var_basename)) . '/';  # https://example.com/wp-content/plugins/pluginname/
 $fvm_var_plugin_version = get_file_data($fvm_var_file, array('Version' => 'Version'), false)['Version'];
-$fvm_var_inc_dir = $fvm_var_dir_path . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR;  # /home/path/plugins/pluginname/inc/
-$fvm_var_inc_lib = $fvm_var_dir_path . DIRECTORY_SEPARATOR . 'libs' . DIRECTORY_SEPARATOR; # /home/path/plugins/pluginname/libs/
+$fvm_var_inc_dir = $fvm_var_dir_path . 'inc' . DIRECTORY_SEPARATOR;  # /home/path/plugins/pluginname/inc/
+$fvm_var_inc_lib = $fvm_var_dir_path . 'libs' . DIRECTORY_SEPARATOR; # /home/path/plugins/pluginname/libs/
 
 # global functions for backend, frontend, ajax, etc
 require_once($fvm_var_inc_dir . 'common.php');
