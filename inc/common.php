@@ -787,11 +787,22 @@ function fvm_maybe_download($url) {
 	# this useragent is needed for google fonts (woff files only + hinted fonts)
 	$uagent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586';
 
-	# cache buster
-	$query = 'cache='.time();
+	# parse uri path
 	$parsedUrl = parse_url($url);
-	if ($parsedUrl['path'] === null) { $url .= '/'; }
-	if ($parsedUrl['query'] === null) { $separator = '?'; } else { $separator = '&'; }
+	if (!isset($parsedUrl['path']) || (isset($parsedUrl['path']) && $parsedUrl['path'] === null)) { 
+		$url .= '/'; 
+	}
+	
+	# cache buster
+	$query = 'nocache='.time();
+	$separator = '&'; 
+	if (isset($parsedUrl['query'])) {
+		if ($parsedUrl['query'] === null) { 
+			$separator = '?'; 
+		}
+	}
+		
+	# final url
 	$url .= $separator.$query;
 
 	# fetch via wordpress functions
@@ -1047,6 +1058,8 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 			foreach($matches[1] as $a) { $b = trim($a); if($b != $a) { $css = str_replace($a, $b, $css); } }
 			$css = preg_replace("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"#])(.+?)['\"]?\s*\)/ui", "url(".dirname($url)."/$1)", $css);	
 		}
+		
+		
 	
 		# minify string with relative urls
 		if($min) {
@@ -1056,6 +1069,22 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 		# add font-display for google fonts and fontawesome
 		# https://developers.google.com/web/updates/2016/02/font-display
 		$css = str_ireplace('font-family:', 'font-display:block;font-family:', $css);
+		
+		# make relative urls when possible
+		global $fvm_urls;
+		$bgimgs = array();
+		preg_match_all ('/url\s*\((\s*[\'"]?(http)(s|:).+[\'"]?\s*)\)/Uui', $css, $bgimgs);
+		if(isset($bgimgs[1]) && is_array($bgimgs[1])) {
+			foreach($bgimgs[1] as $img) {
+				if(substr($img, 0, strlen($fvm_urls['wp_home'])) == $fvm_urls['wp_home']) {
+					$pos = strpos($img, $fvm_urls['wp_home']);
+					if ($pos !== false) {
+						$relimg = substr_replace($img, '', $pos, strlen($fvm_urls['wp_home']));
+						$css = str_replace($img, $relimg, $css);
+					}
+				}
+			}
+		}		
 		
 		# return css
 		return trim($css);
@@ -1112,21 +1141,10 @@ function fvm_minify_css_string($css) {
 	# return early if empty
 	if(empty($css) || $css == false) { return $css; }
 	
-	# get domain
-	global $fvm_urls;
-	
 	# minify	
 	$minifier = new FVM\MatthiasMullie\Minify\CSS($css);
 	$minifier->setMaxImportSize(10); # embed assets up to 10 Kb (default 5Kb) - processes gif, png, jpg, jpeg, svg & woff
 	$min = $minifier->minify();
-
-	# make relative urls
-	$min = str_replace('http://'.$fvm_urls['wp_domain'], '', $min);
-	$min = str_replace('https://'.$fvm_urls['wp_domain'], '', $min);
-	$min = str_replace('//'.$fvm_urls['wp_domain'], '', $min);	
-	$min = str_replace('http://'.str_ireplace('www.', '', $fvm_urls['wp_domain']), '', $min);
-	$min = str_replace('https://'.str_ireplace('www.', '', $fvm_urls['wp_domain']), '', $min);
-	$min = str_replace('//'.str_ireplace('www.', '', $fvm_urls['wp_domain']), '', $min);	
 		
 	# return
 	if($min != false) { 

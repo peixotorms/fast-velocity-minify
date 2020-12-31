@@ -174,8 +174,8 @@
 <p class="fvm-bold-green fvm-rowintro"><?php _e( 'Select your options below', 'fast-velocity-minify' ); ?></p>
 
 <fieldset>
-<label for="fvm_settings_css_enable">
-<input name="fvm_settings[js][enable]" type="checkbox" id="fvm_settings_css_enable" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'js', 'enable')); ?>>
+<label for="fvm_settings_js_enable">
+<input name="fvm_settings[js][enable]" type="checkbox" id="fvm_settings_js_enable" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'js', 'enable')); ?>>
 <?php _e( 'Enable JS Processing', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will enable processing for the settings below', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 

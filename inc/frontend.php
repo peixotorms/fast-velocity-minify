@@ -14,7 +14,6 @@ include_once($fvm_var_inc_lib . DIRECTORY_SEPARATOR . 'raisermin' . DIRECTORY_SE
 
 # php simple html
 # https://sourceforge.net/projects/simplehtmldom/
-define('MAX_FILE_SIZE', 2000000); # Process HTML up to 2 Mb
 include_once($fvm_var_inc_lib . DIRECTORY_SEPARATOR . 'simplehtmldom' . DIRECTORY_SEPARATOR . 'simple_html_dom.php');
 
 # PHP Minify [1.3.60] for CSS minification only
@@ -170,7 +169,7 @@ function fvm_process_page($html) {
 					
 					# get minification settings for files
 					if(isset($fvm_settings['css']['min_disable']) && $fvm_settings['css']['min_disable'] == '1') {
-						$enable_css_minification = true;
+						$enable_css_minification = false;
 					}					
 					
 					# force minification on google fonts
@@ -869,34 +868,44 @@ function fvm_process_page($html) {
 		}
 
 		# add preload headers
-		if(is_array($htmlpreloader)) {
-			ksort($htmlpreloader); # priority
-			$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $htmlpreloader).'<!-- h_preheader -->', $hm);
+		if(isset($htmlpreloader)) {
+			if(is_array($htmlpreloader)) {
+				ksort($htmlpreloader); # priority
+				$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $htmlpreloader).'<!-- h_preheader -->', $hm);
+			}
 		}
-
+		
 		# add critical path
-		if(is_array($critical_path) && count($critical_path) > 0) {
-			$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $critical_path).'<!-- h_preheader -->', $hm);
-		}		
-			
+		if(isset($critical_path)) {
+			if(is_array($critical_path) && count($critical_path) > 0) {
+				$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $critical_path).'<!-- h_preheader -->', $hm);
+			}		
+		}
+		
 		# add stylesheets
-		if(is_array($htmlcssheader) && count($htmlcssheader) > 0) {
-			ksort($htmlcssheader); # priority
-			$hm = str_replace('<!-- h_cssheader -->', implode(PHP_EOL, $htmlcssheader).'<!-- h_cssheader -->', $hm);
+		if(isset($htmlcssheader)) {
+			if(is_array($htmlcssheader) && count($htmlcssheader) > 0) {
+				ksort($htmlcssheader); # priority
+				$hm = str_replace('<!-- h_cssheader -->', implode(PHP_EOL, $htmlcssheader).'<!-- h_cssheader -->', $hm);
+			}
 		}
 		
 		# add header scripts
-		if(is_array($htmljscodeheader) && count($htmljscodeheader) > 0) {
-			ksort($htmljscodeheader); # priority
-			$hm = str_replace('<!-- h_jsheader -->', implode(PHP_EOL, $htmljscodeheader).'<!-- h_jsheader -->', $hm);
+		if(isset($htmljscodeheader)) {
+			if(is_array($htmljscodeheader) && count($htmljscodeheader) > 0) {
+				ksort($htmljscodeheader); # priority
+				$hm = str_replace('<!-- h_jsheader -->', implode(PHP_EOL, $htmljscodeheader).'<!-- h_jsheader -->', $hm);
+			}
 		}
-			
+		
 		# add defer scripts
-		if(is_array($htmljscodedefer) && count($htmljscodedefer) > 0) {
-			ksort($htmljscodedefer); # priority
-			$hm = str_replace('<!-- h_jsheader -->', implode(PHP_EOL, $htmljscodedefer), $hm);
+		if(isset($htmljscodedefer)) {
+			if(is_array($htmljscodedefer) && count($htmljscodedefer) > 0) {
+				ksort($htmljscodedefer); # priority
+				$hm = str_replace('<!-- h_jsheader -->', implode(PHP_EOL, $htmljscodedefer), $hm);
+			}
 		}
-			
+		
 		# cleanup leftover markers
 		$hm = str_replace(
 			  array('<!-- h_preheader -->', '<!-- h_header_function -->', '<!-- h_cssheader -->', '<!-- h_jsheader -->'), '', $hm); 
@@ -927,6 +936,4 @@ function fvm_process_page($html) {
 	return $html;
 	
 }
-
-
 
