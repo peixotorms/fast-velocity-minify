@@ -184,7 +184,7 @@ function fvm_purge_minification() {
 	if(is_null($fvm_cache_paths)) { $fvm_cache_paths = fvm_cachepath(); }
 		
 	# purge html directory?
-	if(isset($fvm_cache_paths['cache_dir_min']) && is_dir($fvm_cache_paths['cache_dir_min']) && is_writable($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
+	if(isset($fvm_cache_paths['cache_dir_min']) && is_dir($fvm_cache_paths['cache_dir_min']) && is_writable($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], DIRECTORY_SEPARATOR . 'fvm') !== false) {
 		
 		# purge css/js files instantly
 		if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
@@ -208,7 +208,7 @@ function fvm_purge_minification() {
 # purge minified files right now
 function fvm_purge_minification_now() {
 	global $fvm_cache_paths;
-	if(isset($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
+	if(isset($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], DIRECTORY_SEPARATOR . 'fvm') !== false) {
 		$result = fvm_rrmdir($fvm_cache_paths['cache_dir_min']);
 		return $result;
 	} else {
@@ -219,11 +219,11 @@ function fvm_purge_minification_now() {
 # purge expired minification files only
 function fvm_purge_minification_expired() {
 	global $fvm_cache_paths;
-	if(isset($fvm_cache_paths['cache_dir_min']) && !empty($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
+	if(isset($fvm_cache_paths['cache_dir_min']) && !empty($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], DIRECTORY_SEPARATOR . 'fvm') !== false) {
 		
 		# must be on the allowed path
 		$wd = $fvm_cache_paths['cache_dir_min'];
-		if(empty($wd) || !defined('WP_CONTENT_DIR') || stripos($wd, '/fvm') === false) {
+		if(empty($wd) || !defined('WP_CONTENT_DIR') || stripos($wd, DIRECTORY_SEPARATOR . 'fvm') === false) {
 			return __( 'Requested purge path is not allowed!', 'fast-velocity-minify' );
 		}
 		
@@ -573,7 +573,7 @@ function fvm_cache_increment() {
 function fvm_rrmdir($path) {
 
 	# must be on the allowed path
-	if(empty($path) || !defined('WP_CONTENT_DIR') || stripos($path, '/fvm') === false) {
+	if(empty($path) || !defined('WP_CONTENT_DIR') || stripos($path, DIRECTORY_SEPARATOR . 'fvm') === false) {
 		return __( 'Requested purge path is not allowed!', 'fast-velocity-minify' );
 	}
 	
@@ -604,7 +604,7 @@ function fvm_rrmdir($path) {
 function fvm_fix_permission_bits($file){
 
 	# must be on the allowed path
-	if(empty($file) || !defined('WP_CONTENT_DIR') || stripos($file, '/fvm') === false) {
+	if(empty($file) || !defined('WP_CONTENT_DIR') || stripos($file, DIRECTORY_SEPARATOR . 'fvm') === false) {
 		return __( 'Requested path is not allowed!', 'fast-velocity-minify' );
 	}
 	
@@ -827,7 +827,7 @@ function fvm_save_file($file, $content) {
 	$path = dirname($file);
 				
 	# must be on the allowed path
-	if(empty($path) || !defined('WP_CONTENT_DIR') || stripos($path, '/fvm') === false) {
+	if(empty($path) || !defined('WP_CONTENT_DIR') || stripos($path, DIRECTORY_SEPARATOR . 'fvm') === false) {
 		return __( 'Requested path is not allowed!', 'fast-velocity-minify' );
 	}
 											

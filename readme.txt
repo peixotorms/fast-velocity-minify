@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.7
 Requires PHP: 5.6
-Stable tag: 3.0.4
+Stable tag: 3.0.5
 Tested up to: 5.6
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
