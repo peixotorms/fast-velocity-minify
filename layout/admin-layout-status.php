@@ -1,7 +1,7 @@
 <?php 
 
 # server info
-if( $at == 'status' ) { 
+if( $active_tab == 'status' ) { 
 ?>
 <div class="fvm-wrapper">
 

@@ -1071,7 +1071,7 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 				preg_match_all('/\{{1}(.*)\}{1}/usi', $ff, $mff2);
 				if(isset($mff2[1]) && is_array($mff2[1]) && isset($mff2[1][0])) {
 					if(stripos($mff2[1][0], 'font-display:') === false) {
-						$css = str_replace($mff2[1][0], 'font-display:block;'.$mff2[1][0], $mff2[1][0]);
+						$css = str_replace($mff2[1][0], 'font-display:block;'.$mff2[1][0], $css);
 					}
 				}
 			}

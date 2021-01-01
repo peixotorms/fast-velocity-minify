@@ -4,14 +4,14 @@
 
 <?php
 # get active tab, set default
-$at = isset($_GET['tab']) ? $_GET['tab'] : 'settings';
+$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'settings';
 ?>
 
 <h2 class="nav-tab-wrapper wp-clearfix">
-	<a href="?page=fvm" class="nav-tab  <?php echo $at == 'settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Settings', 'fast-velocity-minify' ); ?></a>
-	<a href="?page=fvm&tab=status" class="nav-tab <?php echo $at == 'status' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Status', 'fast-velocity-minify' ); ?></a> 
-	<?php /*<a href="?page=fvm&tab=upgrade" class="nav-tab <?php echo $at == 'upgrade' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Upgrade', 'fast-velocity-minify' ); ?></a>*/ ?>
-	<a href="?page=fvm&tab=help" class="nav-tab <?php echo $at == 'help' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Help', 'fast-velocity-minify' ); ?></a>
+	<a href="?page=fvm" class="nav-tab  <?php echo $active_tab == 'settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Settings', 'fast-velocity-minify' ); ?></a>
+	<a href="?page=fvm&tab=status" class="nav-tab <?php echo $active_tab == 'status' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Status', 'fast-velocity-minify' ); ?></a> 
+	<?php /*<a href="?page=fvm&tab=upgrade" class="nav-tab <?php echo $active_tab == 'upgrade' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Upgrade', 'fast-velocity-minify' ); ?></a>*/ ?>
+	<a href="?page=fvm&tab=help" class="nav-tab <?php echo $active_tab == 'help' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Help', 'fast-velocity-minify' ); ?></a>
 </h2>
 
 <div id="fvm">

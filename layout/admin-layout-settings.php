@@ -1,4 +1,4 @@
-<?php if( $at == 'settings' ) { ?>
+<?php if( $active_tab == 'settings' ) { ?>
 <div class="fvm-wrapper">
 
 <form method="post" id="fvm-save-changes">

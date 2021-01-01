@@ -1,4 +1,4 @@
-<?php if( $at == 'upgrade' ) { ?>
+<?php if( $active_tab == 'upgrade' ) { ?>
 
 <div class="fvm-wrapper">
 
