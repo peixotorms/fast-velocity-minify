@@ -765,11 +765,10 @@ function fvm_maybe_download($url) {
 	global $fvm_urls;
 	
 	# check if we can open the file locally first
-	if (stripos($url, $fvm_urls['wp_domain']) !== false && isset($_SERVER['DOCUMENT_ROOT'])) {
+	if (stripos($url, $fvm_urls['wp_domain']) !== false && defined('ABSPATH') && !empty('ABSPATH')) {
 		
-		# file path
-		$f = str_replace(rtrim($fvm_urls['wp_home'], '/'), $_SERVER['DOCUMENT_ROOT'], $url);
-		$f = str_replace('/', DIRECTORY_SEPARATOR, $f);	# windows compatibility
+		# file path + windows compatibility
+		$f = str_replace('/', DIRECTORY_SEPARATOR, str_replace(rtrim($fvm_urls['wp_home'], '/'), ABSPATH, $url));
 		
 		# did it work?
 		if (file_exists($f)) {
@@ -796,11 +795,7 @@ function fvm_maybe_download($url) {
 	# cache buster
 	$query = 'nocache='.time();
 	$separator = '&'; 
-	if (isset($parsedUrl['query'])) {
-		if ($parsedUrl['query'] === null) { 
-			$separator = '?'; 
-		}
-	}
+	if (!isset($parsedUrl['query']) || $parsedUrl['query'] === null) { $separator = '?'; }
 		
 	# final url
 	$url .= $separator.$query;
@@ -1066,9 +1061,21 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 			$css = fvm_minify_css_string($css);
 		}
 		
-		# add font-display for google fonts and fontawesome
+		# add font-display block for all font faces
 		# https://developers.google.com/web/updates/2016/02/font-display
-		$css = str_ireplace('font-family:', 'font-display:block;font-family:', $css);
+		$mff = array();
+		$mff2 = array();
+		preg_match_all('/(\@font-face)([^}]+)(\})/usi', $css, $mff);
+		if(isset($mff[0]) && is_array($mff[0])) {
+			foreach($mff[0] as $ff) {
+				preg_match_all('/\{{1}(.*)\}{1}/usi', $ff, $mff2);
+				if(isset($mff2[1]) && is_array($mff2[1]) && isset($mff2[1][0])) {
+					if(stripos($mff2[1][0], 'font-display:') === false) {
+						$css = str_replace($mff2[1][0], 'font-display:block;'.$mff2[1][0], $mff2[1][0]);
+					}
+				}
+			}
+		}
 		
 		# make relative urls when possible
 		global $fvm_urls;

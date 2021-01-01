@@ -354,7 +354,7 @@ function fvm_process_page($html) {
 					if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 					isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
-							$file_css_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $file_css_url);
+							$file_css_url = str_replace('//'.$fvm_urls['wp_domain'], '//'.$fvm_settings['cdn']['domain'], $file_css_url);
 						}
 					}
 					
@@ -408,7 +408,7 @@ function fvm_process_page($html) {
 					if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 					isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
-							$file_css_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $file_css_url);
+							$file_css_url = str_replace('//'.$fvm_urls['wp_domain'], '//'.$fvm_settings['cdn']['domain'], $file_css_url);
 						}
 					}
 						
@@ -462,7 +462,7 @@ function fvm_process_page($html) {
 			foreach($html->find('script') as $element) {
 				$allscripts[] = $element;
 			}
-			
+				
 			# process all scripts
 			if (is_array($allscripts) && count($allscripts) > 0) {
 				foreach($allscripts as $k=>$tag) {
@@ -762,7 +762,7 @@ function fvm_process_page($html) {
 				if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 				isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 					if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
-						$fheader_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $fheader_url);
+						$fheader_url = str_replace('//'.$fvm_urls['wp_domain'], '//'.$fvm_settings['cdn']['domain'], $fheader_url);
 					}
 				}
 
@@ -800,7 +800,7 @@ function fvm_process_page($html) {
 				if(isset($fvm_settings['cdn']['enable']) && $fvm_settings['cdn']['enable'] == true && 
 				isset($fvm_settings['cdn']['domain']) && !empty($fvm_settings['cdn']['domain'])) {
 					if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
-						$ffooter_url = str_replace('//'.$wpraiser_urls['wp_domain'], '//'.$wpraiser_settings['cdn']['domain'], $ffooter_url);
+						$ffooter_url = str_replace('//'.$fvm_urls['wp_domain'], '//'.$fvm_settings['cdn']['domain'], $ffooter_url);
 
 					}
 				}

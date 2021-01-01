@@ -22,7 +22,7 @@ function fvm_get_generalinfo() {
 	
 	echo'---'. PHP_EOL;
 	echo'SITE INFO:'. PHP_EOL;
-	echo'Site Path:    '. $_SERVER['DOCUMENT_ROOT'] . PHP_EOL;
+	echo'Site Path:    '. ABSPATH . PHP_EOL;
 	echo'Hostname:     '. $_SERVER['SERVER_NAME'] . PHP_EOL;
 	echo'DB Data Size:          '. fvm_format_php_size(fvm_get_mysql_data_usage()) . PHP_EOL;
 	echo'DB Index Size:         '. fvm_format_php_size(fvm_get_mysql_index_usage()) . PHP_EOL;

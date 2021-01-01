@@ -55,6 +55,12 @@ Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requir
 
 == Changelog ==
 
+= 3.0.5 [2021.01.01] =
+* Fixed the cache paths on Windows Servers
+* Fixed incorrect paths on subdirectory sites
+* Fixed the CDN integration not replacing the domain name
+* Fixed CSS font-display replacements
+
 = 3.0.4 [2020.12.31] =
 * Improved compatibility on CSS merging with optimole and similar services
 * Fixed some PHP notices and other minor issues
