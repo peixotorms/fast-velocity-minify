@@ -146,9 +146,9 @@ function fvm_get_updated_field_routines($fvm_settings) {
 	}		
 	# Version 3.0 routines end
 	
-	# Version 3.1 routines start
+	# Version 3.2 routines start
 	if (get_option("fastvelocity_plugin_version") !== false) {
-		if (version_compare($fvm_var_plugin_version, '3.1.0', '>=' )) {
+		if (version_compare($fvm_var_plugin_version, '3.2.0', '>=' )) {
 			
 			# cleanup
 			delete_option('fastvelocity_upgraded');
@@ -194,7 +194,7 @@ function fvm_get_updated_field_routines($fvm_settings) {
 			
 		}
 	}
-	# Version 3.1 routines end
+	# Version 3.2 routines end
 	
 	# return settings array
 	return $fvm_settings;

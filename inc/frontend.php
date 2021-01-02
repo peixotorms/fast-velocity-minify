@@ -165,7 +165,7 @@ function fvm_process_page($html) {
 					$css = '';
 					
 					# make sure we have a complete url
-					$href = fvm_normalize_url($tag->href, $fvm_urls['wp_domain'], $fvm_urls['wp_home']);
+					$href = fvm_normalize_url($tag->href, $fvm_urls['wp_domain'], $fvm_urls['wp_site_url']);
 					
 					# get minification settings for files
 					if(isset($fvm_settings['css']['min_disable']) && $fvm_settings['css']['min_disable'] == '1') {
@@ -206,7 +206,7 @@ function fvm_process_page($html) {
 								
 								# execution time in ms, size in bytes
 								$fs = strlen($css);
-								$ur = str_replace($fvm_urls['wp_home'], '', $href);
+								$ur = str_replace($fvm_urls['wp_site_url'], '', $href);
 								$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur), 'mt'=>$media);
 													
 								# save
@@ -278,7 +278,7 @@ function fvm_process_page($html) {
 						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
 								
 							# scheme + site url
-							$fcdn = str_replace($fvm_urls['wp_domain'], $fvm_settings['cdn']['domain'], $fvm_urls['wp_home']);
+							$fcdn = str_replace($fvm_urls['wp_domain'], $fvm_settings['cdn']['domain'], $fvm_urls['wp_site_url']);
 								
 							# replacements
 							$css = str_ireplace('url(/wp-content/', 'url('.$fcdn.'/wp-content/', $css);
@@ -546,7 +546,7 @@ function fvm_process_page($html) {
 					if(isset($tag->src)) {
 						
 						# make sure we have a complete url
-						$href = fvm_normalize_url($tag->src, $fvm_urls['wp_domain'], $fvm_urls['wp_home']);
+						$href = fvm_normalize_url($tag->src, $fvm_urls['wp_domain'], $fvm_urls['wp_site_url']);
 
 						# upgrade jQuery library and jQuery migrate to version 3
 						if(isset($fvm_settings['js']['jqupgrade']) && $fvm_settings['js']['jqupgrade'] == true) {
@@ -647,7 +647,7 @@ function fvm_process_page($html) {
 																
 													# execution time in ms, size in bytes
 													$fs = strlen($js);
-													$ur = str_replace($fvm_urls['wp_home'], '', $href);
+													$ur = str_replace($fvm_urls['wp_site_url'], '', $href);
 													$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur));
 																	
 													# save
@@ -713,7 +713,7 @@ function fvm_process_page($html) {
 																													
 													# execution time in ms, size in bytes
 													$fs = strlen($js);
-													$ur = str_replace($fvm_urls['wp_home'], '', $href);
+													$ur = str_replace($fvm_urls['wp_site_url'], '', $href);
 													$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur));
 																
 													# save

@@ -418,6 +418,11 @@ function fvm_can_minify() {
 	if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 		return false;
 	}
+	
+	# disable on nocache query string
+	if(isset($_GET["nocache"])) {
+		return false;
+	}
 		
 	# compatibility with DONOTCACHEPAGE
 	if( defined('DONOTCACHEPAGE') && DONOTCACHEPAGE ){ return false; }
@@ -472,11 +477,9 @@ function fvm_can_minify() {
 	}
 	
 	# if there is an url, avoid known static files
-	if(isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['REQUEST_URI'])) {
-		
-		# parse url (path, query)
-		$ruri = str_replace('//', '/', str_replace('..', '', preg_replace( '/[ <>\'\"\r\n\t\(\)]/', '', strtok($_SERVER['REQUEST_URI'], '?'))));
-
+	$ruri = fvm_get_uripath();
+	if($ruri !== false && !empty($ruri)) {
+	
 		# avoid robots.txt and other situations
 		$noext = array('.txt', '.xml', '.map', '.css', '.js', '.png', '.jpeg', '.jpg', '.gif', '.webp', '.ico', '.php', '.htaccess', '.json', '.pdf', '.mp4', '.webm', '.zip', '.sql', '.gz');
 		foreach ($noext as $ext) {
@@ -768,7 +771,7 @@ function fvm_maybe_download($url) {
 	if (stripos($url, $fvm_urls['wp_domain']) !== false && defined('ABSPATH') && !empty('ABSPATH')) {
 		
 		# file path + windows compatibility
-		$f = str_replace('/', DIRECTORY_SEPARATOR, str_replace(rtrim($fvm_urls['wp_home'], '/'), ABSPATH, $url));
+		$f = str_replace('/', DIRECTORY_SEPARATOR, str_replace(rtrim($fvm_urls['wp_site_url'], '/'), ABSPATH, $url));
 		
 		# did it work?
 		if (file_exists($f)) {
@@ -1079,19 +1082,32 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 		
 		# make relative urls when possible
 		global $fvm_urls;
-		$bgimgs = array();
-		preg_match_all ('/url\s*\((\s*[\'"]?(http)(s|:).+[\'"]?\s*)\)/Uui', $css, $bgimgs);
-		if(isset($bgimgs[1]) && is_array($bgimgs[1])) {
-			foreach($bgimgs[1] as $img) {
-				if(substr($img, 0, strlen($fvm_urls['wp_home'])) == $fvm_urls['wp_home']) {
-					$pos = strpos($img, $fvm_urls['wp_home']);
-					if ($pos !== false) {
-						$relimg = substr_replace($img, '', $pos, strlen($fvm_urls['wp_home']));
-						$css = str_replace($img, $relimg, $css);
+		
+		# get root url, preserve subdirectories
+		if(isset($fvm_urls['wp_site_url']) && !empty($fvm_urls['wp_site_url'])) {
+			
+			# parse url and extract domain without uri path
+			$use_url = $fvm_urls['wp_site_url'];
+			$parse = parse_url($use_url);
+			if(isset($parse['path']) && !empty($parse['path']) && $parse['path'] != '/') {
+				$use_url = str_replace(str_replace($use_url, $parse['path'], $use_url), '', $use_url);
+			}
+			
+			# adjust paths
+			$bgimgs = array();
+			preg_match_all ('/url\s*\((\s*[\'"]?(http)(s|:).+[\'"]?\s*)\)/Uui', $css, $bgimgs);
+			if(isset($bgimgs[1]) && is_array($bgimgs[1])) {
+				foreach($bgimgs[1] as $img) {
+					if(substr($img, 0, strlen($use_url)) == $use_url) {
+						$pos = strpos($img, $use_url);
+						if ($pos !== false) {
+							$relimg = substr_replace($img, '', $pos, strlen($use_url));
+							$css = str_replace($img, $relimg, $css);
+						}
 					}
 				}
 			}
-		}		
+		}
 		
 		# return css
 		return trim($css);
@@ -1267,7 +1283,7 @@ function fvm_replace_css_imports($css, $rq=null) {
 			if(!empty($url)) {
 				
 				# make sure we have a complete url
-				$href = fvm_normalize_url($url, $fvm_urls['wp_domain'], $fvm_urls['wp_home']);
+				$href = fvm_normalize_url($url, $fvm_urls['wp_domain'], $fvm_urls['wp_site_url']);
 
 				# download, minify, cache (no ver query string)
 				$tkey = hash('sha1', $href);
@@ -1314,7 +1330,7 @@ function fvm_replace_css_imports($css, $rq=null) {
 							
 						# size in bytes
 						$fs = strlen($subcss);
-						$ur = str_replace($fvm_urls['wp_home'], '', $href);
+						$ur = str_replace($fvm_urls['wp_site_url'], '', $href);
 						$tkey_meta = array('fs'=>$fs, 'url'=>str_replace($fvm_cache_paths['cache_url_min'].'/', '', $ur), 'mt'=>$media);
 								
 						# save
