@@ -768,7 +768,7 @@ function fvm_maybe_download($url) {
 	global $fvm_urls;
 	
 	# check if we can open the file locally first
-	if (stripos($url, $fvm_urls['wp_domain']) !== false && defined('ABSPATH') && !empty('ABSPATH')) {
+	if (stripos($url, $fvm_urls['wp_domain']) !== false && defined('ABSPATH') && !empty('ABSPATH') && substr($url, -4) != '.php') {
 		
 		# file path + windows compatibility
 		$f = str_replace('/', DIRECTORY_SEPARATOR, str_replace(rtrim($fvm_urls['wp_site_url'], '/'), ABSPATH, $url));
@@ -1008,12 +1008,12 @@ function fvm_not_php_html($code) {
 	
 	# return early if not html
 	$code = trim($code);
-	$a = '<!doctype';
-	$b = '<html';
-	$c = '<?xml';
-	$d = '<?php';
-	
-	if ( strcasecmp(substr($code, 0, strlen($a)), $a) != 0 && strcasecmp(substr($code, 0, strlen($b)), $b) != 0 && strcasecmp(substr($code, 0, strlen($c)), $c) != 0 && strcasecmp(substr($code, 0, strlen($d)), $d) != 0 ) {
+	$a = '<!doctype'; # start
+	$b = '<html';     # start
+	$c = '<?xml';     # start
+	$d = '<?php';     # anywhere
+		
+	if ( strcasecmp(substr($code, 0, strlen($a)), $a) != 0 && strcasecmp(substr($code, 0, strlen($b)), $b) != 0 && strcasecmp(substr($code, 0, strlen($c)), $c) != 0 && stripos($code, $d) === false ) {
 		return true;
 	}
 	
@@ -1189,7 +1189,7 @@ function fvm_escape_url_js($str) {
 # try catch wrapper for merged javascript
 function fvm_try_catch_wrap($js, $href=null) {
 	$loc = ''; if(isset($href)) { $loc = '[ Merged: '. $href . ' ] '; }
-	return 'try{'. PHP_EOL . $js . PHP_EOL . '}catch(e){console.error("An error has occurred. '.$loc.'[ "+e.stack+" ]");}';
+	return PHP_EOL . 'try{'. PHP_EOL . $js . PHP_EOL . '}catch(e){console.error("An error has occurred. '.$loc.'[ "+e.stack+" ]");}';
 }
 
 

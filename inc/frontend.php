@@ -432,7 +432,7 @@ function fvm_process_page($html) {
 					if (file_exists($file_css)) {
 						
 						# add file with js							
-						$htmlcssheader['a_'.$css_uid] = '<script data-cfasync="false" id="fvmlpcss">var a;fvmuag()&&((a=document.getElementById("fvmlpcss")).outerHTML='.fvm_escape_url_js("<link rel='stylesheet' href='". $file_css_url . "' media='".$mediatype."' />").');</script>'; # prepend		
+						$htmlcssheader['a_'.$css_uid] = '<script data-cfasync="false" id="fvmlpcss">var fvmft;fvmuag()&&((fvmft=document.getElementById("fvmlpcss")).outerHTML='.fvm_escape_url_js("<link rel='stylesheet' href='". $file_css_url . "' media='".$mediatype."' />").');</script>'; # prepend		
 					
 					}
 						
@@ -640,7 +640,7 @@ function fvm_process_page($html) {
 												if(!empty($js) && $js != false) {
 												
 													# try catch
-													$js = fvm_try_catch_wrap($js);
+													$js = fvm_try_catch_wrap($js, $href);
 													
 													# developers filter
 													$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
@@ -706,7 +706,7 @@ function fvm_process_page($html) {
 												if(!empty($js) && $js != false) {
 													
 													# try catch
-													$js = fvm_try_catch_wrap($js);
+													$js = fvm_try_catch_wrap($js, $href);
 												
 													# developers filter
 													$js = apply_filters( 'fvm_after_download_and_minify_code', $js, 'js');
