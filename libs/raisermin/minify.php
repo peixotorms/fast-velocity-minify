@@ -40,7 +40,6 @@ function fvm_raisermin_js($code){
 	$code = preg_replace('/\n+/', "\n", $code);
 		
 	# process horizontal space
-	$code = preg_replace('/(\h?)(\|\||\&\&|[\{\}\[\]\?:\.;=])(\h?)/ui', '$2', $code);
 	$code = preg_replace('/([\[\]\(\)\{\}\;\<\>])(\h+)([\[\]\(\)\{\}\;\<\>])/ui', '$1 $3', $code);
 	$code = preg_replace('/([\)])(\h?)(\.)/ui', '$1$3', $code);
 	$code = preg_replace('/([\)\?])(\h?)(\.)/ui', '$1$3', $code);

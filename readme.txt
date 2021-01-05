@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.7
 Requires PHP: 5.6
-Stable tag: 3.0.8
+Stable tag: 3.0.9
 Tested up to: 5.6
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -54,6 +54,9 @@ Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requir
 
 
 == Changelog ==
+
+= 3.0.9 [2021.01.04] =
+* Added page caching purging support for Hummingbird and WP-Optimize from FVM
 
 = 3.0.8 [2021.01.02] =
 * Improved compatibility and better detection of dynamic CSS and JS files (files generated with PHP instead of being static)

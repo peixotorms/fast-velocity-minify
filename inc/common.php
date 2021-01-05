@@ -322,13 +322,23 @@ function fvm_purge_others(){
 		return __( 'All caches on <strong>Breeze</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
-
 	# swift
 	if (class_exists("Swift_Performance_Cache")) {
 		Swift_Performance_Cache::clear_all_cache();
 		return __( 'All caches on <strong>Swift Performance</strong> have been purged.', 'fast-velocity-minify' );
 	}
-
+	
+	# Hummingbird
+	if(has_action('wphb_clear_page_cache')) {
+		do_action('wphb_clear_page_cache');
+		return __( 'All caches on <strong>Hummingbird</strong> have been purged.', 'fast-velocity-minify' );
+	}
+	
+	# WP-Optimize
+	if(has_action('wpo_cache_flush')) {
+		do_action('wpo_cache_flush');
+		return __( 'All caches on <strong>WP-Optimize</strong> have been purged.', 'fast-velocity-minify' );
+	}
 
 	# hosting companies
 
@@ -1095,7 +1105,7 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 			
 			# adjust paths
 			$bgimgs = array();
-			preg_match_all ('/url\s*\((\s*[\'"]?(http)(s|:).+[\'"]?\s*)\)/Uui', $css, $bgimgs);
+			preg_match_all ('/url\s*\((\s*[\'"]?(http|\/\/)(s|:).+[\'"]?\s*)\)/Uui', $css, $bgimgs);
 			if(isset($bgimgs[1]) && is_array($bgimgs[1])) {
 				foreach($bgimgs[1] as $img) {
 					if(substr($img, 0, strlen($use_url)) == $use_url) {
