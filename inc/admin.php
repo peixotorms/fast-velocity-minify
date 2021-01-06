@@ -146,7 +146,7 @@ add_filter("plugin_action_links_".$fvm_var_basename, 'fvm_min_settings_link' );
 function fvm_min_settings_link($links) {
 	global $fvm_var_basename;
 	if (is_plugin_active($fvm_var_basename)) { 
-		$settings_link = '<a href="'.admin_url('options-general.php?page=fvm').'">Settings</a>'; 
+		$settings_link = '<a href="'.admin_url('admin.php?page=fvm').'">Settings</a>'; 
 		array_unshift($links, $settings_link); 
 	}
 return $links;
@@ -188,8 +188,16 @@ function fvm_show_admin_notice_from_transient() {
 		if($inf != false && !empty($inf)) {
 			$jsonarr = json_decode($inf, true);
 			if(!is_null($jsonarr) && is_array($jsonarr)){
+				
+				# add all
+				$jsonarr = array_unique($jsonarr);
 				foreach ($jsonarr as $notice) {
-					add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', $notice, 'info' );
+					add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', 'FVM: '.$notice, 'info' );
+				}	
+				
+				# output on other pages
+				if(!isset($_GET['page']) || (isset($_GET['page']) && $_GET['page'] != 'fvm')) {
+					settings_errors( 'fvm_admin_notice' );
 				}
 			}
 			

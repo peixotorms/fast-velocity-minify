@@ -49,11 +49,7 @@ function fvm_process_page($html) {
 	if(fvm_can_minify()) {
 		
 		# return early if not html
-		$html = trim($html);
-		$a = '<!doctype';
-		$b = '<html';
-		
-		if ( strcasecmp(substr($html, 0, strlen($a)), $a) != 0 && strcasecmp(substr($html, 0, strlen($b)), $b) != 0 ) {
+		if(fvm_is_html($html) !== true) {
 			return $html;
 		}
 						

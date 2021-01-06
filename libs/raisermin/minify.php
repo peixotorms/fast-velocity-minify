@@ -74,12 +74,34 @@ function fvm_raisermin_html($html, $xtra) {
 	$allscripts = array();
 	preg_match_all('/\<script(.*?)\<(\s*)\/script(\s*)\>/uis', $html, $allscripts);
 	
-	# replace all scripts and styles with a marker
+	# replace all with a marker
 	if(is_array($allscripts) && isset($allscripts[0]) && count($allscripts[0]) > 0) {
 		foreach ($allscripts[0] as $k=>$v) {
 			$content = str_replace($v, '<!-- SCRIPT '.$k.' -->', $content);
 		}
 	}
+	
+	# get all <code> sections
+	$allcodes = array();
+	preg_match_all('/\<code(.*?)\<(\s*)\/code(\s*)\>/uis', $html, $allcodes);
+	
+	# replace all with a marker
+	if(is_array($allcodes) && isset($allcodes[0]) && count($allcodes[0]) > 0) {
+		foreach ($allcodes[0] as $k=>$v) {
+			$content = str_replace($v, '<!-- CODE '.$k.' -->', $content);
+		}
+	}
+	
+	# get all <pre> sections
+	$allpres = array();
+	preg_match_all('/\<pre(.*?)\<(\s*)\/pre(\s*)\>/uis', $html, $allpres);
+	
+	# replace all with a marker
+	if(is_array($allpres) && isset($allpres[0]) && count($allpres[0]) > 0) {
+		foreach ($allpres[0] as $k=>$v) {
+			$content = str_replace($v, '<!-- PRE '.$k.' -->', $content);
+		}
+	}	
 			
 	# remove line breaks, and colapse two or more white spaces into one
 	$content = preg_replace('/\s+/u', " ", $content);
@@ -131,7 +153,7 @@ function fvm_raisermin_html($html, $xtra) {
 	
 	}
 	
-	# replace markers with scripts and styles			
+	# replace markers for scripts		
 	if(is_array($allscripts) && isset($allscripts[0]) && count($allscripts[0]) > 0) {
 		foreach ($allscripts[0] as $k=>$v) {
 			if($xtra === true) { 
@@ -142,9 +164,30 @@ function fvm_raisermin_html($html, $xtra) {
 		}
 	}
 	
-	
 	# no more than 1 linebreak
 	$content = preg_replace('/\v{2,}/u', PHP_EOL, $content);
+	
+	# replace markers for <code>	
+	if(is_array($allcodes) && isset($allcodes[0]) && count($allcodes[0]) > 0) {
+		foreach ($allcodes[0] as $k=>$v) {
+			if($xtra === true) { 
+				$content = str_replace('<!-- CODE '.$k.' -->',  PHP_EOL . $v . PHP_EOL, $content);
+			} else {
+				$content = str_replace('<!-- CODE '.$k.' -->', $v, $content);
+			}
+		}
+	}
+	
+	# replace markers for <pre>	
+	if(is_array($allpres) && isset($allpres[0]) && count($allpres[0]) > 0) {
+		foreach ($allpres[0] as $k=>$v) {
+			if($xtra === true) { 
+				$content = str_replace('<!-- PRE '.$k.' -->',  PHP_EOL . $v . PHP_EOL, $content);
+			} else {
+				$content = str_replace('<!-- PRE '.$k.' -->', $v, $content);
+			}
+		}
+	}	
 		
 	# save as html, if not empty
 	if(!empty($content)) {

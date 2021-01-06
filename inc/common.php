@@ -30,7 +30,7 @@ function fvm_admintoolbar() {
 			'id'    => 'fvm_submenu_settings',
 			'parent'    => 'fvm_menu', 
 			'title' => __("FVM Settings", 'fvm'),
-			'href'  => admin_url('options-general.php?page=fvm')
+			'href'  => admin_url('admin.php?page=fvm')
 		));
 		
 		/*
@@ -39,7 +39,7 @@ function fvm_admintoolbar() {
 			'id'    => 'fvm_submenu_upgrade',
 			'parent'    => 'fvm_menu', 
 			'title' => __("Upgrade", 'fvm'),
-			'href'  => admin_url('options-general.php?page=fvm&tab=upgrade')
+			'href'  => admin_url('admin.php?page=fvm&tab=upgrade')
 		));
 		*/
 		
@@ -48,7 +48,7 @@ function fvm_admintoolbar() {
 			'id'    => 'fvm_submenu_help',
 			'parent'    => 'fvm_menu', 
 			'title' => __("Help", 'fvm'),
-			'href'  => admin_url('options-general.php?page=fvm&tab=help')
+			'href'  => admin_url('admin.php?page=fvm&tab=help')
 		));
 
 	}
@@ -85,7 +85,7 @@ function fvm_process_cache_purge_request(){
 				if(is_string($others)) { $notices[] = $others; }
 				
 				# save transient for after the redirect
-				if(count($notices) == 0) { $notices[] = __( 'FVM: All Caches are now cleared.', 'fast-velocity-minify' ) . ' ('.date("D, d M Y @ H:i:s e").')'; }
+				if(count($notices) == 0) { $notices[] = __( 'All supported caches have been purged ', 'fast-velocity-minify' ) . ' ('.date("D, d M Y @ H:i:s e").')'; }
 				set_transient( 'fvm_admin_notice', json_encode($notices), 10);
 				
 			}
@@ -424,14 +424,39 @@ function fvm_can_minify() {
 	
 	global $fvm_urls;
 	
+	# must have
+	if(!isset($_SERVER['REQUEST_URI']) || !isset($_SERVER['REQUEST_METHOD'])){
+		return false;
+	}	
+	
 	# only GET requests allowed
 	if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 		return false;
 	}
 	
 	# disable on nocache query string
-	if(isset($_GET["nocache"])) {
-		return false;
+	if (!empty($_SERVER['REQUEST_URI'])) { 
+	
+		$parseurl = parse_url($_SERVER['REQUEST_URI']);
+		if(isset($parseurl["query"]) && !empty($parseurl["query"])) {
+			
+			# parse query string to array
+			$query_string_arr = array(); 
+			parse_str($parseurl["query"], $query_string_arr);
+
+			# specifically allowed query strings
+			$allowed = array('_ga', 'age-verified', 'ao_noptimize', 'cn-reloaded', 'fb_action_ids', 'fb_action_types', 'fb_source', 'fbclid', 'gclid', 'usqp', 'utm_campaign', 'utm_content', 'utm_expid', 'utm_medium', 'utm_source', 'utm_term');
+			
+			foreach ( $allowed as $qs) {
+				if(isset($query_string_arr[$qs])) { unset($query_string_arr[$qs]); }
+			}
+
+			# return false if there are any query strings left
+			if(count($query_string_arr) > 0) {
+				return false;
+			}		
+		}
+		
 	}
 		
 	# compatibility with DONOTCACHEPAGE
@@ -472,9 +497,10 @@ function fvm_can_minify() {
 	if(function_exists('is_ajax') && is_ajax()){ return false; }
 	if(function_exists('is_wc_endpoint_url') && is_wc_endpoint_url()){ return false; }
 	
-	# don't minify amp pages by the amp plugin
+	# don't minify amp pages by known amp plugins
 	if(function_exists('is_amp_endpoint') && is_amp_endpoint()){ return false; }
 	if(function_exists('ampforwp_is_amp_endpoint') && ampforwp_is_amp_endpoint()){ return false; }
+	if(function_exists('is_wp_amp') && is_wp_amp()){ return false; }
 	
 	# get requested hostname
 	$host = fvm_get_domain();
@@ -1031,6 +1057,53 @@ function fvm_not_php_html($code) {
 }
 
 
+# find if a string looks like HTML content
+function fvm_is_html($html) {
+	
+	# return early if it's html
+	$html = trim($html);
+	$a = '<!doctype';
+	$b = '<html';
+	if ( strcasecmp(substr($html, 0, strlen($a)), $a) == 0 || strcasecmp(substr($html, 0, strlen($b)), $b) == 0 ) {
+		return true;
+	}
+	
+	# must have html
+	$hfound = array(); preg_match_all('/<\s?(html)+(.*)>(.*)<\s?\/\s?html\s?>/Uuis', $html, $hfound);
+	if(!isset($hfound[0][0])) { return false; }
+	
+	# must have head
+	$hfound = array(); preg_match_all('/<\s?(head)+(.*)>(.*)<\s?\/\s?head\s?>/Uuis', $html, $hfound);
+	if(!isset($hfound[0][0])) { return false; }
+	
+	# must have body
+	$hfound = array(); preg_match_all('/<\s?(body)+(.*)>(.*)<\s?\/\s?body\s?>/Uuis', $html, $hfound);
+	if(!isset($hfound[0][0])) { return false; }
+	
+	# must have at least one of these
+	$count = 0;
+	
+	# css link
+	$hfound = array(); preg_match_all('/<\s?(link)+(.*)(rel|href)+(.*)>/Uuis', $html, $hfound);
+	if(!isset($hfound[0][0])) { $count++; }
+	
+	# style
+	$hfound = array(); preg_match_all('/<\s?(style)+(.*)(src)+(.*)>(.*)<\s?\/\s?style\s?>/Uuis', $html, $hfound);
+	if(!isset($hfound[0][0])) { $count++; }
+	
+	# script
+	$hfound = array(); preg_match_all('/<\s?(script)+(.*)(src)+(.*)>(.*)<\s?\/\s?script\s?>/Uuis', $html, $hfound);
+	if(!isset($hfound[0][0])) { $count++; }
+	
+	# return if not
+	if($count == 0) { return false; }
+	
+	# else, it's likely html
+	return true;
+	
+}
+
+
 # remove UTF8 BOM
 function fvm_remove_utf8_bom($text) {
     $bom = pack('H*','EFBBBF');
@@ -1393,6 +1466,7 @@ function fvm_get_domain() {
 		return false;
 	}
 }
+
 
 # get the settings file path, current domain name, and uri path without query strings
 function fvm_get_uripath() {
