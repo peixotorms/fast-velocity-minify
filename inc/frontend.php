@@ -56,7 +56,6 @@ function fvm_process_page($html) {
 		# defaults
 		$tvers = get_option('fvm_last_cache_update', '0');
 		$now = time();
-		$htmlpreloader = array();
 		$htmlcssheader = array();
 		$lp_css_last_ff_inline = '';
 			
@@ -69,6 +68,27 @@ function fvm_process_page($html) {
 			return $html . '<!-- simplehtmldom failed to process the html -->';
 		} else {
 			$html = $html_object;
+		}
+		
+		
+		# collect all link preload headers
+		$allpreloads = array();
+		foreach($html->find('link[rel=preload]') as $element) {
+			
+			# normal importance by default
+			$importance = 'normal';
+			if(isset($tag->importance)) { 
+				$importance = $tag->importance; 
+			}
+			
+			# highest to high (but earlier in page)
+			if(isset($tag->importance) && $tag->importance == 'highest') { 
+				$tag->importance = 'high'; 
+			}
+			
+			# collect, group by importance and remove
+			$allpreloads[$importance][] = $element->outertext;
+			$tag->outertext = '';
 		}
 		
 		
@@ -195,7 +215,7 @@ function fvm_process_page($html) {
 							$css = apply_filters( 'fvm_after_download_and_minify_code', $css, 'css');
 											
 							# quick integrity check
-							if(!empty($css) && $css != false) {
+							if(!empty($css) && $css !== false) {
 
 								# trim code
 								$css = trim($css);
@@ -231,6 +251,14 @@ function fvm_process_page($html) {
 							continue;
 						}
 					
+					} else {
+										
+						# there is an error, so leave them alone
+						$err = ''; if(isset($ddl['error'])) { $err = '<!-- '.$ddl['error'].' -->'; }
+						$tag->outertext = PHP_EOL . $tag->outertext.$err . PHP_EOL;
+						unset($allcss[$k]);
+						continue;
+											
 					}
 				
 				}
@@ -375,7 +403,9 @@ function fvm_process_page($html) {
 					if (file_exists($file_css)) {
 						
 						# preload and save for html implementation (with priority order prefix)
-						$htmlpreloader['b_'.$css_uid] = '<link rel="preload" href="'.$file_css_url.'" as="style" media="'.$mediatype.'" />';
+						if((!isset($fvm_settings['css']['nopreload']) || (isset($fvm_settings['css']['nopreload']) && $fvm_settings['css']['nopreload'] != true)) && (!isset($fvm_settings['css']['inline-all']) || (isset($fvm_settings['css']['inline-all']) && $fvm_settings['css']['inline-all'] != true))) {
+							$allpreloads['high'][] = '<link rel="preload" href="'.$file_css_url.'" as="style" media="'.$mediatype.'" importance="high" />';	
+						}
 								
 						# async or render block css
 						if(isset($fvm_settings['css']['async']) && $fvm_settings['css']['async'] == true) {
@@ -458,7 +488,7 @@ function fvm_process_page($html) {
 			foreach($html->find('script') as $element) {
 				$allscripts[] = $element;
 			}
-				
+							
 			# process all scripts
 			if (is_array($allscripts) && count($allscripts) > 0) {
 				foreach($allscripts as $k=>$tag) {
@@ -633,7 +663,7 @@ function fvm_process_page($html) {
 												$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
 																								
 												# quick integrity check
-												if(!empty($js) && $js != false) {
+												if(!empty($js) && $js !== false) {
 												
 													# try catch
 													$js = fvm_try_catch_wrap($js, $href);
@@ -665,6 +695,14 @@ function fvm_process_page($html) {
 											unset($allscripts[$k]);
 											continue 2;
 										
+										} else {
+										
+											# there is an error, so leave them alone
+											$err = ''; if(isset($ddl['error'])) { $err = '<!-- '.$ddl['error'].' -->'; }
+											$tag->outertext = PHP_EOL . $tag->outertext.$err . PHP_EOL;
+											unset($allscripts[$k]);
+											continue 2;
+											
 										}
 										
 									} 
@@ -679,7 +717,7 @@ function fvm_process_page($html) {
 							if(is_array($arr) && count($arr) > 0) {
 								foreach ($arr as $e) { 
 									if(stripos($href, $e) !== false) {
-										
+
 										# download, minify, cache
 										$tkey = hash('sha1', $href);
 										$js = fvm_get_transient($tkey);
@@ -697,9 +735,9 @@ function fvm_process_page($html) {
 															
 												# minify, save and wrap
 												$js = fvm_maybe_minify_js($js, $href, $enable_js_minification);
-															
+														
 												# quick integrity check
-												if(!empty($js) && $js != false) {
+												if(!empty($js) && $js !== false) {
 													
 													# try catch
 													$js = fvm_try_catch_wrap($js, $href);
@@ -778,7 +816,11 @@ function fvm_process_page($html) {
 				}
 				
 				# preload and save for html implementation (with priority order prefix)
-				$htmlpreloader['c_'.$fheader_url] = '<link rel="preload" href="'.$fheader_url.'" as="script" />';
+				if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
+					$allpreloads['high'][] = '<link rel="preload" href="'.$fheader_url.'" as="script" importance="high" />';
+				}
+				
+				# header
 				$htmljscodeheader['c_'.$js_header_uid] = '<script data-cfasync="false" src="'.$fheader_url.'"></script>';
 				
 			}
@@ -817,7 +859,11 @@ function fvm_process_page($html) {
 				}
 						
 				# preload and save for html implementation (with priority order prefix)
-				$htmlpreloader['d_'.$ffooter_url] = '<link rel="preload" href="'.$ffooter_url.'" as="script" />';
+				if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
+					$allpreloads['low'][] = '<link rel="preload" href="'.$ffooter_url.'" as="script" importance="low" />';
+				}
+				
+				# header
 				$htmljscodedefer['d_'.$js_ffooter_uid] = '<script data-cfasync="false" defer src="'.$ffooter_url.'"></script>';
 						
 			}
@@ -863,11 +909,35 @@ function fvm_process_page($html) {
 			foreach($html->find('meta[charset]') as $element) { $element->outertext = ''; }
 		}
 
-		# add preload headers
-		if(isset($htmlpreloader)) {
-			if(is_array($htmlpreloader)) {
-				ksort($htmlpreloader); # priority
-				$hm = str_replace('<!-- h_preheader -->', implode(PHP_EOL, $htmlpreloader).'<!-- h_preheader -->', $hm);
+		# preload headers, by importance
+		if(is_array($allpreloads)) {
+			
+			# start
+			$preload = '';
+			
+			# highest priority (rewritten as high, but earlier)
+			if(isset($allpreloads['highest'])) {
+				$preload.= implode(PHP_EOL, $allpreloads['highest']);
+			}	
+			
+			# high priority
+			if(isset($allpreloads['high'])) {
+				$preload.= implode(PHP_EOL, $allpreloads['high']);
+			}		
+					
+			# auto priority
+			if(isset($allpreloads['auto'])) {
+				$preload.= implode(PHP_EOL, $allpreloads['auto']);
+			}						
+			
+			# low priority
+			if(isset($allpreloads['low'])) {
+				$preload.= implode(PHP_EOL, $allpreloads['low']);
+			}	
+				
+			# add preload
+			if(!empty($preload)) {
+				$hm = str_replace('<!-- h_preheader -->', $preload.'<!-- h_preheader -->', $hm);
 			}
 		}
 		

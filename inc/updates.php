@@ -58,11 +58,13 @@ function fvm_get_updated_field_routines($fvm_settings) {
 			
 			
 			# cdn url
-			if (get_option("fastvelocity_min_fvm_cdn_url") !== false && !isset($fvm_settings['cdn']['domain'])) {
-				$fvm_settings['cdn']['enable'] = 1;
-				$fvm_settings['cdn']['cssok'] = 1;
-				$fvm_settings['cdn']['jsok'] = 1;
-				$fvm_settings['cdn']['domain'] = get_option("fastvelocity_min_fvm_cdn_url");
+			if (get_option("fastvelocity_min_fvm_cdn_url") !== false) {
+				if (!isset($fvm_settings['cdn']['domain']) || (isset($fvm_settings['cdn']['domain']) && empty($fvm_settings['cdn']['domain']))) {
+					$fvm_settings['cdn']['enable'] = 1;
+					$fvm_settings['cdn']['cssok'] = 1;
+					$fvm_settings['cdn']['jsok'] = 1;
+					$fvm_settings['cdn']['domain'] = get_option("fastvelocity_min_fvm_cdn_url");				
+				}
 			}
 			
 			# force https
@@ -98,41 +100,24 @@ function fvm_get_updated_field_routines($fvm_settings) {
 				
 			}
 			
-			# add recommended default scripts, if legacy mode is enabled
-			if (!isset($fvm_settings['js']['merge_defer']) || isset($fvm_settings['js']['merge_defer']) && empty($fvm_settings['js']['merge_defer'])) {
+			# new users, add recommended default scripts settings
+			if ( (!isset($fvm_settings['js']['merge_header']) || isset($fvm_settings['js']['merge_header']) && empty($fvm_settings['js']['merge_header'])) && (!isset($fvm_settings['js']['merge_defer']) || (isset($fvm_settings['js']['merge_defer']) && empty($fvm_settings['js']['merge_defer']))) ) {
+				
+				# header
+				$arr = array('/jquery-migrate-', '/jquery-migrate.js', '/jquery-migrate.min.js', '/jquery.js', '/jquery.min.js');
+				$fvm_settings['js']['merge_header'] = implode(PHP_EOL, fvm_array_order($arr));
+				
+				# defer
 				$arr = array('/ajax.aspnetcdn.com/ajax/', '/ajax.googleapis.com/ajax/libs/', '/cdnjs.cloudflare.com/ajax/libs/', '/stackpath.bootstrapcdn.com/bootstrap/', '/wp-admin/', '/wp-content/', '/wp-includes/');
-				$fvm_settings['js']['merge_defer'] = implode(PHP_EOL, fvm_array_order($arr));	
-			}
-			
-			
-			# js ignore list
-			if (get_option("fastvelocity_min_ignorelist") !== false || get_option("fastvelocity_min_blacklist") !== false || get_option("fastvelocity_min_ignore") !== false && !isset($fvm_settings['js']['ignore']) && !isset($fvm_settings['css']['ignore'])) {
+				$fvm_settings['js']['merge_defer'] = implode(PHP_EOL, fvm_array_order($arr));
 				
-				# default
-				$arr1 = array();
-				$arr2 = array();
-				$arr3 = array();
-				$arr4 = array();
-				$arr5 = array();
-				$arr6 = array();
-				$arr7 = array();
-				$arr8 = array();
+				# js footer dependencies
+				$arr = array('wp.i18n');
+				$fvm_settings['js']['defer_dependencies'] = implode(PHP_EOL, fvm_array_order($arr));
 				
-				# legacy, merge 
-				$arr1 = fvm_array_order(fvm_string_toarray(get_option("fastvelocity_min_ignore")));
-				$arr2 = fvm_array_order(fvm_string_toarray(get_option("fastvelocity_min_ignorelist")));
-				$arr3 = fvm_array_order(fvm_string_toarray(get_option("fastvelocity_min_blacklist")));
-				$arr4 = array_merge($arr1, $arr2);
-				$arr5 = array_merge($arr4, $arr3);
-				$arr6 = fvm_array_order($arr5);
-				
-				# css / js list
-				foreach($arr1 as $c) { if(substr($c, -3) != '.js') { $arr7[] = trim($c); } }
-				foreach($arr6 as $c) { if(substr($c, -4) != '.css') { $arr8[] = trim($c); } }
-				
-				# save settings for css and js
-				$fvm_settings['css']['ignore'] = implode(PHP_EOL, $arr7);
-				$fvm_settings['js']['ignore'] = implode(PHP_EOL, $arr8);
+				# recommended delayed scripts
+				$arr = array('function(f,b,e,v,n,t,s)', 'function(w,d,s,l,i)', 'function(h,o,t,j,a,r)', 'connect.facebook.net', 'www.googletagmanager.com', 'gtag(', 'fbq(', 'assets.pinterest.com/js/pinit_main.js', 'pintrk(');
+				$fvm_settings['js']['thirdparty'] = implode(PHP_EOL, fvm_array_order($arr));
 				
 			}
 

@@ -846,6 +846,8 @@ function fvm_maybe_download($url) {
 		$content = wp_remote_retrieve_body($response);
 		if(strlen($content) > 1) {
 			return array('content'=>$content, 'src'=>'Web');
+		} else {
+			return array('error'=> __( 'Empty content!', 'fast-velocity-minify' ) . ' ['. $url . ']');
 		}
 	}
 	
@@ -1113,13 +1115,31 @@ function fvm_remove_utf8_bom($text) {
     return $text;
 }
 
+# ensure that string is utf8	
+function fvm_ensure_utf8($str) {
+	$enc = mb_detect_encoding($str, mb_list_encodings(), true);
+	if ($enc === false){
+		return false; // could not detect encoding
+	} else if ($enc !== "UTF-8") {
+		return mb_convert_encoding($str, "UTF-8", $enc); // converted to utf8
+	} else {
+		return $str; // already utf8
+	}
+	
+	# fail
+	return false;
+}
+
 
 # validate and minify css
 function fvm_maybe_minify_css_file($css, $url, $min) {
 	
+	# ensure it's utf8
+	$css = fvm_ensure_utf8($css);
+	
 	# return early if empty
-	if(empty($css) || $css == false) { return $css; }
-		
+	if(empty($css) || $css == false) { return false; }
+
 	# process css only if it's not php or html
 	if(fvm_not_php_html($css)) {
 	
@@ -1204,21 +1224,24 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 # validate and minify js
 function fvm_maybe_minify_js($js, $url, $enable_js_minification) {
 
+	# ensure it's utf8
+	$js = fvm_ensure_utf8($js);
+	
 	# return early if empty
-	if(empty($js) || $js == false) { return $js; }
+	if(empty($js) || $js == false) { return false; }
 		
 	# process js only if it's not php or html
 	if(fvm_not_php_html($js)) {
 		
 		# globals
 		global $fvm_settings;
-	
+
 		# filtering
 		$js = fvm_remove_utf8_bom($js); 
-		
+				
 		# remove sourceMappingURL
 		$js = preg_replace('/(\/\/\s*[#]\s*sourceMappingURL\s*[=]\s*)([a-zA-Z0-9-_\.\/]+)(\.map)/ui', '', $js);
-	
+			
 		# minify?
 		if($enable_js_minification == true) {
 

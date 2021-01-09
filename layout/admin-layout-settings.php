@@ -17,13 +17,9 @@
 <tr>
 <th scope="row"><?php _e( 'Global Options', 'fast-velocity-minify' ); ?></th>
 <td>
-<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Select your options below', 'fast-velocity-minify' ); ?></p>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Recommended Settings', 'fast-velocity-minify' ); ?></p>
 
 <fieldset>
-<label for="fvm_settings_cache_min_instant_purge">
-<input name="fvm_settings[cache][min_instant_purge]" type="checkbox" id="fvm_settings_cache_min_instant_purge" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'cache', 'min_instant_purge')); ?>>
-<?php _e( 'Purge Minified CSS/JS files instantly', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Cache files can take up to 24 hours to be deleted by default, for compatibility reasons with certain hosts.', 'fast-velocity-minify' ); ?> ]</span></label>
-<br />
 
 <label for="fvm_settings_global_preserve_settings">
 <input name="fvm_settings[global][preserve_settings]" type="checkbox" id="fvm_settings_global_preserve_settings" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'global', 'preserve_settings')); ?>>
@@ -33,6 +29,20 @@
 <label for="fvm_settings_global_force-ssl">
 <input name="fvm_settings[global][force-ssl]" type="checkbox" id="fvm_settings_global_force-ssl" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'global', 'force-ssl')); ?>>
 <?php _e( 'Force HTTPS urls on merged files', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Recommended if you have SSL but still allow http access to the site.', 'fast-velocity-minify' ); ?> ]</span></label>
+<br />
+
+</fieldset></td>
+</tr>
+
+<tr>
+<th scope="row"><?php _e( 'Advanced Global Options', 'fast-velocity-minify' ); ?></th>
+<td>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Handle with Care', 'fast-velocity-minify' ); ?></p>
+
+<fieldset>
+<label for="fvm_settings_cache_min_instant_purge">
+<input name="fvm_settings[cache][min_instant_purge]" type="checkbox" id="fvm_settings_cache_min_instant_purge" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'cache', 'min_instant_purge')); ?>>
+<?php _e( 'Purge Minified CSS/JS files instantly', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Cache files can take up to 24 hours to be deleted by default, for compatibility reasons with certain hosts.', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
 </fieldset></td>
@@ -51,17 +61,12 @@
 <tr>
 <th scope="row"><?php _e( 'HTML Options', 'fast-velocity-minify' ); ?></th>
 <td>
-<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Select your options below', 'fast-velocity-minify' ); ?></p>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Recommended Settings', 'fast-velocity-minify' ); ?></p>
 
 <fieldset>
 <label for="fvm_settings_html_enable">
 <input name="fvm_settings[html][enable]" type="checkbox" id="fvm_settings_html_enable" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'html', 'enable')); ?>>
 <?php _e( 'Enable HTML Processing', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will enable processing for the settings below', 'fast-velocity-minify' ); ?> ]</span></label>
-<br />
-
-<label for="fvm_settings_html_min_disable">
-<input name="fvm_settings[html][min_disable]" type="checkbox" id="fvm_settings_html_min_disable" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'html', 'min_disable')); ?>>
-<?php _e( 'Disable HTML Minification', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will disable HTML minification for testing purposes', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
 <label for="fvm_settings_html_nocomments">
@@ -82,12 +87,22 @@
 </fieldset></td>
 </tr>
 
+<tr>
+<th scope="row"><?php _e( 'Advanced HTML Options', 'fast-velocity-minify' ); ?></th>
+<td>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Handle with Care', 'fast-velocity-minify' ); ?></p>
+
+<fieldset>
+<label for="fvm_settings_html_min_disable">
+<input name="fvm_settings[html][min_disable]" type="checkbox" id="fvm_settings_html_min_disable" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'html', 'min_disable')); ?>>
+<?php _e( 'Disable HTML Minification', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will disable HTML minification for testing purposes', 'fast-velocity-minify' ); ?> ]</span></label>
+<br />
+
+</fieldset></td>
+</tr>
+
 </tbody>
 </table>
-
-
-
-
 
 <div style="height: 60px;"></div>
 <h2 class="title"><?php _e( 'CSS Settings', 'fast-velocity-minify' ); ?></h2>
@@ -99,12 +114,37 @@
 <tr>
 <th scope="row"><?php _e( 'CSS Options', 'fast-velocity-minify' ); ?></th>
 <td>
-<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Select your options below', 'fast-velocity-minify' ); ?></p>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Recommended Settings', 'fast-velocity-minify' ); ?></p>
 
 <fieldset>
 <label for="fvm_settings_css_enable">
 <input name="fvm_settings[css][enable]" type="checkbox" id="fvm_settings_css_enable" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'enable')); ?>>
 <?php _e( 'Enable CSS Processing', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will enable processing for the settings below', 'fast-velocity-minify' ); ?> ]</span></label>
+<br />
+
+<label for="fvm_settings_css_fonts">
+<input name="fvm_settings[css][fonts]" type="checkbox" id="fvm_settings_css_fonts" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'fonts')); ?>>
+<?php _e( 'Merge Fonts and Icons separately', 'fast-velocity-minify' ); ?><span class="note-info">[ <?php _e( 'Will merge fonts and icons into a separate CSS file', 'fast-velocity-minify' ); ?> ]</span></label>
+<br />
+
+<label for="fvm_settings_css_noprint">
+<input name="fvm_settings[css][noprint]" type="checkbox" id="fvm_settings_css_noprint" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'noprint')); ?>>
+<?php _e( 'Remove "Print" CSS files', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will remove CSS files of mediatype "print" from the frontend', 'fast-velocity-minify' ); ?> ]</span></label>
+<br />
+
+</fieldset></td>
+</tr>
+
+<tr>
+<th scope="row"><?php _e( 'Advanced CSS Options', 'fast-velocity-minify' ); ?></th>
+<td>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Handle with Care', 'fast-velocity-minify' ); ?></p>
+
+<fieldset>
+
+<label for="fvm_settings_css_inline-all">
+<input name="fvm_settings[css][inline-all]" type="checkbox" id="fvm_settings_css_inline-all" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'inline-all')); ?>>
+<?php _e( 'Disable Merging and Inline all CSS', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'It will inline all CSS files, instead of merging CSS into an external file (not recommended)', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
 <label for="fvm_settings_css_min_disable">
@@ -113,23 +153,13 @@
 <br />
 
 <label for="fvm_settings_css_inline-all">
-<input name="fvm_settings[css][inline-all]" type="checkbox" id="fvm_settings_css_inline-all" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'inline-all')); ?>>
-<?php _e( 'Disable Merging and Inline all CSS', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'It will inline all CSS files, instead of merging CSS into an external file (not recommended)', 'fast-velocity-minify' ); ?> ]</span></label>
-<br />
-
-<label for="fvm_settings_css_noprint">
-<input name="fvm_settings[css][noprint]" type="checkbox" id="fvm_settings_css_noprint" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'noprint')); ?>>
-<?php _e( 'Remove "Print" CSS files', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will remove CSS files of mediatype "print" from the frontend', 'fast-velocity-minify' ); ?> ]</span></label>
-<br />
-
-<label for="fvm_settings_css_fonts">
-<input name="fvm_settings[css][fonts]" type="checkbox" id="fvm_settings_css_fonts" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'fonts')); ?>>
-<?php _e( 'Merge Fonts and Icons separately', 'fast-velocity-minify' ); ?><span class="note-info">[ <?php _e( 'Will merge fonts and icons into a separate CSS file', 'fast-velocity-minify' ); ?> ]</span></label>
+<input name="fvm_settings[css][nopreload]" type="checkbox" id="fvm_settings_css_nopreload" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'nopreload')); ?>>
+<?php _e( 'Disable CSS link preload', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will remove the CSS link preload from the header (not recommended)', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
 <label for="fvm_settings_css_async">
 <input name="fvm_settings[css][async]" type="checkbox" id="fvm_settings_css_async" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'async')); ?>>
-<?php _e( 'Load generated CSS files Async', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will load the merged CSS files Async (use your own inline code for the critical path)', 'fast-velocity-minify' ); ?> ]</span></label>
+<?php _e( 'Load generated CSS files Async', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Use your own critical path code like <code>&lt;style id=&quot;critical-path&quot;&gt; your code &lt;/style&gt;</code>', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
 </fieldset></td>
@@ -171,7 +201,7 @@
 <tr>
 <th scope="row"><?php _e( 'JS Options', 'fast-velocity-minify' ); ?></th>
 <td>
-<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Select your options below', 'fast-velocity-minify' ); ?></p>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Recommended Settings', 'fast-velocity-minify' ); ?></p>
 
 <fieldset>
 <label for="fvm_settings_js_enable">
@@ -179,9 +209,23 @@
 <?php _e( 'Enable JS Processing', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will enable processing for the settings below', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
+</fieldset></td>
+</tr>
+
+<tr>
+<th scope="row"><?php _e( 'Advanced JS Options', 'fast-velocity-minify' ); ?></th>
+<td>
+<p class="fvm-bold-green fvm-rowintro"><?php _e( 'Handle with Care', 'fast-velocity-minify' ); ?></p>
+
+<fieldset>
 <label for="fvm_settings_js_min_disable">
 <input name="fvm_settings[js][min_disable]" type="checkbox" id="fvm_settings_js_min_disable" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'js', 'min_disable')); ?>>
 <?php _e( 'Disable JS Minification', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will disable JS minification (merge only) for testing purposes', 'fast-velocity-minify' ); ?> ]</span></label>
+<br />
+
+<label for="fvm_settings_js_inline-all">
+<input name="fvm_settings[js][nopreload]" type="checkbox" id="fvm_settings_js_nopreload" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'js', 'nopreload')); ?>>
+<?php _e( 'Disable JS link preload', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will remove the JS link preload from the header (not recommended)', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
 <label for="fvm_settings_js_jqupgrade">
@@ -197,7 +241,7 @@
 <th scope="row"><?php _e( 'Ignore Script Files', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_js_ignore"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Will prevent merging and minification for these files, regardless of any other broader rules in this page.', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[js][ignore]" rows="7" cols="50" id="fvm_settings_js_ignore" class="large-text code" placeholder="<?php _e( '--- a small snippet that should match an inline script and make it wait for the deferred scripts above ---', 'fast-velocity-minify' ); ?>"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'ignore'); ?></textarea></p>
+<p><textarea name="fvm_settings[js][ignore]" rows="7" cols="50" id="fvm_settings_js_ignore" class="large-text code" placeholder="<?php _e( '--- ex: /plugins/something/assets/problem.js ---', 'fast-velocity-minify' ); ?>"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'ignore'); ?></textarea></p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the script <code>src</code> attribute', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'It is highly recommended to try to leave this empty and later be more specific on what to merge', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
