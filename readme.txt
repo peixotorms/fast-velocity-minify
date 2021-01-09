@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.7
 Requires PHP: 5.6
-Stable tag: 3.1.1
+Stable tag: 3.1.2
 Tested up to: 5.6
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -55,9 +55,13 @@ Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requir
 
 == Changelog ==
 
+= 3.1.2 [2021.01.09] =
+* Fixed a PHP notice on wp-admin
+
 = 3.1.1 [2021.01.09] =
 * Added option to disable preload header
 * Added support for the preload header importance attribute
+* Better default settings for new installs
 * Other bug fixes related to UTF-8 decoding and merging
 
 = 3.1.0 [2021.01.06] =

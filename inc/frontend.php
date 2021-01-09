@@ -73,7 +73,7 @@ function fvm_process_page($html) {
 		
 		# collect all link preload headers
 		$allpreloads = array();
-		foreach($html->find('link[rel=preload]') as $element) {
+		foreach($html->find('link[rel=preload]') as $tag) {
 			
 			# normal importance by default
 			$importance = 'normal';
@@ -87,7 +87,7 @@ function fvm_process_page($html) {
 			}
 			
 			# collect, group by importance and remove
-			$allpreloads[$importance][] = $element->outertext;
+			$allpreloads[$importance][] = $tag->outertext;
 			$tag->outertext = '';
 		}
 		
