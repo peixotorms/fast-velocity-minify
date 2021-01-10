@@ -75,10 +75,12 @@ function fvm_process_page($html) {
 		$allpreloads = array();
 		foreach($html->find('link[rel=preload]') as $tag) {
 			
-			# normal importance by default
-			$importance = 'normal';
+			# auto importance by default
+			$importance = 'auto';
 			if(isset($tag->importance)) { 
 				$importance = $tag->importance; 
+			} else {
+				$tag->importance = $importance;
 			}
 			
 			# highest to high (but earlier in page)
