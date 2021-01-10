@@ -80,12 +80,13 @@ function fvm_process_page($html) {
 			if(isset($tag->importance)) { 
 				$importance = $tag->importance; 
 			} else {
-				$tag->importance = $importance;
+				$tag->importance = 'auto';
 			}
 			
 			# highest to high (but earlier in page)
 			if(isset($tag->importance) && $tag->importance == 'highest') { 
-				$tag->importance = 'high'; 
+				$tag->importance = 'high';
+				$importance	= 'highest';
 			}
 			
 			# collect, group by importance and remove
