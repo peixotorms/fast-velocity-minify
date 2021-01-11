@@ -171,10 +171,16 @@ function fvm_purge_minification() {
 	# increment cache file names
 	$now = fvm_cache_increment();
 
-	# truncate cache table
+	# truncate cache table (doesn't work with prepared statements)
 	global $wpdb;
-	$wpdb->query("TRUNCATE TABLE {$wpdb->prefix}fvm_cache");
-	$wpdb->query("TRUNCATE TABLE {$wpdb->prefix}fvm_logs");
+	
+	# purge cache table
+	$tbl_name = "{$wpdb->prefix}fvm_cache";
+	$wpdb->query("TRUNCATE TABLE `$tbl_name`");
+	
+	# purge logs table
+	$tbl_name = "{$wpdb->prefix}fvm_logs";
+	$wpdb->query("TRUNCATE TABLE `$tbl_name`");
 	
 	# get cache and min directories
 	global $fvm_cache_paths, $fvm_settings;
@@ -198,7 +204,7 @@ function fvm_purge_minification() {
 		}
 		
 	} else {
-		return __( 'The cache directory is not rewritable!', 'fast-velocity-minify' );
+		return __( 'The cache directory is not writeable!', 'fast-velocity-minify' );
 	}
 	
 	return false;	
@@ -738,6 +744,122 @@ function fvm_get_default_settings($fvm_settings) {
 }
 
 
+
+# update routines for new fields and replacements
+function fvm_get_updated_field_routines($fvm_settings) {
+	
+	# current version
+	global $fvm_var_plugin_version;	
+	
+	# must have
+	if(!is_array($fvm_settings)) { return $fvm_settings; }
+	
+	# Version 3.0 routines start
+	
+	# settings migration
+	if (get_option("fastvelocity_upgraded") === false) {
+		if (get_option("fastvelocity_plugin_version") !== false) {		
+		
+			# cache path
+			if (get_option("fastvelocity_min_change_cache_path") !== false && !isset($fvm_settings['cache']['path'])) { 
+				$fvm_settings['cache']['path'] = get_option("fastvelocity_min_change_cache_path");
+			}
+			
+			# cache base_url
+			if (get_option("fastvelocity_min_change_cache_base_url") !== false && !isset($fvm_settings['cache']['url'])) { 
+				$fvm_settings['cache']['url'] = get_option("fastvelocity_min_change_cache_base_url");
+				
+			}
+			
+			# disable html minification
+			if (get_option("fastvelocity_min_skip_html_minification") !== false && !isset($fvm_settings['html']['min_disable'])) { 
+				$fvm_settings['html']['min_disable'] = 1;
+			}
+			
+			# do not remove html comments
+			if (get_option("fastvelocity_min_strip_htmlcomments") !== false && !isset($fvm_settings['html']['nocomments'])) { 
+				$fvm_settings['html']['nocomments'] = 1;
+			}			
+			
+			# cdn url
+			$oldcdn = get_option("fastvelocity_min_fvm_cdn_url");
+			if ($oldcdn !== false && !empty($oldcdn)) {
+				if (!isset($fvm_settings['cdn']['domain']) || (isset($fvm_settings['cdn']['domain']) && empty($fvm_settings['cdn']['domain']))) {
+					$fvm_settings['cdn']['enable'] = 1;
+					$fvm_settings['cdn']['cssok'] = 1;
+					$fvm_settings['cdn']['jsok'] = 1;
+					$fvm_settings['cdn']['domain'] = $oldcdn;				
+				}
+			}
+			
+			# force https
+			if (get_option("fastvelocity_min_default_protocol") == 'https' && !isset($fvm_settings['global']['force-ssl'])) { 
+				$fvm_settings['global']['force-ssl'] = 1;
+			}
+			
+			# preserve settings on uninstall
+			if (get_option("fastvelocity_preserve_settings_on_uninstall") !== false && !isset($fvm_settings['global']['preserve_settings'])) { 
+				$fvm_settings['global']['preserve_settings'] = 1;
+			}
+			
+			# inline all css
+			if (get_option("fastvelocity_min_force_inline_css") !== false && !isset($fvm_settings['css']['inline-all'])) { 
+				$fvm_settings['css']['inline-all'] = 1;
+			}
+			
+			# remove google fonts
+			if (get_option("fastvelocity_min_remove_googlefonts") !== false && !isset($fvm_settings['css']['remove'])) { 
+				
+				# add fonts.gstatic.com
+				$arr = array('fonts.gstatic.com');
+				$fvm_settings['css']['remove'] = implode(PHP_EOL, fvm_array_order($arr));
+				
+			}
+
+			# Skip deferring the jQuery library, add them to the header render blocking
+			if (get_option("fastvelocity_min_exclude_defer_jquery") !== false && !isset($fvm_settings['js']['merge_header'])) { 
+
+				# add jquery + jquery migrate
+				$arr = array('/jquery-migrate-', '/jquery-migrate.js', '/jquery-migrate.min.js', '/jquery.js', '/jquery.min.js');
+				$fvm_settings['js']['merge_header'] = implode(PHP_EOL, fvm_array_order($arr));
+				
+			}
+			
+			# new users, add recommended default scripts settings
+			if ( (!isset($fvm_settings['js']['merge_header']) || isset($fvm_settings['js']['merge_header']) && empty($fvm_settings['js']['merge_header'])) && (!isset($fvm_settings['js']['merge_defer']) || (isset($fvm_settings['js']['merge_defer']) && empty($fvm_settings['js']['merge_defer']))) ) {
+				
+				# header
+				$arr = array('/jquery-migrate-', '/jquery-migrate.js', '/jquery-migrate.min.js', '/jquery.js', '/jquery.min.js');
+				$fvm_settings['js']['merge_header'] = implode(PHP_EOL, fvm_array_order($arr));
+				
+				# defer
+				$arr = array('/ajax.aspnetcdn.com/ajax/', '/ajax.googleapis.com/ajax/libs/', '/cdnjs.cloudflare.com/ajax/libs/', '/stackpath.bootstrapcdn.com/bootstrap/', '/wp-admin/', '/wp-content/', '/wp-includes/');
+				$fvm_settings['js']['merge_defer'] = implode(PHP_EOL, fvm_array_order($arr));
+				
+				# js footer dependencies
+				$arr = array('wp.i18n');
+				$fvm_settings['js']['defer_dependencies'] = implode(PHP_EOL, fvm_array_order($arr));
+				
+				# recommended delayed scripts
+				$arr = array('function(f,b,e,v,n,t,s)', 'function(w,d,s,l,i)', 'function(h,o,t,j,a,r)', 'connect.facebook.net', 'www.googletagmanager.com', 'gtag(', 'fbq(', 'assets.pinterest.com/js/pinit_main.js', 'pintrk(');
+				$fvm_settings['js']['thirdparty'] = implode(PHP_EOL, fvm_array_order($arr));
+				
+			}
+
+			# clear old cron
+			wp_clear_scheduled_hook( 'fastvelocity_purge_old_cron_event' );
+
+			# mark as done
+			update_option('fastvelocity_upgraded', true);
+		
+		}
+	}		
+	# Version 3.0 routines end
+	
+	# return settings array
+	return $fvm_settings;
+}
+
 # save log to database
 function fvm_save_log($arr) {
 	
@@ -776,7 +898,8 @@ function fvm_save_log($arr) {
 	}
 	
 	# prepare and insert to database
-	$sql = $wpdb->prepare("INSERT IGNORE INTO ".$wpdb->prefix."fvm_logs (".implode(', ', $fld).") VALUES (".implode(', ', $tpe).")", $vls);
+	$tbl_name = "{$wpdb->prefix}fvm_logs";
+	$sql = $wpdb->prepare("INSERT IGNORE INTO `$tbl_name` (".implode(', ', $fld).") VALUES (".implode(', ', $tpe).")", $vls);
 	$result = $wpdb->query($sql);
 	
 	# check if it already exists
@@ -881,16 +1004,18 @@ function fvm_save_file($file, $content) {
 # get transients
 function fvm_get_transient($key, $check=null) {
 	
+	# defaults
 	global $wpdb;
+	$tbl_name = "{$wpdb->prefix}fvm_cache";
 	
 	# normalize unknown keys
 	if(strlen($key) != 40) { $key = hash('sha1', $key); }
 	
 	# check or fetch
 	if($check) {
-		$sql = $wpdb->prepare("SELECT id FROM {$wpdb->prefix}fvm_cache WHERE uid = %s LIMIT 1", $key);
+		$sql = $wpdb->prepare("SELECT id FROM `$tbl_name` WHERE uid = '%s' LIMIT 1", $key);
 	} else {
-		$sql = $wpdb->prepare("SELECT content FROM {$wpdb->prefix}fvm_cache WHERE uid = %s LIMIT 1", $key);
+		$sql = $wpdb->prepare("SELECT content FROM `$tbl_name` WHERE uid = '%s' LIMIT 1", $key);
 	}
 
 	# get result from database
@@ -948,7 +1073,8 @@ function fvm_set_transient($arr) {
 	}
 		
 	# prepare and insert to database
-	$sql = $wpdb->prepare("INSERT IGNORE INTO ".$wpdb->prefix."fvm_cache (".implode(', ', $fld).") VALUES (".implode(', ', $tpe).")", $vls);
+	$tbl_name = "{$wpdb->prefix}fvm_cache";
+	$sql = $wpdb->prepare("INSERT IGNORE INTO `$tbl_name` (".implode(', ', $fld).") VALUES (".implode(', ', $tpe).")", $vls);
 	$result = $wpdb->query($sql);
 	
 	# check if it already exists
@@ -970,7 +1096,8 @@ function fvm_del_transient($key) {
 	if(strlen($key) != 40) { $key = hash('sha1', $key); }
 	
 	# delete
-	$sql = $wpdb->prepare("DELETE FROM {$wpdb->prefix}fvm_cache WHERE uid = %s", $key);
+	$tbl_name = "{$wpdb->prefix}fvm_cache";
+	$sql = $wpdb->prepare("DELETE FROM `$tbl_name` WHERE uid = '%s'", $key);
 	$result = $wpdb->get_row($sql);
 	return true;
 }

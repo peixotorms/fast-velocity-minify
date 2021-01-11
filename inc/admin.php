@@ -286,12 +286,15 @@ function fvm_get_logs_callback() {
 		
 		# defaults
 		global $wpdb;
+		$tbl_name_log = $wpdb->prefix .'fvm_logs';
+		$tbl_name_cache = $wpdb->prefix .'fvm_cache';
 		
 		# initialize log
 		$css_log = '';
 		
 		# build css logs from database
-		$results = $wpdb->get_results($wpdb->prepare("SELECT date, content, meta FROM ".$wpdb->prefix."fvm_logs WHERE type = 'css' ORDER BY id DESC LIMIT 20"));
+		
+		$results = $wpdb->get_results("SELECT date, content, meta FROM `$tbl_name_log` WHERE type = 'css' ORDER BY id DESC LIMIT 20");
 		
 		# build second query
 		foreach ($results as $log) {
@@ -313,7 +316,7 @@ function fvm_get_logs_callback() {
 			if(count($list) > 0) {
 				$listuids = implode(', ', array_fill(0, count($list), '%s'));
 				if(!empty($listuids)) {
-					$rs = array(); $rs = $wpdb->get_results($wpdb->prepare("SELECT meta FROM ".$wpdb->prefix."fvm_cache WHERE uid IN (".$listuids.") ORDER BY FIELD(uid, '".implode("', '", $list)."')", $list));
+					$rs = array(); $rs = $wpdb->get_results($wpdb->prepare("SELECT meta FROM `$tbl_name_cache` WHERE uid IN (".$listuids.") ORDER BY FIELD(uid, '".implode("', '", $list)."')", $list));
 					foreach ($rs as $r) {
 						$imt = json_decode($r->meta, true);
 						$css_log.= '[Size: '.str_pad(fvm_format_filesize($imt['fs']), 10,' ',STR_PAD_LEFT).']'."\t". $imt['url'] . PHP_EOL;
@@ -330,7 +333,7 @@ function fvm_get_logs_callback() {
 		$js_log = '';
 		
 		# build css logs from database
-		$results = $wpdb->get_results($wpdb->prepare("SELECT date, content, meta FROM ".$wpdb->prefix."fvm_logs WHERE type = 'js' ORDER BY id DESC LIMIT 20"));
+		$results = $wpdb->get_results("SELECT date, content, meta FROM `$tbl_name_log` WHERE type = 'js' ORDER BY id DESC LIMIT 20");
 		
 		# build second query
 		foreach ($results as $log) {
@@ -351,7 +354,7 @@ function fvm_get_logs_callback() {
 			if(count($list) > 0) {
 				$listuids = implode(', ', array_fill(0, count($list), '%s'));
 				if(!empty($listuids)) {
-					$rs = array(); $rs = $wpdb->get_results($wpdb->prepare("SELECT meta FROM ".$wpdb->prefix."fvm_cache WHERE uid IN (".$listuids.") ORDER BY FIELD(uid, '".implode("', '", $list)."')", $list));
+					$rs = array(); $rs = $wpdb->get_results($wpdb->prepare("SELECT meta FROM `$tbl_name_cache` WHERE uid IN (".$listuids.") ORDER BY FIELD(uid, '".implode("', '", $list)."')", $list));
 					foreach ($rs as $r) {
 						$imt = json_decode($r->meta, true);
 						$js_log.= '['.__( 'Size:', 'fast-velocity-minify' ).' '.str_pad(fvm_format_filesize($imt['fs']), 10,' ',STR_PAD_LEFT).']'."\t". $imt['url'] . PHP_EOL;
@@ -393,48 +396,45 @@ function fvm_get_logs_callback() {
 # run during activation
 register_activation_hook($fvm_var_file, 'fvm_plugin_activate');
 function fvm_plugin_activate() {
-	
+		
+	# default variables
 	global $wpdb;
-	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-	
-	# defauls
-	$sql = array();
-	$wpdb_collate = $wpdb->collate;
-	
-	# create cache table
+	$charset_collate = $wpdb->get_charset_collate();
 	$sqla_table_name = $wpdb->prefix . 'fvm_cache';
-	$sqla = "CREATE TABLE IF NOT EXISTS {$sqla_table_name} (
-         `id` bigint(20) unsigned NOT NULL auto_increment ,
-         `uid` varchar(60) NOT NULL,
-		 `date` bigint(20) unsigned NOT NULL, 
-		 `type` varchar(32) NOT NULL, 
-		 `content` mediumtext NOT NULL, 
-		 `meta` mediumtext NOT NULL,
-         PRIMARY KEY  (id),
-		 UNIQUE KEY uid (uid), 
-		 KEY date (date), KEY type (type) 
-         )
-         COLLATE {$wpdb_collate}";
+	$sqlb_table_name = $wpdb->prefix . 'fvm_logs';
+	
+	# prepare	
+	$sqla = "CREATE TABLE IF NOT EXISTS `$sqla_table_name` (
+        `id` bigint(20) unsigned NOT NULL auto_increment, 
+        `uid` varchar(60) NOT NULL, 
+		`date` bigint(20) unsigned NOT NULL, 
+		`type` varchar(32) NOT NULL, 
+		`content` mediumtext NOT NULL, 
+		`meta` mediumtext NOT NULL, 
+        PRIMARY KEY  (id), 
+		UNIQUE KEY uid (uid), 
+		KEY date (date), KEY type (type) 
+        ) $charset_collate;";
 		 
 	# create logs table
-	$sqlb_table_name = $wpdb->prefix . 'fvm_logs';
-	$sqlb = "CREATE TABLE IF NOT EXISTS {$sqlb_table_name} (
-         `id` bigint(20) unsigned NOT NULL auto_increment, 
-		 `uid` varchar(60) NOT NULL, 
-		 `date` bigint(20) unsigned NOT NULL, 
-		 `type` varchar(32) NOT NULL, 
-		 `content` mediumtext NOT NULL, 
-		 `meta` mediumtext NOT NULL, 
-		 PRIMARY KEY  (id), 
-		 UNIQUE KEY uid (uid), 
-		 KEY date (date), 
-		 KEY type (type)
-         )
-         COLLATE {$wpdb_collate}";
+	
+	$sqlb = "CREATE TABLE IF NOT EXISTS `$sqlb_table_name` (
+        `id` bigint(20) unsigned NOT NULL auto_increment, 
+		`uid` varchar(60) NOT NULL, 
+		`date` bigint(20) unsigned NOT NULL, 
+		`type` varchar(32) NOT NULL, 
+		`content` mediumtext NOT NULL, 
+		`meta` mediumtext NOT NULL, 
+		PRIMARY KEY  (id), 
+		UNIQUE KEY uid (uid), 
+		KEY date (date), 
+		KEY type (type) 
+        ) $charset_collate;";
 
 	# run sql
-	dbDelta($sqla);
-	dbDelta($sqlb);
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sqla );
+	dbDelta( $sqlb );
 	
 	# initialize cache time
 	fvm_cache_increment();
@@ -452,9 +452,15 @@ function fvm_plugin_deactivate() {
 		fvm_rrmdir($fvm_cache_paths['cache_base_dir']);
 	}
 	
-	# delete tables
-	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_cache");
-	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_logs");
+	# delete cache table
+	$tbl_name = $wpdb->prefix .'fvm_cache';
+	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`", $tbl_name);
+	$wpdb->query($sql);
+	
+	# delete logs table
+	$tbl_name = $wpdb->prefix .'fvm_logs';
+	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`", $tbl_name);
+	$wpdb->query($sql);
 
 }
 
@@ -469,13 +475,25 @@ function fvm_plugin_uninstall() {
 	
 	# remove settings, unless disabled
 	if(!isset($fvm_settings['global']['preserve_settings']) || ( isset($fvm_settings['global']['preserve_settings']) && $fvm_settings['global']['preserve_settings'] != true)) {		
-		$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_settings'");
-		$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_last_cache_update'");
+		
+		# prepare and delete
+		$tbl_name = $wpdb->prefix .'options';
+		$sql = $wpdb->prepare( "DELETE FROM `$tbl_name` WHERE option_name = 'fvm_settings'");
+		$wpdb->query($sql);
+		$sql = $wpdb->prepare( "DELETE FROM `$tbl_name` WHERE option_name = 'fvm_last_cache_update'");
+		$wpdb->query($sql);
+		
 	}
 	
-	# remove cache
-	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_cache");
-	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_logs");
+	# delete cache table
+	$tbl_name = $wpdb->prefix .'fvm_cache';
+	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`");
+	$wpdb->query($sql);
+	
+	# delete logs table
+	$tbl_name = $wpdb->prefix .'fvm_logs';
+	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`");
+	$wpdb->query($sql);
 	
 	# remove all cache directories
 	if(isset($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
@@ -485,9 +503,13 @@ function fvm_plugin_uninstall() {
 
 # initialize database if it doesn't exist
 function fvm_initialize_database() {
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	global $wpdb;
-	$check1 = $wpdb->query("SHOW TABLES LIKE '{$wpdb->prefix}fvm_cache'");
-	if(!$check1){ fvm_plugin_activate(); }
+	$tbl_name = $wpdb->prefix .'fvm_cache';
+    $sql = $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $tbl_name ) );
+    if ( $wpdb->get_var( $sql ) !== $tbl_name ) {
+        fvm_plugin_activate();
+    }
 }
 
 
