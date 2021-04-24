@@ -9,8 +9,8 @@
   <div>
     <p><strong>Notes:</strong></p>
     <p>JavaScript merging functionality went through a significant change on FVM 3 and it now requires manual configuration to work.</p>
-	<p>If you are upgrading from FVM 2 please refer to the help section below, to understand how to reconfigure each plugin setting.</p>
-	<p>If you just installed the plugin, please note that JS is not being optimized yet. You have to choose which files to be render blocking and which ones to be deferred, plus it's dependencies (if any). </p>
+	<p>If you are upgrading from FVM 2 please refer to the help section below for more information on the settings.</p>
+	<p>If you just installed the plugin, please note that JS is not being optimized yet. You have to choose which files to be render blocking and which ones to be deferred, plus it's inline script dependencies (if any). </p>
 	<p>Previously, FVM merged everything and relied on having options to ignore scripts. This option frequently created issues with other plugin updates, when they changed something JavaScript related.</p>
 	<p>Please understand that this plugin is and it has always been aimed at being a tool for advanced users and developers, so it's not meant just be plug and play, without manual settings in place.</p>
 	<p>There is a new method to optimize third party scripts and load them on user interaction or automatically, after 5 seconds. This is a more recommended method to optimize scripts, as compared to FVM 2 which used document.write and other deprecated methods.</p>
@@ -45,17 +45,9 @@
   <h3>Purge Minified CSS/JS files instantly</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>If your hosting has no page cache enabled, you can force the plugin to immediately purge it's cache files instead of waiting for 24 hours before deletion.</p>
-  </div>
-  <h3>Preserve settings on uninstall</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>When you are testing things, sometimes you may want to preserve all FVM settings when you uninstall or delete the plugin.</p>
-  </div>
-  <h3>Force HTTPS urls on merged files</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>This will make sure that when FVM generates a CSS and JS file, that it's linked on your page with https.</p>
+    <p>When you purge CSS/JS files instantly, all CSS and JS cache files are deleted immediately when you clear everything on FVM. While this is great during development, it may cause issues when your hosting is doing page caching that cannot be purged by FVM. For example, if you were to delete the CSS and JS files instantly without purging the full page cache, that page cache would now be pointing to deleted files.</p>
+	<p>If you deselect this option, whenever you clear everything on FVM, it will only try to delete files that are older than 24h (and hopefully this should be enough for your hosting to expire the page cache automatically). That way, even if your hosting is still showing your page cache to anonymous users, the referred CSS and JS files will still be available.</p>
+	<p>If you are not sure about page caching on your server or hosting provider, you should keep this option disabled.</p>
   </div>
 </div>
 
@@ -68,27 +60,27 @@
     <p><strong>Notes:</strong></p>
     <p>You need to enable this option, for any other options in the HTML section to work.</p>
   </div>
-  <h3>Disable HTML Minification</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>Although rare, it's possible that HTML minification may strip too much code thus breaking something.</p>
-	<p>You can use this option to test if that is the case.</p>
-  </div>
   <h3>Strip HTML Comments</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>Some plugins may need to use comments for certain functionality to work, however this is quite rare. This option is enabled by default.</p>
+    <p>Some plugins may need to use comments for certain functionality to work, however this is quite rare. The benefit of removing comments is usually very small, so if needed you can disable this setting.</p>
   </div>
   <h3>Cleanup Header</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This options removes resource hints, generator tag, shortlinks, emoji, manifest link, etc from the HTML header.</p> 
-	<p>This is recommended because the head section, should be kept as lean as possible for the best TTFB response times and LCP metrics.</p>
+    <p>This options removes resource hints, generator tags, shortlinks, manifest link, etc from the header.</p> 
+	<p>The header should be kept as lean as possible for the best TTFB response times and LCP metrics, but if you later find that you need some of the stuff that is removed by this option, you can disable this setting.</p>
   </div>
   <h3>Remove Emoji</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This will remove the default emoji scripts from wordpress, thus reducing the amount of code during page loading.</p>
+    <p>This will remove the default emoji scripts from wordpress, thus reducing the amount of code during page loading. If you use WordPress emoji when posting content, you should keep this option disabled.</p>
+  </div>
+  <h3>Disable HTML Minification</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>Although rare, it's possible for the HTML minification to strip too much code thus breaking something. You can use this option to test if that is the case and keep this option disabled if that is the case.</p>
+	<p>HTML minification is no longer a recommendation by gtmetrix or pagespeed insights, so you can keep this option disabled if there is any incompatibility issue.</p>
   </div>
 </div>
 
@@ -102,47 +94,52 @@
     <p><strong>Notes:</strong></p>
     <p>You need to enable this option, for any other options in the CSS section to work.</p>
   </div>
-  <h3>Disable CSS Minification</h3>
+  <h3>Merge Fonts and Icons Separately</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>Although rare, it's possible that CSS minification may strip too much code thus breaking your styles.</p>
-  </div>
-  <h3>Disable Merging and Inline all CSS</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>If your total CSS code is very small (under 25 Kb uncompressed), it's recommended to inline all CSS.</p>
-	<p>If your CSS files combined are large, inlining it will delay the time needed for the first byte, as you are forcing the server to compress the HTML and the CSS on the same process.</p>
+    <p>This will try to collect and simplify all your CSS font face rules into a separate CSS file and load it async. It may be useful for de-duplication of fonts, or to evaluate how many fonts are in use. </p>
   </div>
   <h3>Remove "Print" stylesheets</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>As a generic rule, it's safe to remove it for the vast majority of sites, unless your users often need to print pages from your site, and you have customized styles for when they do so.</p>
+    <p>As a generic rule this it's safe to remove it for the vast majority of sites, unless your users often need to print pages from your site and you have customized styles for when they do so.</p>
   </div>
-  <h3>Merge Fonts and Icons Separately</h3>
+  <h3>Combine CSS Files</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This will try to collect all your icon and animation know files into a separate file.</p>
-	<p>It may be useful for debugging purposes or to evaluate how many fonts are in use.</p>
+    <p>Merging CSS is no longer recommended if your server supports HTTP/2. The feature also usually causes conflicts when merging multiple CSS files into one, due to the lack of specificity or other errors in the code. It's still available for legacy support on old installations or outdated servers that do not support HTTP/2 delivery.</p>
   </div>
-  <h3>Load generated CSS files Async</h3>
+  <h3>Disable CSS Files Minification</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This will load the generated CSS files Async, however, without a manually added critical path code, you will likely see a Flash of Unstyled Content before that CSS finishes loading.</p>
-	<p>Use your own PHP code or another plugin to add the critical path CSS code using conditional tags, filters, hooks or other method.</p>
+    <p>Although rare, it's possible that CSS files minification may strip too much code and break some style rules that are not supported by the minification library. You can always try to disable this and check if this fixes anything, then use the ignore list to exclude the file that is causing issues.</p>
+  </div>
+  <h3>Disable CSS Styles Minification</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>Although rare, it's possible that CSS Styles minification may strip too much code and break some style rules that are not supported by the minification library. You can always try to disable this and check if this fixes anything.</p>
+  </div>
+  <h3>Disable CSS Link Preload</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>CSS Link Preloading is useful when you are merging CSS files or when you defined certain paths as Async CSS. By default, FVM will send an HTTP preload request as well as adding the html preload tag on the header, which will prioritize downloading the critical styles earlier than the other resources.</p>
+	<p>If you select this option, these headers will be removed and your default preload resources will load earlier than the CSS files. You need to test and see what works best for you.</p>
   </div>
   <h3>Ignore CSS files</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>You can use this option to prevent a certain CSS file from being merged, for example, when it breaks something when merged.</p> 
-	<p>This uses uses PHP stripos against the href attribute on the link tag, to decide if a CSS should be left alone or not.</p>
-	<p>This should be empty by default, and only used strictly when a CSS being merged is breaking the page layout.</p>
+    <p>If there is a conflict when merging CSS files or during individual minification of a specific CSS file, you can add the path on this section and FVM will ignore the file, thus leaving it alone.</p>
   </div>
-  <h3>Remove CSS files</h3>
+  <h3>Remove CSS Files</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>If you wish to remove a CSS file from the frontend without editing code or using other settings, you can use this option.</p>
-	<p>For example, you can remove google fonts link tags, or the default Gutenberg CSS file enqueued by WordPress.</p>
-	<p>You should still first try to remove it or dequeue it with PHP code, when possible.</p>
+    <p>If your plugins enqueue multiple duplicate libraries with different url paths, you can add the path on this section and FVM will remove the file from the frontend, thus reducing your total CSS size.</p>
+  </div>
+  <h3>Async CSS Files</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>CSS files from plugins that are not rendered above the fold, should ideally be loaded async. For example, if a plugin has CSS files but you only use the element on the footer, you could add the /plugins/plugin-name/ here to async it. But you should not async CSS files that are needed for content that is visible on the critical path.</p>
+	<p>Also note that by loading certain CSS files async, you are changing the order of styles. This means, some styles may or may not work as intended, because now they load on a different position.</p>
   </div>
 </div>
 
@@ -156,47 +153,50 @@
     <p><strong>Notes:</strong></p>
     <p>You need to enable this option, for any other options in the JS section to work.</p>
   </div>
-  <h3>Disable JS Minification</h3>
+  <h3>Combine JS Files</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>Although rare, it's possible that JS minification may strip too much white space, or fail to minify some more complex JavaScript  code, which can lead to breaking some functionality or triggering browser console log errors.</p>
-	<p>You can use this option to test if that is the case.</p>
+    <p>Merging JS is no longer recommended if your server supports HTTP/2. The feature also usually causes conflicts when merging multiple JS files into one, due to a different order of loading or other errors in the code. It's still available for legacy support on old installations or outdated servers that do not support HTTP/2 delivery.</p>
   </div>
-  <h3>Upgrade to jQuery 3</h3>
+  <h3>Disable JS Files Minification</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>If your theme and plugins make use of modern standards and doesn't include outdated jQuery code, you can force the usage of the smaller jQuery 3 instead of the older, default WordPress jQuery.</p>
-	<p>You must check your browser console log in incognito mode, for possible errors after enabling this feature. Sometimes there are no errors but some scripts may not work as well, so use this feature with care.</p>
+    <p>JS files minification may strip too much code and break some code that is not supported by the minification library. You can always try to disable this and check if this fixes anything, then use the ignore list to exclude the file that is causing issues.</p>
   </div>
+  <h3>Disable JS Inline Minification</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>Inline JS Styles minification may strip too much code and break some code that is not supported by the minification library. You can always try to disable this and check if this fixes anything.</p>
+  </div>
+  <h3>Disable JS Link Preload</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>JS Link Preloading is useful when you are merging JS files or when you defined certain paths as Defer JS. By default, FVM will send an HTTP preload request as well as adding the html preload tag on the header, which will prioritize downloading the render blocking scripts earlier than the other resources.</p>
+	<p>If you select this option, these headers will be removed and your default preload resources will load earlier than the JS files. You need to test and see what works best for you.</p>
+  </div>
+  
   <h3>Ignore Script Files</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>When you are adding a lot of JS files to consider, it may be more convenient to add the default recommended paths and exclude individual files.</p>
-	<p>This should be empty by default, and only used strictly when a CSS being merged is breaking the page layout.</p>
+    <p>When you are merging JS files, the order of scripts change positions and dependencies may break. Other times, a specific script is not supported by the minification and breaks as well. If you encounter issues while merging or minifying JS files, you can exclude them here and those files will be left alone.</p>
   </div>
-  <h3>Merge render blocking JS files in the header</h3>
+  <h3>Render Blocking JS files</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>In most WordPress themes and for a significant amount of plugins, you need to render block jQuery and possibly other scripts.</p> 
-	<p>If you are a developer and are sure that there is no inlined code requiring jQuery to be defined earlier, then leave this section empty and add your scripts on the "Merge and Defer Scripts" section instead.</p>
-	<p>It's important for speed, that you keep this section to a bare minimum, usually, jQuery and jQuery migrate only.</p>
-	<p>Some plugins such as gravity forms may also require to be render blocking, so you should look out for browser console log errors in incognito mode.</p>
+    <p>In most WordPress themes and for a significant amount of plugins, you usually need to render block jQuery and jQuery Migrate for compatibility reasons.</p> 
+	<p>Some plugins may not work at all if they are not render blocking, so you should look out for browser console log errors in incognito mode.</p>
 	<p><strong>Recommended Default Settings:</strong></p>
 	<p class="fvm-code-full">
-	/jquery-migrate-<br>
-	/jquery-migrate.js<br>
-	/jquery-migrate.min.js<br>
+	/jquery-migrate<br>
 	/jquery.js<br>
 	/jquery.min.js<br>
 	</p>
   </div>
-  <h3>Merge and Defer Scripts</h3>
+  <h3>Defer JS Files</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This option uses PHP stripos against the script <code>outerHTML</code> to decide what to merge and defer.</p>
-	<p>Very frequently, jQuery, jQuery migrate and some plugins, need to be render blocking for everything to work, so you cannot just put all scripts in this section.</p>
-	<p>You must check your browser console log in incognito mode, for possible errors after enabling this feature, and either move them to the header, remove them from this list (be more specific with paths so it doesn't match certain files), or use the Inline JavaScript Dependencies section, to force inline scripts to wait for this file to load.</p>
-	<p>Note that this is an advanced feature that can stop your scripts from working, hence it requires manual configuration.</p>
+    <p>Deferring every single script is not always the best solution, especially if those are needed to generate content above the fold. You must check your browser console log in incognito mode for possible errors after enabling this feature, and either move them to the render blocking section or check if there is any inline script that also needs to be deferred (so the order of loading is preserved).</p>
+	<p>Note that this is an advanced feature, hence it requires manual configuration for it to work.</p>
 	<p><strong>Recommended Default Settings:</strong></p>
 	<p class="fvm-code-full">
 	/ajax.aspnetcdn.com/ajax/<br>
@@ -208,24 +208,27 @@
 	/wp-includes/
 	</p>
   </div>
-  <h3>Inline JavaScript Dependencies</h3>
+  <h3>Defer Inline JavaScript</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This option uses PHP stripos against the script <code>innerHTML</code> to decide what to merge and defer.</p>
-	<p>When you merge JS files and defer them, you are effectively changing the order in which they load, however for certain scripts, the order of loading matters.</p>
-	<p>If you defer a certain script and you see an "undefined" error triggered on some inline code, you can try this option to force it to wait for the deferred scripts to finish, but it may still not work if dependencies are more complex.</p>
-	<p>You must check your browser console log in incognito mode, for possible errors after enabling this feature, and either move them to the header, remove them from this list (be more specific with paths so it doesn't match certain files), or use the Inline JavaScript Dependencies to force inline scripts to wait for this file to load.</p>
-	<p>This is empty by default, unless you determine that it's needed (the plugin is for advanced users and developers, so you need to debug yourself).</p>
+    <p>When you merge JS files and defer them, you are effectively changing the order in which they load, however for certain scripts, the order of loading matters. If you are deferring a certain JS file and you see an "undefined" error triggered on some inline code, you can try this option to also defer the inline code and preserve the order of execution.</p>
+	<p>Note however, not all scripts can work with defer so you need to test if everything is working without errors.</p>
+	<p>This is empty by default, unless you determine that it's needed.</p>
+	<p><strong>Recommended Default Settings:</strong></p>
+	<p class="fvm-code-full">
+	wp.i18n<br>
+	wp.apiFetch.use<br>
+	window.lodash<br>
+	wp.hooks<br>
+	wp.url
+	</p>
   </div>
-  <h3>Execute matching third party scripts after user interaction</h3>
+  <h3>Delay third party scripts until user interaction</h3>
   <div>
     <p><strong>Notes:</strong></p>
-	<p>Scripts like analytics, ads, tracking codes, etc, consume important CPU and Network resources needed for the initial pageview.</p>
-	<p>This option uses PHP stripos against the script <code>innerHTML</code> or <code>src</code> attribute for async/defer scripts.</p>
-	<p>It will delay the specified script execution until the user interacts with the page, on the first <code>'mouseover','keydown','touchmove','touchstart'</code> event, or <code>up to 5 seconds after page load</code>(whichever happens first).</p>
-	<p>FVM will delay most Async and Defer scripts, a well as inline code matching these settings.</p>
-	<p>You can rewrite most scripts to support this feature by adding the Async or Defer attribute, however, note that if you blindly use this method for render blocking scripts, it may trigger "undefined" errors on the browser console log or some elements may stop working (some scripts only work in render blocking mode).</p>
-	<p>If you have render blocking third party scripts, ask your provider if they can provide you with an async implementation (else remove them, because render blocking scripts are not recommended for speed).</p>
+	<p>Scripts like analytics, ads, tracking codes, etc, consume important CPU and network resources needed for the initial page view. You can force certain plugins to wait for user interaction (mouseover, keydown, touchstart, touchmove and wheel) and the scripts will only run on these events.</p>
+	<p>Delaying these scripts will improve your speed because most third party scripts are not needed for showing any content (if they are, then they are on the critical path and you should not delay them). In addition, note that some codes make use of document.write and other methods, which do not support delaying (delaying will work as usual, but the script will not do anything or stop working).</p>
+	<p>If you have render blocking third party scripts, ask your provider if they can provide you with an async or defer implementation (else remove them, because render blocking scripts are not recommended for speed).</p>
 	<p><strong>Example Settings:</strong></p>
 	<p class="fvm-code-full">
 	function(w,d,s,l,i)<br>
@@ -239,9 +242,7 @@
   <h3>Remove JavaScript Scripts</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This option uses PHP stripos against the script <code>outerHTML</code> to decide what to remove.</p>
-	<p>It can be used when you want to remove some JS file that you cannot remove directly from the source.</p>
-	<p>If it's a third party script you added to the header or footer (or via some plugin), it's better if you delete it at the source.</p>
+    <p>This can be used when you want to remove a duplicate JS file from the frontend source. However, if this is for a third party script you added to the header or footer (either code or via some plugin), it's better if you delete it at the source.</p>
   </div>
 </div>
 
@@ -273,42 +274,14 @@
   <h3>CDN URL</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This is not required for providers such as cloudflare.com or sucuri.com as well as any reverse proxy CDN service that doesn't change your domain name (the whole site is proxified through their service).</p>
-	<p>For other types of CDN, you are usually provided with an alternative domain name from where your static files can be served, and in those cases, you would introduce your new domain name here, for your static assets.</p>
+    <p>This is not required for providers such as Cloudflare.com as well as any reverse proxy CDN service that doesn't change your domain name (the whole site goes through their service).</p>
+	<p>For other types of CDN, you are usually provided with an alternative domain name from where your static files can be served and in those cases, you would introduce your new domain name here.</p>
   </div>
   <h3>CDN Integration</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>Uses syntax from <a target="_blank" href="https://simplehtmldom.sourceforge.io/manual.htm">https://simplehtmldom.sourceforge.io/manual.htm</a> for modifying the urls on the HTML.</p>
-	<p>The plugin will only replace your site domain, with the CDN domain for the matching HTML tags.</p>
-	<p><strong>Recommended Default Settings:</strong></p>
-	<p class="fvm-code-full">
-	a[data-interchange*=/wp-content/]<br>
-	image[height]<br>
-	img[src*=/wp-content/], img[data-src*=/wp-content/], img[data-srcset*=/wp-content/]<br>
-	link[rel=icon]<br>
-	picture source[srcset*=/wp-content/]<br>
-	video source[type*=video]
-	</p>
-  </div>
-</div>
-
-
-<div style="height: 20px;"></div>
-<h2 class="title">Cache Settings</h2>
-
-<div class="accordion">
-  <h3>Public Cache Path</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>This can be any writeable directory or mounting point on your server, as long as it's mapped to be served on publicly available URL.</p>
-	<p>Should be left empty by default, unless your hosting blocks writing files to the default cache directory.</p>
-  </div>
-  <h3>Public Cache URL</h3>
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p>This must be a publicly available URL on your site, where users can download the generated js/css files.</p>
-	<p>Should be left empty by default, unless your hosting blocks writing files to the default cache directory.</p>
+    <p>Uses syntax from <a target="_blank" href="https://simplehtmldom.sourceforge.io/manual.htm">https://simplehtmldom.sourceforge.io/manual.htm</a> for modifying the HTML.</p>
+	<p>The plugin will replace your site domain url with the CDN domain for the matching HTML tags.</p>
   </div>
 </div>
 
@@ -369,15 +342,15 @@
   <div>
     <p><strong>Notes:</strong></p>
     <p>Simply disable the plugin, and make sure to purge all page caches (Cache Plugins, Hosting, OPCache, etc).</p>
-	<p>Note that some hosts rate limit the amount of times you can purge caches to once every few minutes, so you may be purging and it doesn't work, because you are being rate limited by your hosting cache system. If that happens, jsut ask your hosting to manually purge all caches on the server.</p>
+	<p>Note that some hosts rate limit the amount of times you can purge caches to once every few minutes, so you may be purging and it doesn't work, because you are being rate limited by your hosting cache system. If that happens, just wait and try again later or ask your hosting to manually purge all caches on the server.</p>
+	<p>You can also delete any database entries on the wp_options table starting with fastvelocity to completely purge it.</p>
 	<p>FVM does not modify your site. It runs after your template loads and filters the final HTML to present it to your users, in a more optimized way.</p>
   </div>
   <h3>I have disabled FVM but somehow the cache files are still being generated?</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>If you have disabled the plugin and purged all caches available, this is simply not possible.</p>
-	<p>Please ensure you have delete the plugin on the correct site location and that all caches are emptied.</p>
-	<p>A few hosting providers will cache your disk in memory to speed things up when they use remote disk locations, which may cause code to be cached even if you have deleted it completely from the disk. In that case, restart the server or ask your hosting to purge all disk caches.</p>
+    <p>If you already purged all caches available, please ensure you have deleted the plugin and that it's no longer visible via wp-admin. If you still see references to FVM in incognito mode via google chrome, that means your server still has full page cache in memory that needs to be cleared.</p>
+	<p>A few hosting providers will put your files on a remote storage and cache your disk and files in memory to speed things up, which may cause code to be cached even if you have completely deleted it from the remote storage. This means, it may take a few minutes, or several hours for the actual code to update. In that case, restart the server or ask your hosting to purge all disk and page caching memory.</p>
   </div>
   <h3>Where can I get support or ask questions about the plugin?</h3>
   <div>
@@ -387,10 +360,10 @@
   <h3>How is it possible that some scan is showing malware on the plugin?</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>I guarantee that the plugin is 100% clean of malware, provided you have downloaded the plugin from the official WordPress source.</p>
-	<p>Understand that Malware can infect any plugin you have on your site (even security plugins), regardless of the point of entry. Sometimes it propagates to/from different areas (including other sites you may have on the same server). </p>
-	<p>If there is any malware on any scripts being merged by FVM, they would be merged as they are until your next cache purge. </p>
-	<p>If you are seeing malware on any file related to FVM, simply delete the plugin, purge all cache files and make sure to only download the plugin from the official source on wordpress.org or via wp-admin.</p>
+    <p>I guarantee that the plugin is 100% clean of malware, provided you have downloaded the plugin from the official WordPress source AND that your other plugins, theme or core is not compromised.</p>
+	<p>Malware can infect any plugin (even security plugins) regardless of the point of entry. Sometimes it propagates from different areas (including other sites you may have on the same server) or through a vulnerability on another theme or plugin (even disabled plugins or themes sometimes). </p>
+	<p>For that reason, if there is already malware on any JS files or CSS being merged by FVM, they would still be merged as they are, as FVM also reads them as they are. </p>
+	<p>If you are seeing malware on any cache file related to FVM, simply purge all caches and delete the FVM plugin. Then hire someone to manually audit the site (plugins or automated malware checks are not 100% accurate). You can then reinstall the FVM plugin from the official source on wordpress.org or via wp-admin if you like.</p>
   </div>
   <h3>How do I report a security issue or file a bug report?</h3>
   <div>

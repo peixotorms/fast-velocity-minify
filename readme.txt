@@ -1,26 +1,26 @@
 === Fast Velocity Minify ===
 Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
-Requires at least: 4.7
+Requires at least: 4.9
 Requires PHP: 5.6
-Stable tag: 3.1.4
-Tested up to: 5.6
+Stable tag: 3.1.5
+Tested up to: 5.7.1
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Improve your speed score on GTmetrix, Pingdom Tools and Google PageSpeed Insights by merging and minifying CSS and JavaScript, compressing HTML and a few more speed optimization options. 
+Improve your speed score on GTmetrix, Pingdom Tools and Google PageSpeed Insights by adjusting your CSS and JS files (defer, async, minify, combine, etc), compressing HTML, simplifying fonts and a few more speed optimization options. 
  
 
 == Description ==
-Speed optimization plugin for developers and advanced users. This plugin reduces HTTP requests by merging CSS & JavaScript files. It minifies CSS and JS files with PHP Minify, the same library used on most cache plugins.
+Speed optimization plugin for developers and advanced users. 
 
-Minification is done on the frontend during the first uncached request. Once the first request is processed, any other pages that require the same set of CSS and JavaScript files, will reuse the same generated file.
+Minification is done on the frontend during the first uncached request. Once the first request is processed, any other pages that require the same set of CSS and JS files, will be able to reuse the same generated file.
 
 The plugin includes options for developers and advanced users, however the default settings should work just fine for most sites.
 Kindly read the HELP section after installing the plugin, about possible issues and how to solve them.
 
-= Aditional Optimization =
+= Additional Optimization =
 
 I can offer you aditional `custom made` optimization on top of this plugin. If you would like to hire me, please visit my profile links for further information.
 
@@ -54,6 +54,15 @@ Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requir
 
 
 == Changelog ==
+
+= 3.1.5 [2021.04.24] =
+* added support for WP Cloudflare Super Page Cache plugin
+* fixed support for LiteSpeed Cache purging
+* changed the cache directory to the uploads directory (WP_Filesystem_Direct)
+* deprecated CSS and JS merging as this is no longer recommended for HTTP/2 servers
+* stop removing RSS feeds references on the header cleanup option
+* changed some descriptions and updated the HELP section
+* other bug fixes
 
 = 3.1.4 [2021.01.11] =
 * disable FVM update routines when a user runs wp-cli commands outside of the root directory

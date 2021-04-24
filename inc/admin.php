@@ -45,24 +45,45 @@ function fvm_check_minimum_requirements() {
 
 # check for soft errors and misconfiguration
 function fvm_check_misconfiguration() {
-	if(current_user_can('manage_options')) {
-		
-		global $fvm_settings, $fvm_cache_paths;
-		
-		# check if custom cache directory exists
-		if(isset($fvm_settings['cache']['path']) && !empty($fvm_settings['cache']['path']) && !is_dir($fvm_settings['cache']['path']) && !is_writeable($fvm_settings['cache']['path'])) {
-			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', __( 'FVM needs writing permissions.', 'fast-velocity-minify' ).
-		' ['.$fvm_settings['cache']['path'].']' , 'success' );
+	try {
+				
+		# plugin version
+		global $fvm_var_plugin_version;
+		if(is_null($fvm_var_plugin_version)) { return false; }
+				
+		# if no database version, regenerate
+		$plugin_meta = get_option('fvm_plugin_meta');
+		if($plugin_meta === false) {
+			
+			# startup routines
+			fvm_plugin_deactivate();
+			fvm_plugin_activate();
+			
+			# save
+			update_option('fvm_plugin_meta', json_encode(array('dbv'=>0)) );
 		}
 		
-		# cache permissions		
-		if(!is_dir($fvm_cache_paths['cache_base_dir']) && !is_writeable($fvm_settings['cache']['path'])) {
-			$error = __( 'FVM needs writing permissions.', 'fast-velocity-minify' ) . ' ['.$fvm_cache_paths['cache_base_dir'].']';
+		# updates
+		if($plugin_meta !== false) {
+			
+			# future updates
+			$meta = json_decode($plugin_meta, true);
+			$previous_version = $meta['dbv'];
+			if($fvm_var_plugin_version != $previous_version) {
+				
+				# startup routines
+				fvm_plugin_deactivate();
+				fvm_plugin_activate();
+				
+				# save
+				update_option('fvm_plugin_meta', json_encode(array('dbv'=>$fvm_var_plugin_version)) );
+				
+			}
+			
 		}
 
-		# initialize database routine if not available
-		fvm_initialize_database();
-		
+	} catch (Exception $e) {
+		error_log('Caught exception (fvm_initialize_database): '.$e->getMessage(), 0);
 	}
 }
 
@@ -229,155 +250,40 @@ function fvm_get_logs_callback() {
 		
 	# must be able to cleanup cache
 	if (!current_user_can('manage_options')) {
-		wp_die( __('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
+		wp_die( __('You do not have sufficient permissions to access this page.'), __('Error:'), array('response'=>200)); 
 	}
 	
 	# must have
 	if(!defined('WP_CONTENT_DIR')) { 
-		wp_die( __('WP_CONTENT_DIR is undefined!', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
+		wp_die( __('WP_CONTENT_DIR is undefined!'), __('Error:'), array('response'=>200)); 
 	}
 	
-	# get info
-	global $fvm_cache_paths;
+	# defaults
+	global $wpdb;
+	if(is_null($wpdb)) { 
+		wp_die( __('Database error!'), __('Error:'), array('response'=>200)); 
+	}
 	
-	# must have valid cache paths
-	if(isset($fvm_cache_paths['cache_dir_min']) && !empty($fvm_cache_paths['cache_dir_min'])) {
+	# initialize log
+	$log = '';
 		
-		# defaults
-		$count_css = 0;
-		$count_js = 0;
-		$size_css = 0;
-		$size_js = 0;
+	# build css logs from database
+	$results = $wpdb->get_results("SELECT date, msg FROM ".$wpdb->prefix."fvm_logs ORDER BY id DESC LIMIT 500", 'ARRAY_A');
+		
+	# build log
+	if(is_array($results)) {
+		foreach (array_reverse($results, true) as $r) {
+			$log.= 'PROCESSED ON - ' . date('r', $r['date']) . PHP_EOL;
+			$log.= $r['msg'] .  PHP_EOL . PHP_EOL;
+		}
+	}
 	
-		# scan min directory recursively
-		$errora = false;
-		if(is_dir($fvm_cache_paths['cache_dir_min'])) {
-			try {
-				$i = new DirectoryIterator($fvm_cache_paths['cache_dir_min']);
-				foreach($i as $f){
-					if($f->isFile()){ 
-					
-						# javascript
-						if(stripos($f->getRealPath(), '.js') !== false) {
-							$count_js = $count_js + 1;
-							$size_js = $size_js + intval($f->getSize());
-						}
-						
-						# css
-						if(stripos($f->getRealPath(), '.css') !== false) {
-							$count_css = $count_css + 1;
-							$size_css = $size_css + intval($f->getSize());
-						}
-						
-					}
-				}
-			} catch (Exception $e) {
-				$errora = get_class($e) . ": " . $e->getMessage();
-			}
-		}
-			
-		# return early if errors
-		if($errora != false) {
-			header('Content-Type: application/json');
-			echo json_encode(array('error' => $errora));
-			exit();
-		}
-		
-		
-		# defaults
-		global $wpdb;
-		$tbl_name_log = $wpdb->prefix .'fvm_logs';
-		$tbl_name_cache = $wpdb->prefix .'fvm_cache';
-		
-		# initialize log
-		$css_log = '';
-		
-		# build css logs from database
-		
-		$results = $wpdb->get_results("SELECT date, content, meta FROM `$tbl_name_log` WHERE type = 'css' ORDER BY id DESC LIMIT 20");
-		
-		# build second query
-		foreach ($results as $log) {
-			
-			# get meta into an array
-			$meta = json_decode($log->meta, true);
-			
-			# start log
-			$css_log.= '+++++++++' . PHP_EOL;
-			$css_log.= 'PROCESSED - ' . date('r', $log->date) . ' - VIA - '. $meta['loc'] . PHP_EOL;
-			$css_log.= 'GENERATED - ' . $meta['fl'] . PHP_EOL;
-			$css_log.= 'MEDIATYPE - ' . $meta['mt'] . PHP_EOL;
-			$css_log.= '---' . PHP_EOL;
-			
-			# generate uid's from json
-			$list = array(); $list = json_decode($log->content);
-			
-			# get rows to log file
-			if(count($list) > 0) {
-				$listuids = implode(', ', array_fill(0, count($list), '%s'));
-				if(!empty($listuids)) {
-					$rs = array(); $rs = $wpdb->get_results($wpdb->prepare("SELECT meta FROM `$tbl_name_cache` WHERE uid IN (".$listuids.") ORDER BY FIELD(uid, '".implode("', '", $list)."')", $list));
-					foreach ($rs as $r) {
-						$imt = json_decode($r->meta, true);
-						$css_log.= '[Size: '.str_pad(fvm_format_filesize($imt['fs']), 10,' ',STR_PAD_LEFT).']'."\t". $imt['url'] . PHP_EOL;
-					}
-				}
-				$css_log.= '+++++++++' . PHP_EOL . PHP_EOL;
-			}
-		}
-		
-		# trim
-		$css_log = trim($css_log);
+	# default message
+	if(empty($log)) { $log = 'No logs generated yet.'; }
 
-		# initialize log
-		$js_log = '';
-		
-		# build css logs from database
-		$results = $wpdb->get_results("SELECT date, content, meta FROM `$tbl_name_log` WHERE type = 'js' ORDER BY id DESC LIMIT 20");
-		
-		# build second query
-		foreach ($results as $log) {
-			
-			# get meta into an array
-			$meta = json_decode($log->meta, true);
-			
-			# start log
-			$js_log.= '+++++++++' . PHP_EOL;
-			$js_log.= __( 'PROCESSED', 'fast-velocity-minify' ) . ' - ' . date('r', $log->date) . ' - VIA - '. $meta['loc'] . PHP_EOL;
-			$js_log.= __( 'GENERATED', 'fast-velocity-minify' ) . ' - ' . $meta['fl'] . PHP_EOL;
-			$js_log.= '---' . PHP_EOL;
-			
-			# generate uid's from json
-			$list = array(); $list = json_decode($log->content);
-			
-			# get rows to log file
-			if(count($list) > 0) {
-				$listuids = implode(', ', array_fill(0, count($list), '%s'));
-				if(!empty($listuids)) {
-					$rs = array(); $rs = $wpdb->get_results($wpdb->prepare("SELECT meta FROM `$tbl_name_cache` WHERE uid IN (".$listuids.") ORDER BY FIELD(uid, '".implode("', '", $list)."')", $list));
-					foreach ($rs as $r) {
-						$imt = json_decode($r->meta, true);
-						$js_log.= '['.__( 'Size:', 'fast-velocity-minify' ).' '.str_pad(fvm_format_filesize($imt['fs']), 10,' ',STR_PAD_LEFT).']'."\t". $imt['url'] . PHP_EOL;
-					}
-				}
-				$js_log.= '+++++++++' . PHP_EOL . PHP_EOL;
-			}
-		}
-		
-		# trim
-		$js_log = trim($js_log);
-		
-		# default message
-		if(empty($css_log)) { $css_log = __( 'No CSS files generated yet.', 'fast-velocity-minify' ); }
-		if(empty($js_log)) { $js_log = __( 'No JS files generated yet.', 'fast-velocity-minify' ); }
-		
 		# build info
 		$result = array(
-			'stats_total' => array('count'=>($count_css+$count_js), 'size'=>fvm_format_filesize($size_css+$size_js)),
-			'stats_css' => array('count'=>$count_css, 'size'=>fvm_format_filesize($size_css)),
-			'stats_js' => array('count'=>$count_js, 'size'=>fvm_format_filesize($size_js)),
-			'js_log' => $js_log,
-			'css_log' => $css_log,
+			'log' => $log,
 			'success' => 'OK'
 		);
 		
@@ -385,11 +291,7 @@ function fvm_get_logs_callback() {
 		header('Content-Type: application/json');
 		echo json_encode($result);
 		exit();
-		
-	}
 	
-	# default
-	wp_die( __('Unknown cache path!', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 }
 
 
@@ -397,47 +299,47 @@ function fvm_get_logs_callback() {
 register_activation_hook($fvm_var_file, 'fvm_plugin_activate');
 function fvm_plugin_activate() {
 		
-	# default variables
 	global $wpdb;
-	$charset_collate = $wpdb->get_charset_collate();
-	$sqla_table_name = $wpdb->prefix . 'fvm_cache';
-	$sqlb_table_name = $wpdb->prefix . 'fvm_logs';
+	if(is_null($wpdb)) { return false; }
+		
+	# defauls
+	$sql = array();
+	$wpdb_collate = $wpdb->collate;
 	
-	# prepare	
-	$sqla = "CREATE TABLE IF NOT EXISTS `$sqla_table_name` (
-        `id` bigint(20) unsigned NOT NULL auto_increment, 
-        `uid` varchar(60) NOT NULL, 
-		`date` bigint(20) unsigned NOT NULL, 
-		`type` varchar(32) NOT NULL, 
-		`content` mediumtext NOT NULL, 
-		`meta` mediumtext NOT NULL, 
-        PRIMARY KEY  (id), 
-		UNIQUE KEY uid (uid), 
-		KEY date (date), KEY type (type) 
-        ) $charset_collate;";
+	# create cache table
+	$sqla_table_name = $wpdb->prefix . 'fvm_cache';
+	$sqla = "CREATE TABLE IF NOT EXISTS {$sqla_table_name} (
+         `id` bigint(20) unsigned NOT NULL auto_increment ,
+         `uid` varchar(64) NOT NULL,
+		 `date` bigint(10) unsigned NOT NULL, 
+		 `type` varchar(3) NOT NULL, 
+		 `content` mediumtext NOT NULL, 
+		 `meta` mediumtext NOT NULL,
+         PRIMARY KEY  (id),
+		 UNIQUE KEY uid (uid), 
+		 KEY date (date), KEY type (type) 
+         )
+         COLLATE {$wpdb_collate}";
 		 
 	# create logs table
-	
-	$sqlb = "CREATE TABLE IF NOT EXISTS `$sqlb_table_name` (
-        `id` bigint(20) unsigned NOT NULL auto_increment, 
-		`uid` varchar(60) NOT NULL, 
-		`date` bigint(20) unsigned NOT NULL, 
-		`type` varchar(32) NOT NULL, 
-		`content` mediumtext NOT NULL, 
-		`meta` mediumtext NOT NULL, 
-		PRIMARY KEY  (id), 
-		UNIQUE KEY uid (uid), 
-		KEY date (date), 
-		KEY type (type) 
-        ) $charset_collate;";
+	$sqlb_table_name = $wpdb->prefix . 'fvm_logs';
+	$sqlb = "CREATE TABLE IF NOT EXISTS {$sqlb_table_name} (
+         `id` bigint(20) unsigned NOT NULL auto_increment, 
+		 `uid` varchar(64) NOT NULL,
+		 `date` bigint(10) unsigned NOT NULL, 
+		 `type` varchar(10) NOT NULL, 
+		 `msg` mediumtext NOT NULL, 
+		 `meta` mediumtext NOT NULL, 
+		 PRIMARY KEY  (id), 
+		 UNIQUE KEY uid (uid), 
+		 KEY date (date), 
+		 KEY type (type)
+         )
+         COLLATE {$wpdb_collate}";
 
 	# run sql
-	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	dbDelta( $sqla );
-	dbDelta( $sqlb );
-	
-	# initialize cache time
-	fvm_cache_increment();
+	$wpdb->query($sqla);
+	$wpdb->query($sqlb);
 
 }
 
@@ -445,71 +347,35 @@ function fvm_plugin_activate() {
 # run during deactivation
 register_deactivation_hook($fvm_var_file, 'fvm_plugin_deactivate');
 function fvm_plugin_deactivate() {
-	global $wpdb, $fvm_settings, $fvm_cache_paths;
+
+	global $wpdb;
+	if(is_null($wpdb)) { return false; }
 	
-	# remove all caches on deactivation
-	if(isset($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
-		fvm_rrmdir($fvm_cache_paths['cache_base_dir']);
-	}
+	# remove options and tables
+	$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_last_cache_update'");
+	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_cache");
+	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_logs");
 	
-	# delete cache table
-	$tbl_name = $wpdb->prefix .'fvm_cache';
-	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`", $tbl_name);
-	$wpdb->query($sql);
-	
-	# delete logs table
-	$tbl_name = $wpdb->prefix .'fvm_logs';
-	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`", $tbl_name);
-	$wpdb->query($sql);
+	# process cache settings
+	fvm_purge_static_files();
 
 }
 
 # run during uninstall
 register_uninstall_hook($fvm_var_file, 'fvm_plugin_uninstall');	
 function fvm_plugin_uninstall() {
-	global $wpdb, $fvm_settings, $fvm_cache_paths;
-	
-	# fetch settings on wp-cli
-	if(is_null($fvm_settings)) { $fvm_settings = fvm_get_settings(); }
-	if(is_null($fvm_cache_paths)) { $fvm_cache_paths = fvm_cachepath(); }
-	
-	# remove settings, unless disabled
-	if(!isset($fvm_settings['global']['preserve_settings']) || ( isset($fvm_settings['global']['preserve_settings']) && $fvm_settings['global']['preserve_settings'] != true)) {		
-		
-		# prepare and delete
-		$tbl_name = $wpdb->prefix .'options';
-		$sql = $wpdb->prepare( "DELETE FROM `$tbl_name` WHERE option_name = 'fvm_settings'");
-		$wpdb->query($sql);
-		$sql = $wpdb->prepare( "DELETE FROM `$tbl_name` WHERE option_name = 'fvm_last_cache_update'");
-		$wpdb->query($sql);
-		
-	}
-	
-	# delete cache table
-	$tbl_name = $wpdb->prefix .'fvm_cache';
-	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`");
-	$wpdb->query($sql);
-	
-	# delete logs table
-	$tbl_name = $wpdb->prefix .'fvm_logs';
-	$sql = $wpdb->prepare( "DROP TABLE IF EXISTS `$tbl_name`");
-	$wpdb->query($sql);
-	
-	# remove all cache directories
-	if(isset($fvm_cache_paths['cache_dir_min']) && stripos($fvm_cache_paths['cache_dir_min'], '/fvm') !== false) {
-		fvm_rrmdir($fvm_cache_paths['cache_base_dir']);
-	}
-}
-
-# initialize database if it doesn't exist
-function fvm_initialize_database() {
-	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	global $wpdb;
-	$tbl_name = $wpdb->prefix .'fvm_cache';
-    $sql = $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $tbl_name ) );
-    if ( $wpdb->get_var( $sql ) !== $tbl_name ) {
-        fvm_plugin_activate();
-    }
+	if(is_null($wpdb)) { return false; }
+	
+	# remove options and tables
+	$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_settings'");
+	$wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name = 'fvm_last_cache_update'");
+	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_cache");
+	$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}fvm_logs");
+	
+	# process cache settings
+	fvm_purge_static_files();
+	
 }
 
 
