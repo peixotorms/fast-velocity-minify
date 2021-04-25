@@ -21,15 +21,26 @@ function fvm_check_minimum_requirements() {
 		}
 		
 		# wp version requirements
-		if ( version_compare( $GLOBALS['wp_version'], '4.5', '<' ) ) {
-			$error = __( 'FVM requires WP 4.5 or higher. You’re still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version']; 
+		if ( version_compare( $GLOBALS['wp_version'], '4.9', '<' ) ) {
+			$error = __( 'FVM requires WP 4.9 or higher. You’re still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version']; 
 		}
 		
-		# cache permissions		
-		global $fvm_cache_paths;
-		if(is_dir($fvm_cache_paths['cache_base_dir']) && !is_writable($fvm_cache_paths['cache_base_dir'])) {
-		$error = __( 'FVM needs writing permissions.', 'fast-velocity-minify' ). ' ['.$fvm_cache_paths['cache_base_dir'].']';
+		# set cache on the uploads directory
+		$upload_dir = wp_upload_dir();
+		if(isset($upload_dir['basedir']) && isset($upload_dir['baseurl']) && !empty($upload_dir['basedir'])) {
+			
+			# define and create directory
+			$cache_dir = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . 'fvm-cache'. DIRECTORY_SEPARATOR . 'min';
+			$cache_dir_url = $upload_dir['baseurl'] . '/fvm-cache/min';
+			if(!is_dir($cache_dir) && function_exists('wp_mkdir_p')) { wp_mkdir_p($cache_dir); }
+			
+			# check
+			if(is_dir($cache_dir) && !is_writable($cache_dir)) {
+				$error = __( 'FVM needs writing permissions on ', 'fast-velocity-minify' ). ' ['.$cache_dir.']';
+			}
+			
 		}
+		
 		
 		# deactivate plugin forcefully
 		global $fvm_var_basename;
@@ -237,7 +248,7 @@ function fvm_add_settings_admin() {
 	}
 
 	# include admin html template
-	global $fvm_cache_paths, $fvm_settings, $fvm_var_dir_path;
+	global $fvm_settings, $fvm_var_dir_path;
 	
 	# admin html templates
 	include($fvm_var_dir_path . 'layout' . DIRECTORY_SEPARATOR . 'admin-layout.php');

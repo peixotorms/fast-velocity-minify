@@ -940,7 +940,7 @@ function fvm_process_page($html) {
 			
 		# add preload http header
 		if(count($pre_http) > 0) {
-			if(!headers_sent()) {
+			if(!headers_sent() && fvm_get_scheme() && fvm_has_http2()) {
 				header("Link: " . implode(', ', $pre_http));
 			}
 		}

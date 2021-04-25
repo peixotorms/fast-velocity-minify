@@ -1986,6 +1986,16 @@ function fvm_get_scheme() {
 	return 'http';
 }
 
+# detect http2
+function fvm_has_http2() {
+	if(isset($_SERVER['SERVER_PROTOCOL'])) { 
+		if($_SERVER['SERVER_PROTOCOL'] == 'HTTP/2.0') { return true; }
+	}
+	return false;
+}
+
+
+
 # get the domain name
 function fvm_get_domain() {
 	if (function_exists('site_url')) {
