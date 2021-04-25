@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.9
 Requires PHP: 5.6
-Stable tag: 3.1.5
+Stable tag: 3.1.6
 Tested up to: 5.7.1
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -54,6 +54,10 @@ Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requir
 
 
 == Changelog ==
+
+= 3.1.6 [2021.04.25] =
+* fixed a notice on wp-admin
+* better http2 support
 
 = 3.1.5 [2021.04.24] =
 * added support for WP Cloudflare Super Page Cache plugin
