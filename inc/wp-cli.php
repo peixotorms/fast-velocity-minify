@@ -15,11 +15,11 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		# purge files + cache
 		public function purge() {
 			WP_CLI::success( __( 'FVM and other caches were purged.', 'fast-velocity-minify' ) );
-			fvm_purge_minification();
+			fvm_purge_static_files();
 			fvm_purge_others();	
 			
 			# purge everything
-			$cache = fvm_purge_minification();
+			$cache = fvm_purge_static_files();
 			$others = fvm_purge_others();
 			
 			# notices
