@@ -394,8 +394,11 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 	# files first, but only for js/css types
 	if(function_exists('wp_upload_dir')) {
 		
+		# cache date
+		$tvers = get_option('fvm_last_cache_update', '0');
+		
 		# parse uripath and check if it matches against our rewrite format
-		$filename = $tkey .'.'. $type;
+		$filename = $tvers.'-'.$tkey .'.'. $type;
 
 		# set cache on the uploads directory
 		$upload_dir = wp_upload_dir();
@@ -497,6 +500,9 @@ function fvm_purge_static_files() {
 	
 	# process
 	if( function_exists('wp_upload_dir') ) {
+		
+		# current timestamp
+		$tvers = get_option('fvm_last_cache_update', '0');
 	
 		$upload_dir = wp_upload_dir();
 		if(isset($upload_dir['basedir']) && isset($upload_dir['baseurl']) && !empty($upload_dir['basedir'])) {
@@ -514,12 +520,14 @@ function fvm_purge_static_files() {
 				$cache_dir = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . 'fvm-cache'. DIRECTORY_SEPARATOR . 'min';
 				$fileSystemDirect = new WP_Filesystem_Direct(false);
 				
-				# older than 3 days
+				# older than 24h and not matching current timestamp
 				$list = $fileSystemDirect->dirlist($cache_dir, false, true);
 				if(is_array($list) && count($list) > 0) {
 					foreach($list as $k=>$arr) {
 						if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= time()-86400) {
-							$fileSystemDirect->delete($cache_dir . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
+							if(substr($arr['name'], 0, 10) !== $tvers) {
+								$fileSystemDirect->delete($cache_dir . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
+							}
 						}
 					}
 				}
@@ -779,7 +787,7 @@ function fvm_save_log($arr) {
 		
 		# check if exists before inserting
 		$result = $wpdb->get_row($wpdb->prepare("SELECT id FROM ".$wpdb->prefix."fvm_logs WHERE uid = %s LIMIT 1", $arr['uid']));
-		if(is_null($check) || !isset($result->id)) {
+		if(!isset($result->id)) {
 			
 			# prepare and insert to database
 			$wpdb->query($wpdb->prepare("INSERT IGNORE INTO ".$wpdb->prefix."fvm_logs (".implode(', ', $fld).") VALUES (".implode(', ', $tpe).")", $vls));
