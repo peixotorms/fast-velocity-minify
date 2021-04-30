@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.9
 Requires PHP: 5.6
-Stable tag: 3.1.7
+Stable tag: 3.1.8
 Tested up to: 5.7.1
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -46,14 +46,12 @@ You can create a style tag, with an ID equal to "critical-path" ex: `<style id="
 1. The Settings page.
 
 
-== Upgrade Notice ==
-
-= 3.0.0 =
-Please backup your site before updating. 
-Version 3.0 is a major code rewrite to improve JS and CSS merging, but it requires JS settings to be readjusted after the update. 
-
-
 == Changelog ==
+
+= 3.1.8 [2021.04.30] =
+* fixed missing dynamic css/js urls
+* fixed some relative static assets paths 
+* added auto disabling of FVM on Web Stories (AMP)
 
 = 3.1.7 [2021.04.26] =
 * more php notices fixes

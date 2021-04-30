@@ -856,6 +856,11 @@ function fvm_replace_css_imports($css, $rq=null) {
 					# download file, get contents, merge
 					$ddl = array();
 					$ddl = fvm_maybe_download($href);
+					
+					# error
+					if(isset($ddl['error'])) {
+						return trim($css);
+					}
 				
 					# if success
 					if(isset($ddl['content'])) {
@@ -920,6 +925,9 @@ function fvm_extract_fonts($css_code) {
 	$css_code_ff = str_replace('https://'.$fvm_urls['wp_domain'], '', $css_code_ff);
 	$css_code_ff = str_replace('http://'.$fvm_urls['wp_domain'], '', $css_code_ff);
 	$css_code_ff = str_replace('//'.$fvm_urls['wp_domain'], '', $css_code_ff);
+	
+	# fixes
+	$css_code_ff = str_replace('/./', '/', $css_code_ff);
 
 	# return
 	$result = array('code'=>$css_code, 'fonts'=>$css_code_ff);
@@ -1061,7 +1069,7 @@ function fvm_rewrite_cdn_url($url) {
 
 # get css font-face rules, original + simplified
 function fvm_simplify_fontface($css_code) {
-	
+
 	$mff = array();
 	$before = array();
 	$after = array();
@@ -1078,22 +1086,22 @@ function fvm_simplify_fontface($css_code) {
 					
 					# woff				
 					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^,\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff[\'\"]*\s*\)/Uui', $csr, $fonts);
+					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff[\'\"]*\s*\)/Uui', $csr, $fonts);
 					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
 				
 					# woff2
 					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^,\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff2[\'\"]*\s*\)/Uui', $csr, $fonts);
+					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff2[\'\"]*\s*\)/Uui', $csr, $fonts);
 					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
 				
 					# svg
 					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^,\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*svg[\'\"]*\s*\)/Uui', $csr, $fonts);
+					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*svg[\'\"]*\s*\)/Uui', $csr, $fonts);
 					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
 					
 					# truetype
 					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^,\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*truetype[\'\"]*\s*\)/Uui', $csr, $fonts);
+					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*truetype[\'\"]*\s*\)/Uui', $csr, $fonts);
 					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
 					
 					# delete other src:url rules
@@ -1145,6 +1153,11 @@ function fvm_get_css_from_file($tag) {
 		$ddl = array();
 		$ddl = fvm_maybe_download($href);
 		
+		# error
+		if(isset($ddl['error'])) {
+			return array('error'=>$ddl['error'], 'tkey'=>$tkey, 'url'=> $href);
+		}
+		
 		# success
 		if(isset($ddl['content'])) {
 			
@@ -1163,7 +1176,7 @@ function fvm_get_css_from_file($tag) {
 				# handle import rules
 				$css = fvm_replace_css_imports($css, $href);
 				$meta = json_encode(array('href'=>$href));
-										
+														
 				# save transient
 				$verify = fvm_set_transient(array('uid'=>$tkey, 'date'=>$tvers, 'type'=>'css', 'content'=>$css, 'meta'=>$meta));
 								
@@ -1176,10 +1189,7 @@ function fvm_get_css_from_file($tag) {
 		# success, from transient
 		return array('code'=>$css, 'tkey'=>$tkey, 'url'=> $href);
 	}
-	
-	# fallback
-	return false;
-		
+			
 }
 
 
@@ -1204,6 +1214,11 @@ function fvm_get_js_from_file($tag) {
 		
 		$ddl = array();
 		$ddl = fvm_maybe_download($href);
+		
+		# error
+		if(isset($ddl['error'])) {
+			return array('error'=>$ddl['error'], 'tkey'=>$tkey, 'url'=> $href);
+		}
 		
 		# success
 		if(isset($ddl['content'])) {
@@ -1722,26 +1737,29 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 			
 			# adjust paths
 			$bgimgs = array();
-			preg_match_all ('/url\s*\((\s*[\'"]?(http:|https:|\/\/).+[\'"]?\s*)\)/Uui', $css, $bgimgs);
+			preg_match_all ('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)/Uui', $css, $bgimgs);
 			if(isset($bgimgs[1]) && is_array($bgimgs[1])) {
 				foreach($bgimgs[1] as $img) {
-					
-					# normalize
-					$newimg = fvm_normalize_url($img);
-					if($newimg != $img) { $css = str_replace($img, $newimg, $css); $img = $newimg; }
-					
-					# process
-					if(substr($img, 0, strlen($use_url)) == $use_url) {
-						$pos = strpos($img, $use_url);
-						if ($pos !== false) {
-							
-							# relative path image
-							$relimg = '/' . ltrim(substr_replace($img, '', $pos, strlen($use_url)), '/');
-							
-							# replace url
-							$css = str_replace($img, $relimg, $css);
-							
+					if(stripos($img, 'http') !== false || stripos($img, '//') !== false) {
+						
+						# normalize
+						$newimg = fvm_normalize_url($img);
+						if($newimg != $img) { $css = str_replace($img, $newimg, $css); $img = $newimg; }
+						
+						# process
+						if(substr($img, 0, strlen($use_url)) == $use_url) {
+							$pos = strpos($img, $use_url);
+							if ($pos !== false) {
+								
+								# relative path image
+								$relimg = '/' . ltrim(substr_replace($img, '', $pos, strlen($use_url)), '/');
+								
+								# replace url
+								$css = str_replace($img, $relimg, $css);
+								
+							}
 						}
+						
 					}
 				}
 			}
@@ -1753,6 +1771,9 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 			$css = str_replace('https://'.$fvm_urls['wp_domain'], '', $css);
 			$css = str_replace('http://'.$fvm_urls['wp_domain'], '', $css);
 			$css = str_replace('//'.$fvm_urls['wp_domain'], '', $css);
+			
+			# fixes
+			$css = str_replace('/./', '/', $css);
 			
 		}
 		
@@ -1927,9 +1948,9 @@ function fvm_maybe_download($url) {
 		
 		# file path + windows compatibility
 		$f =  strtok(str_replace('/', DIRECTORY_SEPARATOR, str_replace(rtrim($fvm_urls['wp_site_url'], '/'), rtrim(ABSPATH, '/'), $url)), '?');
-			
+					
 		# did it work?
-		if (file_exists($f)) {
+		if (file_exists($f) && is_file($f)) {
 			return array('content'=>file_get_contents($f), 'src'=>'Disk');
 		}
 	}
@@ -1943,7 +1964,7 @@ function fvm_maybe_download($url) {
 	$response = wp_remote_get($url, array('user-agent'=>$uagent, 'timeout' => 7, 'httpversion' => '1.1', 'sslverify'=>false)); 
 	if ( is_wp_error( $response ) ) {
 		$error_message = $response->get_error_message();
-		return array('error'=>"Something went wrong: $error_message / $url");
+		return array('error'=>"Something went wrong: $error_message");
 	} else {
 		return array('content'=>wp_remote_retrieve_body($response), 'src'=>'Web');
 	}

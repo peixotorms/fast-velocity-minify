@@ -70,11 +70,18 @@ function fvm_process_page($html) {
 	
 	# collect all link preload headers, skip amp
 	if(fvm_is_amp_page() !== true) {
+		
+		# skip on web stories
+		if(count($html->find('script[src*=cdn.ampproject.org]')) > 0) {
+			return $html . '<!-- FVM does not support AMP -->';
+		}
+		
 		# add other preloads
 		foreach($html->find('link[rel=preload]') as $tag) {
 			$htmlpreloads[] = $tag->outertext;
 			$tag->outertext = '';
 		}
+		
 	}
 	
 	
@@ -132,8 +139,8 @@ function fvm_process_page($html) {
 			
 			
 			# START CSS FILES
-			if($tag->tag == 'link' && isset($tag->href)) {		
-
+			if($tag->tag == 'link' && isset($tag->href)) {
+				
 				# Ignore css files
 				$ignore_css_merging = false;
 				if(isset($fvm_settings['css']['ignore']) && !empty($fvm_settings['css']['ignore'])) {
@@ -169,6 +176,13 @@ function fvm_process_page($html) {
 					$css = fvm_get_css_from_file($tag);
 					
 					if($css !== false && is_array($css)) {
+						
+						# error
+						if(isset($css['error'])) {
+							$tag->outertext = '/* Error on '.$href.' : '.$css['error'].' */'. PHP_EOL . $tag->outertext;
+							unset($allcss[$k]);
+							continue;
+						}
 						
 						# extract fonts and icons
 						if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
@@ -233,6 +247,13 @@ function fvm_process_page($html) {
 					$css = fvm_get_css_from_file($tag);
 					
 					if($css !== false && is_array($css)) {
+						
+						# error
+						if(isset($css['error'])) {
+							$tag->outertext = '/* Error on '.$href.' : '.$css['error'].' */'. PHP_EOL . $tag->outertext;
+							unset($allcss[$k]);
+							continue;
+						}
 						
 						# extract fonts and icons
 						if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
@@ -564,6 +585,13 @@ function fvm_process_page($html) {
 										# download or fetch from transient, minified
 										$js = fvm_get_js_from_file($tag);
 										if($js !== false && is_array($js)) {
+											
+											# error
+											if(isset($js['error'])) {
+												$tag->outertext = '/* Error on '.$href.' : '.$js['error'].' */'. PHP_EOL . $tag->outertext;
+												unset($allscripts[$k]);
+												continue 2;
+											}
 										
 											# save js for merging
 											$fvm_scripts_header[] = $js['code'];
@@ -594,6 +622,13 @@ function fvm_process_page($html) {
 										# download or fetch from transient, minified
 										$js = fvm_get_js_from_file($tag);
 										if($js !== false && is_array($js)) {
+											
+											# error
+											if(isset($js['error'])) {
+												$tag->outertext = '/* Error on '.$href.' : '.$js['error'].' */'. PHP_EOL . $tag->outertext;
+												unset($allscripts[$k]);
+												continue 2;
+											}
 										
 											# save js for merging
 											$fvm_scripts_defer[] = $js['code'];
@@ -657,6 +692,13 @@ function fvm_process_page($html) {
 										# download or fetch from transient, minified
 										$js = fvm_get_js_from_file($tag);
 										if($js !== false && is_array($js)) {
+											
+											# error
+											if(isset($js['error'])) {
+												$tag->outertext = '/* Error on '.$href.' : '.$js['error'].' */'. PHP_EOL . $tag->outertext;
+												unset($allscripts[$k]);
+												continue 2;
+											}
 										
 											# generate url
 											$ind_js_url = fvm_generate_min_url($tag->src, $js['tkey'], 'js', $js['code']);
@@ -702,6 +744,13 @@ function fvm_process_page($html) {
 										# download or fetch from transient, minified
 										$js = fvm_get_js_from_file($tag);
 										if($js !== false && is_array($js)) {
+											
+											# error
+											if(isset($js['error'])) {
+												$tag->outertext = '/* Error on '.$href.' : '.$js['error'].' */'. PHP_EOL . $tag->outertext;
+												unset($allscripts[$k]);
+												continue 2;
+											}
 										
 											# generate url
 											$ind_js_url = fvm_generate_min_url($tag->src, $js['tkey'], 'js', $js['code']);
