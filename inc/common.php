@@ -816,9 +816,13 @@ function fvm_replace_css_imports($css, $rq=null) {
 	
 	# globals
 	global $fvm_urls, $fvm_settings;
+	
+	# reset
+	$cssimports = array();
+	$cssimports_prepend = array();
+	$css = trim($css);
 
 	# handle import url rules
-	$cssimports = array();
 	preg_match_all ("/@import[ ]*['\"]{0,}(url\()*['\"]*([^\(\{'\"\)]*)['\"\)]*[;]{0,}/ui", $css, $cssimports);
 	if(isset($cssimports[0]) && isset($cssimports[2])) {
 		foreach($cssimports[0] as $k=>$cssimport) {
@@ -879,13 +883,20 @@ function fvm_replace_css_imports($css, $rq=null) {
 					}
 				}
 
-				# replace import rule with inline code
+				# remove import rule and prepend imported code
 				if ($subcss !== false && !empty($subcss)) {
-					$css = str_replace($cssimport, $subcss, $css);
+					$css = str_replace($cssimport, '', $css);
+					$cssimports_prepend[] = '/* Import rule from: '.$href . ' */' . PHP_EOL . $subcss;
 				}
 				
 			}
 		}
+	}
+	
+	# prepend import rules
+	# https://www.w3.org/TR/CSS2/cascade.html#at-import
+	if(count($cssimports_prepend) > 0) {
+		$css = implode(PHP_EOL, $cssimports_prepend) . $css;
 	}
 	
 	# return
@@ -1083,12 +1094,12 @@ function fvm_simplify_fontface($css_code) {
 			$cssrules = preg_split("/;(?![^(]*\))/iu", $ff);
 			foreach ($cssrules as $k=>$csr) {
 				if(preg_match('/src\s*\:\s*url/Uui', $csr)) {
-					
+
 					# woff				
 					$fonts = array();
 					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff[\'\"]*\s*\)/Uui', $csr, $fonts);
 					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
-				
+
 					# woff2
 					$fonts = array();
 					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff2[\'\"]*\s*\)/Uui', $csr, $fonts);
@@ -1737,7 +1748,7 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 			
 			# adjust paths
 			$bgimgs = array();
-			preg_match_all ('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)/Uui', $css, $bgimgs);
+			preg_match_all ('/url\s*\(\s*[\'\"]*([^;\'\"]*)[\'\"]*\)/Uui', $css, $bgimgs);
 			if(isset($bgimgs[1]) && is_array($bgimgs[1])) {
 				foreach($bgimgs[1] as $img) {
 					if(stripos($img, 'http') !== false || stripos($img, '//') !== false) {
