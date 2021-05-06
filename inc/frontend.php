@@ -61,7 +61,6 @@ function fvm_process_page($html) {
 				
 	# defaults
 	$tvers = get_option('fvm_last_cache_update', '0');
-	$httppreloads = array();
 	$htmlpreloads = array();
 	$htmlcssheader = array();
 	$htmljsheader = array();
@@ -312,7 +311,6 @@ function fvm_process_page($html) {
 
 						# http and html preload for render blocking css
 						if(!isset($fvm_settings['css']['nopreload']) || (isset($fvm_settings['css']['nopreload']) && $fvm_settings['css']['nopreload'] != true)) {
-							$httppreloads[] = '<'.$ind_css_url.'>; rel=preload; as=style';
 							$htmlpreloads[] = '<link rel="preload" href="'.$ind_css_url.'" as="style" media="'.$tag->media.'" />';	
 						}
 						
@@ -448,7 +446,6 @@ function fvm_process_page($html) {
 						
 						# http and html preload for render blocking css
 						if(!isset($fvm_settings['css']['nopreload']) || (isset($fvm_settings['css']['nopreload']) && $fvm_settings['css']['nopreload'] != true)) {
-							$httppreloads[] = '<'.$merged_css_url.'>; rel=preload; as=style';
 							$htmlpreloads[] = '<link rel="preload" href="'.$merged_css_url.'" as="style" media="'.$mediatype.'"  />';
 						}
 						
@@ -657,7 +654,6 @@ function fvm_process_page($html) {
 							
 							# http and html preload for render blocking js
 							if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
-								$httppreloads[] = '<'.$href.'>; rel=preload; as=script';
 								$htmlpreloads[] = '<link rel="preload" href="'.$href.'" as="script" />';
 							}
 							
@@ -714,7 +710,6 @@ function fvm_process_page($html) {
 											
 											# http and html preload for render blocking scripts
 											if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
-												$httppreloads[] = '<'.$ind_js_url.'>; rel=preload; as=script';
 												$htmlpreloads[] = '<link rel="preload" href="'.$ind_js_url.'" as="script" />';
 											}
 											
@@ -888,7 +883,6 @@ function fvm_process_page($html) {
 			
 			# http and html preload for render blocking scripts
 			if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
-				$httppreloads[] = '<'.$merged_js_url.'>; rel=preload; as=script';
 				$htmlpreloads[] = '<link rel="preload" href="'.$merged_js_url.'" as="script" />';
 			}
 			
@@ -977,22 +971,13 @@ function fvm_process_page($html) {
 	}
 	
 	# preload headers, by importance
-	if(is_array($htmlpreloads) || is_array($httppreloads)) {
+	if(is_array($htmlpreloads)) {
 		
 		# deduplicate
 		$htmlpreloads = array_unique($htmlpreloads);
-		$httppreloads = array_unique($httppreloads);
 		
 		# get values
 		$pre_html = array_values($htmlpreloads); 
-		$pre_http = array_values($httppreloads); 
-			
-		# add preload http header
-		if(count($pre_http) > 0) {
-			if(!headers_sent() && fvm_get_scheme() && fvm_has_http2()) {
-				header("Link: " . implode(', ', $pre_http));
-			}
-		}
 		
 		# add preload html header
 		if(count($pre_html) > 0) {

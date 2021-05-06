@@ -1146,7 +1146,7 @@ function fvm_simplify_fontface($css_code) {
 function fvm_get_css_from_file($tag) {
 	
 	# globals
-	global $fvm_urls, $fvm_settings;
+	global $fvm_settings;
 	
 	# variables
 	$tvers = get_option('fvm_last_cache_update', '0');
@@ -1173,9 +1173,9 @@ function fvm_get_css_from_file($tag) {
 		if(isset($ddl['content'])) {
 			
 			# minify flag
-			$min = false; 
-			if(isset($fvm_settings['css']['css_enable_min_files']) && $fvm_settings['css']['css_enable_min_files'] == true) { 
-				$min = true; 
+			$min = true; 
+			if(isset($fvm_settings['css']['min_disable']) && $fvm_settings['css']['min_disable'] == true) { 
+				$min = false; 
 			}
 							
 			# minify
@@ -1208,7 +1208,7 @@ function fvm_get_css_from_file($tag) {
 function fvm_get_js_from_file($tag) {
 	
 	# globals
-	global $fvm_urls, $fvm_settings;
+	global $fvm_settings;
 	
 	# variables
 	$tvers = get_option('fvm_last_cache_update', '0');
@@ -1234,10 +1234,14 @@ function fvm_get_js_from_file($tag) {
 		# success
 		if(isset($ddl['content'])) {
 			
-			# minify?
-			if(!isset($fvm_settings['js']['min_disable_inline']) || (isset($fvm_settings['js']['min_disable_inline'])&& $fvm_settings['js']['min_disable_inline'] != true)) {
-				$js = fvm_maybe_minify_js($ddl['content'], $href, true);
+			# minify flag
+			$min = true; 
+			if(isset($fvm_settings['js']['min_disable']) && $fvm_settings['js']['min_disable'] == true) { 
+				$min = false; 
 			}
+			
+			# minify
+			$js = fvm_maybe_minify_js($ddl['content'], $href, $min);
 			
 			# wrap with try catch
 			$js = fvm_try_catch_wrap($js, $href);
@@ -1707,6 +1711,7 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 
 		# remove sourceMappingURL
 		$css = preg_replace('/(\/\/\s*[#]\s*sourceMappingURL\s*[=]\s*)([a-zA-Z0-9-_\.\/]+)(\.map)/ui', '', $css);
+		$css = preg_replace('/(\/[*]\s*[#]\s*sourceMappingURL\s*[=]\s*)([a-zA-Z0-9-_\.\/]+)(\.map)\s*[*]\s*[\/]/ui', '', $css);
 		
 		# fix url paths
 		if(!empty($url)) {
@@ -1823,6 +1828,7 @@ function fvm_maybe_minify_js($js, $url, $enable_js_minification) {
 				
 		# remove sourceMappingURL
 		$js = preg_replace('/(\/\/\s*[#]\s*sourceMappingURL\s*[=]\s*)([a-zA-Z0-9-_\.\/]+)(\.map)/ui', '', $js);
+		$js = preg_replace('/(\/[*]\s*[#]\s*sourceMappingURL\s*[=]\s*)([a-zA-Z0-9-_\.\/]+)(\.map)\s*[*]\s*[\/]/ui', '', $js);
 			
 		# minify?
 		if($enable_js_minification == true) {
@@ -2025,16 +2031,6 @@ function fvm_get_scheme() {
 	if(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') { return 'https'; }
 	return 'http';
 }
-
-# detect http2
-function fvm_has_http2() {
-	if(isset($_SERVER['SERVER_PROTOCOL'])) { 
-		if($_SERVER['SERVER_PROTOCOL'] == 'HTTP/2.0') { return true; }
-	}
-	return false;
-}
-
-
 
 # get the domain name
 function fvm_get_domain() {

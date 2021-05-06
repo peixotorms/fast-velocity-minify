@@ -122,7 +122,7 @@
 
 <fieldset>
 
-<label for="fvm_settings_css_nopreload">
+<label for="fvm_settings_css_combine">
 <input name="fvm_settings[css][combine]" type="checkbox" id="fvm_settings_css_combine" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'combine')); ?>>
 <?php _e( 'Combine CSS Files', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Deprecated: Will combine all CSS files by mediatype groups in the header (no longer recommended for HTTP/2 servers)', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
@@ -132,7 +132,7 @@
 <?php _e( 'Disable CSS Files Minification', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will disable CSS Files minification for compatibility purposes', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
-<label for="fvm_settings_css_min_disable">
+<label for="fvm_settings_css_min_disable_styles">
 <input name="fvm_settings[css][min_disable_styles]" type="checkbox" id="fvm_settings_css_min_disable_styles" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'min_disable_styles')); ?>>
 <?php _e( 'Disable CSS Styles Minification', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will disable CSS Styles minification for compatibility purposes', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
