@@ -25,22 +25,13 @@ function fvm_check_minimum_requirements() {
 			$error = __( 'FVM requires WP 4.9 or higher. You’re still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version']; 
 		}
 		
-		# set cache on the uploads directory
-		$upload_dir = wp_upload_dir();
-		if(isset($upload_dir['basedir']) && isset($upload_dir['baseurl']) && !empty($upload_dir['basedir'])) {
-			
-			# define and create directory
-			$cache_dir = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . 'fvm-cache'. DIRECTORY_SEPARATOR . 'min';
-			$cache_dir_url = $upload_dir['baseurl'] . '/fvm-cache/min';
-			if(!is_dir($cache_dir) && function_exists('wp_mkdir_p')) { wp_mkdir_p($cache_dir); }
-			
-			# check
-			if(is_dir($cache_dir) && !is_writable($cache_dir)) {
-				$error = __( 'FVM needs writing permissions on ', 'fast-velocity-minify' ). ' ['.$cache_dir.']';
+		# check cache directory
+		$ch_info = fvm_get_cache_location();
+		if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
+			if(is_dir($ch_info['ch_dir']) && !is_writable($ch_info['ch_dir'])) {
+				$error = __( 'FVM needs writing permissions on ', 'fast-velocity-minify' ). ' ['.$ch_info['ch_dir'].']';
 			}
-			
-		}
-		
+		}		
 		
 		# deactivate plugin forcefully
 		global $fvm_var_basename;

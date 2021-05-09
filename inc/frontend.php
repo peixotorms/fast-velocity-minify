@@ -513,6 +513,9 @@ function fvm_process_page($html) {
 				# START JS FILES
 				if(isset($tag->src)) {
 					
+					# filter url
+					$href = fvm_normalize_url($tag->src);
+					
 					# ignore js files
 					if(isset($fvm_settings['js']['ignore']) && !empty($fvm_settings['js']['ignore'])) {
 						$arr = fvm_string_toarray($fvm_settings['js']['ignore']);
@@ -649,9 +652,6 @@ function fvm_process_page($html) {
 						# jquery needs to load earlier, if not being merged (while merging is active)
 						if(stripos($tag->src, '/jquery.js') !== false || stripos($tag->src, '/jquery.min.js') !== false || stripos($tag->src, '/jquery-migrate') !== false) {
 							
-							# filter url
-							$href = fvm_normalize_url($tag->src);
-							
 							# http and html preload for render blocking js
 							if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
 								$htmlpreloads[] = '<link rel="preload" href="'.$href.'" as="script" />';
@@ -661,7 +661,7 @@ function fvm_process_page($html) {
 							if(stripos($tag->src, '/jquery-migrate') !== false) {
 								$htmljsheader[1] = "<script data-cfasync='false' src='".$href."'></script>"; # jquery migrate
 							} else {
-								$htmljsheader[0] = "<script data-cfasync='false' src='".$tag->src."'></script>"; # jquery
+								$htmljsheader[0] = "<script data-cfasync='false' src='".$href."'></script>"; # jquery
 							}
 							
 							# content
@@ -677,6 +677,13 @@ function fvm_process_page($html) {
 					# START INDIVIDUAL JS MINIFICATION	
 					# minify individually, if enabled
 					if(!isset($fvm_settings['js']['min_disable']) || (isset($fvm_settings['js']['min_disable'])&& $fvm_settings['js']['min_disable'] != true)) {
+						
+						# skip third party scripts, unless allowed
+						$allowed = array($fvm_urls['wp_domain'], '/ajax.aspnetcdn.com/ajax/', '/ajax.googleapis.com/ajax/libs/',  '/cdnjs.cloudflare.com/ajax/libs/');
+						if(str_replace($allowed, '', $href) == $href) {
+							unset($allscripts[$k]);
+							continue;
+						}
 						
 						# force render blocking
 						if(isset($fvm_settings['js']['merge_header']) && !empty($fvm_settings['js']['merge_header'])) {

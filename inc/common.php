@@ -55,6 +55,60 @@ function fvm_admintoolbar() {
 }
 
 
+# get cache directory
+function fvm_get_cache_location() {
+	
+	# custom path
+	if (defined('FVM_DIR') && defined('FVM_URL')){
+		
+		# define paths and url
+		$sep = DIRECTORY_SEPARATOR;
+		$dir = trim(rtrim(FVM_DIR, '/\\')). $sep . 'cache' . $sep . 'fvm'. $sep . 'min';
+		$durl = trim(rtrim(FVM_URL, '/')). '/cache/fvm/min';
+		
+		# create and return
+		if(!is_dir($dir) && function_exists('wp_mkdir_p')) { wp_mkdir_p($dir); }
+		return array('ch_dir'=>$dir,'ch_url'=>$durl);
+		
+	}
+	
+	
+	# /wp-content/cache
+	if (defined('WP_CONTENT_DIR') && defined('WP_CONTENT_URL')){
+		
+		# define paths and url
+		$sep = DIRECTORY_SEPARATOR;
+		$dir = trim(rtrim(WP_CONTENT_DIR, '/\\')). $sep . 'cache' . $sep . 'fvm'. $sep . 'min';
+		$durl = trim(rtrim(WP_CONTENT_URL, '/')). '/cache/fvm/min';
+		
+		# create and return
+		if(!is_dir($dir) && function_exists('wp_mkdir_p')) { wp_mkdir_p($dir); }
+		return array('ch_dir'=>$dir,'ch_url'=>$durl);
+		
+	}	
+	
+	# uploads directory
+	$ch_info = wp_upload_dir();
+	if(isset($ch_info['basedir']) && isset($ch_info['baseurl']) && !empty($ch_info['basedir'])) {
+	
+		# define and create directory
+		$sep = DIRECTORY_SEPARATOR;
+		$dir = $ch_info['basedir'] . $sep . 'cache' . $sep . 'fvm'. $sep . 'min';
+		$durl = $ch_info['baseurl'] . '/cache/fvm/min';
+		
+		# create and return
+		if(!is_dir($dir) && function_exists('wp_mkdir_p')) { wp_mkdir_p($dir); }
+		return array('ch_dir'=>$dir,'ch_url'=>$durl);
+			
+	}
+	
+	# error
+	return false;
+
+}
+
+
+
 # purge all caches when clicking the button on the admin bar
 function fvm_process_cache_purge_request(){
 	
@@ -205,8 +259,8 @@ function fvm_purge_others(){
 	# hosting companies
 
 	# Purge SG Optimizer (Siteground)
-	if (function_exists('sg_cachepress_purge_cache')) {
-		sg_cachepress_purge_cache();
+	if (function_exists('sg_cachepress_purge_everything')) {
+		sg_cachepress_purge_everything();
 		return __( 'All caches on <strong>SG Optimizer</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
@@ -272,9 +326,9 @@ function fvm_purge_others(){
 
 
 # Purge Godaddy Managed WordPress Hosting (Varnish)
-function fvm_godaddy_request( $method, $url = null ) {
-	$url  = empty( $url ) ? home_url() : $url;
-	$host = parse_url( $url, PHP_URL_HOST );
+function fvm_godaddy_request( $method) {
+	$url = home_url();
+	$host = wpraiser_get_domain();
 	$url  = set_url_scheme( str_replace( $host, WPaas\Plugin::vip(), $url ), 'http' );
 	update_option( 'gd_system_last_cache_flush', time(), 'no'); # purge apc
 	wp_remote_request( esc_url_raw( $url ), array('method' => $method, 'blocking' => false, 'headers' => array('Host' => $host)) );
@@ -390,45 +444,37 @@ function fvm_can_minify_css() {
 
 # save minified code, if not yet available
 function fvm_generate_min_url($url, $tkey, $type, $code) {
+		
+	# cache date
+	$tvers = get_option('fvm_last_cache_update', '0');
+		
+	# parse uripath and check if it matches against our rewrite format
+	$filename = $tvers.'-'.$tkey .'.'. $type;
 	
-	# files first, but only for js/css types
-	if(function_exists('wp_upload_dir')) {
-		
-		# cache date
-		$tvers = get_option('fvm_last_cache_update', '0');
-		
-		# parse uripath and check if it matches against our rewrite format
-		$filename = $tvers.'-'.$tkey .'.'. $type;
-
-		# set cache on the uploads directory
-		$upload_dir = wp_upload_dir();
-		if(isset($upload_dir['basedir']) && isset($upload_dir['baseurl']) && !empty($upload_dir['basedir'])) {
+	# check cache directory
+	$ch_info = fvm_get_cache_location();
+	if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
+		if(is_dir($ch_info['ch_dir']) && is_writable($ch_info['ch_dir'])) {
 			
-			# define and create directory
-			$cache_dir = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . 'fvm-cache'. DIRECTORY_SEPARATOR . 'min';
-			$cache_dir_url = $upload_dir['baseurl'] . '/fvm-cache/min';
-			if(!is_dir($cache_dir) && function_exists('wp_mkdir_p')) { wp_mkdir_p($cache_dir); }
-				
 			# filename
-			$file = $cache_dir . DIRECTORY_SEPARATOR . $filename;
-			$public = $cache_dir_url . '/' .$filename;
-			
-			# cache date
-			$tvers = get_option('fvm_last_cache_update', '0');
+			$file = $ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $filename;
+			$public = $ch_info['ch_url'] . '/' .$filename;
 			
 			# wordpress functions
 			require_once (ABSPATH . DIRECTORY_SEPARATOR . 'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-base.php');
 			require_once (ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-direct.php');
 			
-			# create if doesn't exist
+			# initialize
 			$fileSystemDirect = new WP_Filesystem_Direct(false);
+				
+			# create if doesn't exist
 			if(!$fileSystemDirect->exists($file) || ($fileSystemDirect->exists($file) && $fileSystemDirect->mtime($file) < $tvers)) {
 				$fileSystemDirect->put_contents($file, $code);
 			}
 				
 			# return url
 			return $public;
-		
+			
 		}
 	}
 	
@@ -498,44 +544,42 @@ function fvm_purge_static_files() {
 	# increment
 	update_option('fvm_last_cache_update', time());
 	
-	# process
-	if( function_exists('wp_upload_dir') ) {
-		
-		# current timestamp
-		$tvers = get_option('fvm_last_cache_update', '0');
-	
-		$upload_dir = wp_upload_dir();
-		if(isset($upload_dir['basedir']) && isset($upload_dir['baseurl']) && !empty($upload_dir['basedir'])) {
+	# check cache directory
+	$ch_info = fvm_get_cache_location();
+	if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
+		if(is_dir($ch_info['ch_dir']) && is_writable($ch_info['ch_dir'])) {
+			
+			# wordpress functions
 			require_once (ABSPATH . DIRECTORY_SEPARATOR . 'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-base.php');
 			require_once (ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-direct.php');
-
+			
+			# start
+			$fileSystemDirect = new WP_Filesystem_Direct(false);
+				
 			# instant purge
 			global $fvm_settings;
 			if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
-				$cache_dir = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . 'fvm-cache';
-				$fileSystemDirect = new WP_Filesystem_Direct(false);
-				$fileSystemDirect->rmdir($cache_dir, true);
+				$fileSystemDirect->rmdir($ch_info['ch_dir'], true);
 				return true;
-			} else {
-				$cache_dir = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . 'fvm-cache'. DIRECTORY_SEPARATOR . 'min';
-				$fileSystemDirect = new WP_Filesystem_Direct(false);
+			} else {				
 				
 				# older than 24h and not matching current timestamp
-				$list = $fileSystemDirect->dirlist($cache_dir, false, true);
+				$list = $fileSystemDirect->dirlist($ch_info['ch_dir'], false, true);
 				if(is_array($list) && count($list) > 0) {
 					foreach($list as $k=>$arr) {
 						if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= time()-86400) {
-							if(substr($arr['name'], 0, 10) !== $tvers) {
-								$fileSystemDirect->delete($cache_dir . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
+							if(substr($arr['name'], 0, 10) !== time()) {
+								$fileSystemDirect->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
 							}
 						}
 					}
 				}
 
 			}
-			
-		}
+				
+		}		
 	}
+	
 }
 
 
