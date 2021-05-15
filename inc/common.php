@@ -316,12 +316,49 @@ function fvm_purge_others(){
 	if(function_exists('pantheon_wp_clear_edge_all')) {
 		pantheon_wp_clear_edge_all();
 	}
+	
+	# cloudways varnish
+	if(fvm_purge_varnish_cloudways()) {
+		$ret[] = __('Cloudways (Varnish)');
+	}
 
 	# wordpress default cache
 	if (function_exists('wp_cache_flush')) {
 		wp_cache_flush();
 	}
 	
+}
+
+
+# purge varnish on cloudways
+function fvm_purge_varnish_cloudways() {
+	
+	# cloudways detection
+	if (!isset($_SERVER['cw_allowed_ip'])){ return false; }
+	
+	# must have
+	if (!isset($_SERVER['HTTP_X_VARNISH']) || !isset($_SERVER['HTTP_X_APPLICATION'])){ return false; }
+	if (is_null($_SERVER['HTTP_X_VARNISH']) || is_null($_SERVER['HTTP_X_APPLICATION'])){ return false; }
+	if ('varnishpass' === trim($_SERVER['HTTP_X_APPLICATION'])){ return false; } 
+	if ('bypass' === trim($_SERVER['HTTP_X_APPLICATION'])){ return false; } 
+	
+	# host and uri path
+	$host = wpraiser_get_domain();
+		
+	# request arguments
+	$request_args = array('method' => 'PURGE', 'redirection' => 0, 'timeout' => 10, 'blocking' => false, 'headers' => array('Host' => $host, 'X-Purge-Method' => 'regex') );
+	
+	# default host and port
+	$varnish_ip = '127.0.0.1';
+	$varnish_port = '8080';
+		
+	# overwrite by constant 
+	if(defined('FVM_VARNISH_IP') && !empty(FVM_VARNISH_IP)) { $varnish_ip = trim(FVM_VARNISH_IP); }
+	if(defined('FVM_VARNISH_PORT') && !empty(FVM_VARNISH_PORT)) { $varnish_port = trim(FVM_VARNISH_PORT); }
+	
+	# purge async
+	$response = wp_remote_request('http://'.$varnish_ip.':'.$varnish_port.'/.*', $request_args);
+	return true;
 }
 
 
@@ -460,16 +497,17 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 			$file = $ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $filename;
 			$public = $ch_info['ch_url'] . '/' .$filename;
 			
-			# wordpress functions
-			require_once (ABSPATH . DIRECTORY_SEPARATOR . 'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-base.php');
-			require_once (ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-direct.php');
-			
-			# initialize
-			$fileSystemDirect = new WP_Filesystem_Direct(false);
-				
+			# WordPress filesystem
+			global $wp_filesystem;
+			if (!is_a($wp_filesystem, 'WP_Filesystem_Base')){
+				include_once(ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'/file.php');
+				$creds = request_filesystem_credentials(site_url());
+				wp_filesystem($creds);
+			}
+
 			# create if doesn't exist
-			if(!$fileSystemDirect->exists($file) || ($fileSystemDirect->exists($file) && $fileSystemDirect->mtime($file) < $tvers)) {
-				$fileSystemDirect->put_contents($file, $code);
+			if(!$wp_filesystem->exists($file) || ($wp_filesystem->exists($file) && $wp_filesystem->mtime($file) < $tvers)) {
+				$wp_filesystem->put_contents($file, $code);
 			}
 				
 			# return url
@@ -549,27 +587,28 @@ function fvm_purge_static_files() {
 	if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
 		if(is_dir($ch_info['ch_dir']) && is_writable($ch_info['ch_dir'])) {
 			
-			# wordpress functions
-			require_once (ABSPATH . DIRECTORY_SEPARATOR . 'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-base.php');
-			require_once (ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'class-wp-filesystem-direct.php');
-			
-			# start
-			$fileSystemDirect = new WP_Filesystem_Direct(false);
+			# WordPress filesystem
+			global $wp_filesystem;
+			if (!is_a($wp_filesystem, 'WP_Filesystem_Base')){
+				include_once(ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'/file.php');
+				$creds = request_filesystem_credentials(site_url());
+				wp_filesystem($creds);
+			}
 				
 			# instant purge
 			global $fvm_settings;
 			if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
-				$fileSystemDirect->rmdir($ch_info['ch_dir'], true);
+				$wp_filesystem->rmdir($ch_info['ch_dir'], true);
 				return true;
 			} else {				
 				
 				# older than 24h and not matching current timestamp
-				$list = $fileSystemDirect->dirlist($ch_info['ch_dir'], false, true);
+				$list = $wp_filesystem->dirlist($ch_info['ch_dir'], false, true);
 				if(is_array($list) && count($list) > 0) {
 					foreach($list as $k=>$arr) {
 						if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= time()-86400) {
 							if(substr($arr['name'], 0, 10) !== time()) {
-								$fileSystemDirect->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
+								$wp_filesystem->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
 							}
 						}
 					}

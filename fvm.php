@@ -6,7 +6,7 @@ Description: Improve your speed score on GTmetrix, Pingdom Tools and Google Page
 Author: Raul Peixoto
 Author URI: http://fastvelocity.com
 Text Domain: fast-velocity-minify
-Version: 3.2.2
+Version: 3.2.3
 License: GPL2
 
 ------------------------------------------------------------------------

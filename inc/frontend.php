@@ -140,13 +140,16 @@ function fvm_process_page($html) {
 			# START CSS FILES
 			if($tag->tag == 'link' && isset($tag->href)) {
 				
+				# filter url
+				$href = fvm_normalize_url($tag->href);
+				
 				# Ignore css files
 				$ignore_css_merging = false;
 				if(isset($fvm_settings['css']['ignore']) && !empty($fvm_settings['css']['ignore'])) {
 					$arr = fvm_string_toarray($fvm_settings['css']['ignore']);
 					if(is_array($arr) && count($arr) > 0) {
 						foreach ($arr as $e) { 
-							if(stripos($tag->href, $e) !== false) {
+							if(stripos($href, $e) !== false) {
 								unset($allcss[$k]);
 								continue 2;
 							} 
@@ -159,7 +162,7 @@ function fvm_process_page($html) {
 					$arr = fvm_string_toarray($fvm_settings['css']['remove']);
 					if(is_array($arr) && count($arr) > 0) {
 						foreach ($arr as $e) { 
-							if(stripos($tag->href, $e) !== false) {
+							if(stripos($href, $e) !== false) {
 								$tag->outertext = '';
 								unset($allcss[$k]);
 								continue 2;
@@ -186,7 +189,7 @@ function fvm_process_page($html) {
 						# extract fonts and icons
 						if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
 							$extract_fonts_arr = fvm_extract_fonts($css['code']);
-							$css_lowpriority_code.= '/* '.$tag->href.' */'. PHP_EOL . $extract_fonts_arr['fonts'];
+							$css_lowpriority_code.= '/* '.$href.' */'. PHP_EOL . $extract_fonts_arr['fonts'];
 							$css_code = $extract_fonts_arr['code'];
 						} else {
 							$css_code = $css['code'];
@@ -199,7 +202,7 @@ function fvm_process_page($html) {
 								$arr = fvm_string_toarray($fvm_settings['css']['async']);
 								if(is_array($arr) && count($arr) > 0) {
 									foreach ($arr as $aa) { 
-										if(stripos($tag->href, $aa) !== false) {
+										if(stripos($href, $aa) !== false) {
 											
 											# save css for merging
 											$fvm_styles[$tag->media]['async'][] = $css_code;
@@ -257,7 +260,7 @@ function fvm_process_page($html) {
 						# extract fonts and icons
 						if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
 							$extract_fonts_arr = fvm_extract_fonts($css['code']);
-							$css_lowpriority_code.= '/* '.$tag->href.' */'. PHP_EOL . $extract_fonts_arr['fonts'];
+							$css_lowpriority_code.= '/* '.$href.' */'. PHP_EOL . $extract_fonts_arr['fonts'];
 							$css_code = $extract_fonts_arr['code'];
 						} else {
 							$css_code = $css['code'];
@@ -269,11 +272,11 @@ function fvm_process_page($html) {
 							unset($allcss[$k]);
 							continue;
 						} else {
-							$css_code = '/* '.$tag->href.' */'. PHP_EOL . $css_code;
+							$css_code = '/* '.$href.' */'. PHP_EOL . $css_code;
 						}
 							
 						# generate url
-						$ind_css_url = fvm_generate_min_url($tag->href, $css['tkey'], 'css', $css_code);
+						$ind_css_url = fvm_generate_min_url($href, $css['tkey'], 'css', $css_code);
 						
 						# cdn
 						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
@@ -285,7 +288,7 @@ function fvm_process_page($html) {
 							$arr = fvm_string_toarray($fvm_settings['css']['async']);
 							if(is_array($arr) && count($arr) > 0) {
 								foreach ($arr as $aa) { 
-									if(stripos($tag->href, $aa) !== false) {
+									if(stripos($href, $aa) !== false) {
 										
 										# async attributes
 										$tag->rel = 'preload';
