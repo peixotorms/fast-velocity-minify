@@ -255,6 +255,12 @@ function fvm_purge_others(){
 		do_action('wpo_cache_flush');
 		return __( 'All caches on <strong>WP-Optimize</strong> have been purged.', 'fast-velocity-minify' );
 	}
+	
+	# Cache-Master
+        if ( function_exists( 'scm_clear_all_cache' ) ) {
+            scm_clear_all_cache();
+            return __( 'All caches on <strong>Cache-Master</strong> have been purged.', 'fast-velocity-minify' );
+        }
 
 	# hosting companies
 
