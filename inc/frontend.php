@@ -47,7 +47,7 @@ function fvm_process_page($html) {
 	
 	# get html into an object
 	# https://simplehtmldom.sourceforge.io/manual.htm
-	$html_object = str_get_html($html, false, true, 'UTF-8', false, PHP_EOL, ' ');
+	$html_object = fvm_str_get_html($html, false, true, 'UTF-8', false, PHP_EOL, ' ');
 
 	# return early if html is not an object, or overwrite html into an object for processing
 	if (!is_object($html_object)) {
@@ -188,7 +188,7 @@ function fvm_process_page($html) {
 						
 						# extract fonts and icons
 						if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
-							$extract_fonts_arr = fvm_extract_fonts($css['code']);
+							$extract_fonts_arr = fvm_extract_fonts($css['code'], $href);
 							$css_lowpriority_code.= '/* '.$href.' */'. PHP_EOL . $extract_fonts_arr['fonts'];
 							$css_code = $extract_fonts_arr['code'];
 						} else {
@@ -259,7 +259,7 @@ function fvm_process_page($html) {
 						
 						# extract fonts and icons
 						if(isset($fvm_settings['css']['fonts']) && $fvm_settings['css']['fonts'] == true) {
-							$extract_fonts_arr = fvm_extract_fonts($css['code']);
+							$extract_fonts_arr = fvm_extract_fonts($css['code'], $href);
 							$css_lowpriority_code.= '/* '.$href.' */'. PHP_EOL . $extract_fonts_arr['fonts'];
 							$css_code = $extract_fonts_arr['code'];
 						} else {

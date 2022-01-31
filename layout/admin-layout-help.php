@@ -286,6 +286,21 @@
 </div>
 
 <div style="height: 20px;"></div>
+<h2 class="title">Query String Settings</h2>
+
+<div class="accordion">
+  <h3>Allowed Query Strings</h3>
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p>This allows processing of CSS, HTML and JS when the url contains certain query strings, but note that if there are other query strings found on the same url not on the list of allowed query strings, it will still not process the url.</p>
+	<p><strong>Example Settings:</strong></p>
+	<p class="fvm-code-full">
+	utm_source<br />utm_campaign<br />utm_medium<br />utm_expid<br />utm_term<br />utm_content<br />fb_action_ids<br />fb_action_types<br />fb_source<br />fbclid<br />_ga<br />gclid<br />age-verified<br />usqp<br />cn-reloaded<br />lang<br />s<br />permalink_name<br />lp-variation-id<br />author<br />author_name<br />cat<br />category_name<br />order<br />orderby<br />p<br />page_id<br />page<br />paged<br />post_type<br />posts<br />s<br />search<br />taxonomy<br />tag<br />tag_id<br />term
+	</p>
+  </div>
+</div>
+
+<div style="height: 20px;"></div>
 <h2 class="title">User Settings</h2>
 
 <div class="accordion">

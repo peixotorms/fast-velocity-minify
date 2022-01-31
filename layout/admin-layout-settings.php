@@ -22,7 +22,7 @@
 <fieldset>
 <label for="fvm_settings_cache_min_instant_purge">
 <input name="fvm_settings[cache][min_instant_purge]" type="checkbox" id="fvm_settings_cache_min_instant_purge" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'cache', 'min_instant_purge')); ?>>
-<?php _e( 'Purge Minified CSS/JS files instantly', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Cache files are only deleted if older than 24h by default, for compatibility with certain hosting providers.', 'fast-velocity-minify' ); ?> ]</span></label>
+<?php _e( 'Purge Minified CSS/JS files instantly', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'CSS & JS cache files are preserved for 7 days by default, for better compatibility with certain hosting providers.', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
 </fieldset></td>
@@ -160,7 +160,7 @@
 <td><fieldset>
 <label for="fvm_settings_css_remove"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Remove the following CSS files', 'fast-velocity-minify' ); ?></span></label>
 <p><textarea name="fvm_settings[css][remove]" rows="7" cols="50" id="fvm_settings_css_remove" class="large-text code" placeholder="ex: fonts.googleapis.com"><?php echo fvm_get_settings_value($fvm_settings, 'css', 'remove'); ?></textarea></p>
-<p class="description">[ <?php _e( 'This will allow you to remove unwanted CSS files by URL path from the frontend', 'fast-velocity-minify' ); ?> ]</p>
+<p class="description">[ <?php _e( 'This will allow you to remove unwanted CSS files by URI path from the frontend', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the <code>href attribute</code> on the <code>link tag</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
 </tr>
@@ -170,7 +170,7 @@
 <td><fieldset>
 <label for="fvm_settings_css_async"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Async the following CSS files', 'fast-velocity-minify' ); ?></span></label>
 <p><textarea name="fvm_settings[css][async]" rows="7" cols="50" id="fvm_settings_css_async" class="large-text code" placeholder="ex: /plugins/something/assets/low-priority.css"><?php echo fvm_get_settings_value($fvm_settings, 'css', 'async'); ?></textarea></p>
-<p class="description">[ <?php _e( 'This will allow you to remove unwanted CSS files by URL path from the frontend', 'fast-velocity-minify' ); ?> ]</p>
+<p class="description">[ <?php _e( 'This will allow you to Async CSS files by URI path from the frontend', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the <code>href attribute</code> on the <code>link tag</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
 </tr>
@@ -358,6 +358,22 @@ www.googletagmanager.com/gtm.js"><?php echo fvm_get_settings_value($fvm_settings
 <label for="fvm_settings_cdn_integration"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Missing HTML elements to replace', 'fast-velocity-minify' ); ?></span></label>
 <p><textarea name="fvm_settings[cdn][integration]" rows="7" cols="50" id="fvm_settings_cdn_integration" class="large-text code" placeholder="--- check the help section for suggestions ---"><?php echo fvm_get_settings_value($fvm_settings, 'cdn', 'integration'); ?></textarea></p>
 <p class="description">[ <?php _e( 'Additional replacement rules with syntax from <code>https://simplehtmldom.sourceforge.io/manual.htm</code>', 'fast-velocity-minify' ); ?> ]</p>
+</fieldset></td>
+</tr>
+</tbody></table>
+
+
+<div style="height: 60px;"></div>
+<h2 class="title"><?php _e( 'Query Strings', 'fast-velocity-minify' ); ?></h2>
+<h3 class="fvm-bold-green"><?php _e( 'Allow processing of CSS, JS & HTML on specific query strings', 'fast-velocity-minify' ); ?></h3>
+<table class="form-table fvm-settings">
+<tbody>
+<tr>
+<th scope="row"><?php _e( 'Allowed Query Strings', 'fast-velocity-minify' ); ?></th>
+<td><fieldset>
+<label for="fvm_settings_settings_qs"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'One query string key per line', 'fast-velocity-minify' ); ?></span></label>
+<p><textarea name="fvm_settings[settings][qs]" rows="7" cols="50" id="fvm_settings_settings_qs" class="large-text code" placeholder="--- check the help section for suggestions ---"><?php echo fvm_get_settings_value($fvm_settings, 'settings', 'qs'); ?></textarea></p>
+<p class="description">[ <?php _e( 'Additional query strings, keys only', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
 </tr>
 </tbody></table>

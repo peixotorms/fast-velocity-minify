@@ -563,47 +563,7 @@ class CSS extends Minify
      */
     protected function shortenZeroes($content)
     {
-        // we don't want to strip units in `calc()` expressions:
-        // `5px - 0px` is valid, but `5px - 0` is not
-        // `10px * 0` is valid (equates to 0), and so is `10 * 0px`, but
-        // `10 * 0` is invalid
-        // we've extracted calcs earlier, so we don't need to worry about this
-
-        // reusable bits of code throughout these regexes:
-        // before & after are used to make sure we don't match lose unintended
-        // 0-like values (e.g. in #000, or in http://url/1.0)
-        // units can be stripped from 0 values, or used to recognize non 0
-        // values (where wa may be able to strip a .0 suffix)
-        $before = '(?<=[:(, ])';
-        $after = '(?=[ ,);}])';
-        $units = '(em|ex|%|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax|vm)';
-
-        // strip units after zeroes (0px -> 0)
-        // NOTE: it should be safe to remove all units for a 0 value, but in
-        // practice, Webkit (especially Safari) seems to stumble over at least
-        // 0%, potentially other units as well. Only stripping 'px' for now.
-        // @see https://github.com/matthiasmullie/minify/issues/60
-        $content = preg_replace('/'.$before.'(-?0*(\.0+)?)(?<=0)px'.$after.'/', '\\1', $content);
-
-        // strip 0-digits (.0 -> 0)
-        $content = preg_replace('/'.$before.'\.0+'.$units.'?'.$after.'/', '0\\1', $content);
-        // strip trailing 0: 50.10 -> 50.1, 50.10px -> 50.1px
-        $content = preg_replace('/'.$before.'(-?[0-9]+\.[0-9]+)0+'.$units.'?'.$after.'/', '\\1\\2', $content);
-        // strip trailing 0: 50.00 -> 50, 50.00px -> 50px
-        $content = preg_replace('/'.$before.'(-?[0-9]+)\.0+'.$units.'?'.$after.'/', '\\1\\2', $content);
-        // strip leading 0: 0.1 -> .1, 01.1 -> 1.1
-        $content = preg_replace('/'.$before.'(-?)0+([0-9]*\.[0-9]+)'.$units.'?'.$after.'/', '\\1\\2\\3', $content);
-
-        // strip negative zeroes (-0 -> 0) & truncate zeroes (00 -> 0)
-        $content = preg_replace('/'.$before.'-?0+'.$units.'?'.$after.'/', '0\\1', $content);
-
-        // IE doesn't seem to understand a unitless flex-basis value (correct -
-        // it goes against the spec), so let's add it in again (make it `%`,
-        // which is only 1 char: 0%, 0px, 0 anything, it's all just the same)
-        // @see https://developer.mozilla.org/nl/docs/Web/CSS/flex
-        $content = preg_replace('/flex:([0-9]+\s[0-9]+\s)0([;\}])/', 'flex:${1}0%${2}', $content);
-        $content = preg_replace('/flex-basis:0([;\}])/', 'flex-basis:0%${1}', $content);
-
+        // removed
         return $content;
     }
 

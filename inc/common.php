@@ -214,7 +214,7 @@ function fvm_purge_others(){
 		do_action("swcfpc_purge_everything");
 		return __( 'All caches on <strong>WP Cloudflare Super Page Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
-
+	
 	# Purge Hyper Cache
 	if (class_exists( 'HyperCache' )) {
 		do_action( 'autoptimize_action_cachepurged' );
@@ -254,6 +254,30 @@ function fvm_purge_others(){
 	if(has_action('wpo_cache_flush')) {
 		do_action('wpo_cache_flush');
 		return __( 'All caches on <strong>WP-Optimize</strong> have been purged.', 'fast-velocity-minify' );
+	}
+	
+	# nginx helper
+	if(has_action('rt_nginx_helper_purge_all')) {
+		do_action('rt_nginx_helper_purge_all');
+		$ret[] = __( 'Nginx Helper' );
+	}
+	
+	
+	# Object Cache
+	
+	# WordPress OPCache
+	if (function_exists('wp_cache_flush')) {
+		wp_cache_flush();
+	}
+	
+	# Purge Redis Object Cache plugin
+	if(class_exists('Redis') && defined('WP_REDIS_PATH')) {
+		$r = new Redis();
+		if ($r->connect( WP_REDIS_PATH, 0 )) {
+			if( false !== $r->flushdb() ) {
+				$ret[] = __('Redis Object Cache');
+			}
+		}
 	}
 
 	# hosting companies
@@ -322,9 +346,16 @@ function fvm_purge_others(){
 		$ret[] = __('Cloudways (Varnish)');
 	}
 
-	# wordpress default cache
-	if (function_exists('wp_cache_flush')) {
-		wp_cache_flush();
+	# bigscoots.com
+	if(has_action('bs_cache_purge_cache')) {
+		do_action('bs_cache_purge_cache');
+		$ret[] = __( 'BigScoots' );
+	}
+	
+	# godaddy.com managed WordPress
+	if (class_exists('WPass') && method_exists('WPass\Cache', 'do_ban')){
+		WPaaS\Cache::do_ban();
+		$ret[] = __( 'GoDaddy' );
 	}
 	
 }
@@ -493,25 +524,41 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 	if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
 		if(is_dir($ch_info['ch_dir']) && is_writable($ch_info['ch_dir'])) {
 			
-			# filename
-			$file = $ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $filename;
-			$public = $ch_info['ch_url'] . '/' .$filename;
-			
-			# WordPress filesystem
-			global $wp_filesystem;
-			if (!is_a($wp_filesystem, 'WP_Filesystem_Base')){
-				include_once(ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'/file.php');
-				$creds = request_filesystem_credentials(site_url());
-				wp_filesystem($creds);
-			}
+			# get file system type
+			if(function_exists('get_filesystem_method')) {
+				$access_type = get_filesystem_method();
+				if($access_type === 'direct') {
+					
+					# get credentials
+					$creds = request_filesystem_credentials(site_url() . '/wp-admin/', '', false, false, array());
 
-			# create if doesn't exist
-			if(!$wp_filesystem->exists($file) || ($wp_filesystem->exists($file) && $wp_filesystem->mtime($file) < $tvers)) {
-				$wp_filesystem->put_contents($file, $code);
+					/* initialize the API */
+					if ( ! WP_Filesystem($creds) ) {
+						error_log('FVM could not find the WP filesystem.');
+						return false;
+					}	
+
+					global $wp_filesystem;
+					/* do our file manipulations below */
+					
+					# filename
+					$file = $ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $filename;
+					$public = $ch_info['ch_url'] . '/' .$filename;
+
+					# create if doesn't exist
+					if(!$wp_filesystem->exists($file) || ($wp_filesystem->exists($file) && $wp_filesystem->mtime($file) < $tvers)) {
+						$wp_filesystem->put_contents($file, $code);
+					}
+						
+					# return url
+					return $public;
+					
+					
+				} else {
+					/* don't have direct write access. Prompt user with our notice */
+					error_log('FVM has no direct write access for CSS / JS cache files.'); 	
+				}
 			}
-				
-			# return url
-			return $public;
 			
 		}
 	}
@@ -587,35 +634,51 @@ function fvm_purge_static_files() {
 	if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
 		if(is_dir($ch_info['ch_dir']) && is_writable($ch_info['ch_dir'])) {
 			
-			# WordPress filesystem
-			global $wp_filesystem;
-			if (!is_a($wp_filesystem, 'WP_Filesystem_Base')){
-				include_once(ABSPATH . DIRECTORY_SEPARATOR .'wp-admin'. DIRECTORY_SEPARATOR .'includes'. DIRECTORY_SEPARATOR .'/file.php');
-				$creds = request_filesystem_credentials(site_url());
-				wp_filesystem($creds);
-			}
-				
-			# instant purge
-			global $fvm_settings;
-			if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
-				$wp_filesystem->rmdir($ch_info['ch_dir'], true);
-				return true;
-			} else {				
-				
-				# older than 24h and not matching current timestamp
-				$list = $wp_filesystem->dirlist($ch_info['ch_dir'], false, true);
-				if(is_array($list) && count($list) > 0) {
-					foreach($list as $k=>$arr) {
-						if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= time()-86400) {
-							if(substr($arr['name'], 0, 10) !== time()) {
-								$wp_filesystem->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
+			# get file system type
+			if(function_exists('get_filesystem_method')) {
+				$access_type = get_filesystem_method();
+				if($access_type === 'direct') {
+					
+					# get credentials
+					$creds = request_filesystem_credentials(site_url() . '/wp-admin/', '', false, false, array());
+
+					/* initialize the API */
+					if ( ! WP_Filesystem($creds) ) {
+						error_log('FVM could not find the WP filesystem.');
+						return false;
+					}	
+
+					global $wp_filesystem;
+					/* do our file manipulations below */
+					
+					# instant purge
+					if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
+						$wp_filesystem->rmdir($ch_info['ch_dir'], true);
+						error_log('FVM instant cache purge.');
+						return true;
+					} else {				
+						
+						# older than 7 days and not matching current timestamp
+						error_log('FVM cache purge for files older than 7 days ago.');
+						$list = $wp_filesystem->dirlist($ch_info['ch_dir'], false, true);
+						if(is_array($list) && count($list) > 0) {
+							foreach($list as $k=>$arr) {
+								if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= time()-86400*7) {
+									if(substr($arr['name'], 0, 10) !== time()) {
+										$wp_filesystem->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
+									}
+								}
 							}
 						}
-					}
-				}
 
-			}
+					}			
 				
+				} else {
+					/* don't have direct write access. Prompt user with our notice */
+					error_log('FVM has no direct write access for CSS / JS cache files.'); 	
+				}
+			}
+			
 		}		
 	}
 	
@@ -989,19 +1052,12 @@ function fvm_replace_css_imports($css, $rq=null) {
 
 
 # remove fonts and icons from final css
-function fvm_extract_fonts($css_code) {
+function fvm_extract_fonts($css_code, $url=null) {
 	
 	global $fvm_settings, $fvm_urls;
-	$critical_fonts = array();
 	$mff = array();
 	$css_preload = array();
 	$css_code_ff = '';
-	
-	# get list of fonts that are on the critical path and are to be left alone
-	if( isset($fvm_settings['css']['css_optimize_critical_fonts']) && 
-	   !empty($fvm_settings['css']['css_optimize_critical_fonts'])) {
-			$critical_fonts = fvm_string_toarray($fvm_settings['css']['css_optimize_critical_fonts']);
-	}
 	
 	# extract font faces
 	preg_match_all('/\@\s*font-face\s*\{([^}]+)\}/iUu', $css_code, $mff);
@@ -1013,6 +1069,50 @@ function fvm_extract_fonts($css_code) {
 			$css_code_ff.= $ff . PHP_EOL;
 		
 		}
+	}
+	
+	# add font-display swap for all font faces
+	# https://developers.google.com/web/updates/2016/02/font-display
+	$css_code_ff = preg_replace_callback('/(?:@font-face)\s*{(?<value>[^}]+)}/i',
+		function ($matches) {
+			if(stripos($matches['value'], 'font-display') !== false) {
+				return $matches[0];
+			} else {
+				return str_replace($matches['value'], 'font-display:swap;'.$matches['value'], $matches[0] );
+			}
+		},
+		$css_code_ff
+	);
+	
+	# add font-display swap for all font faces
+	# https://developers.google.com/web/updates/2016/02/font-display
+	$css_code = preg_replace_callback('/(?:@font-face)\s*{(?<value>[^}]+)}/i',
+		function ($matches) {
+			if(stripos($matches['value'], 'font-display') !== false) {
+				return $matches[0];
+			} else {
+				return str_replace($matches['value'], 'font-display:swap;'.$matches['value'], $matches[0] );
+			}
+		},
+		$css_code
+	);
+	
+	# remove query strings from fonts
+	$css_code_ff = preg_replace('/(.eot|.woff2|.woff|.ttf)+[?+](.+?)(\)|\'|\")/ui', "$1"."$3", $css_code_ff);
+	$css_code = preg_replace('/(.eot|.woff2|.woff|.ttf)+[?+](.+?)(\)|\'|\")/ui', "$1"."$3", $css_code);
+	
+	# fix url paths css_code_ff
+	if(!empty($url)) {
+		$matches = array(); preg_match_all("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"])(.+?)['\"]?\s*\)/ui", $css_code_ff, $matches);
+		foreach($matches[1] as $a) { $b = trim($a); if($b != $a) { $css_code_ff = str_replace($a, $b, $css_code_ff); } }
+		$css_code_ff = preg_replace("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"#])(.+?)['\"]?\s*\)/ui", "url(".dirname($url)."/$1)", $css_code_ff);	
+	}
+	
+	# fix url paths css_code
+	if(!empty($url)) {
+		$matches = array(); preg_match_all("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"])(.+?)['\"]?\s*\)/ui", $css_code, $matches);
+		foreach($matches[1] as $a) { $b = trim($a); if($b != $a) { $css_code = str_replace($a, $b, $css_code); } }
+		$css_code = preg_replace("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"#])(.+?)['\"]?\s*\)/ui", "url(".dirname($url)."/$1)", $css_code);	
 	}
 	
 	# relative paths
@@ -1038,7 +1138,7 @@ function fvm_process_cdn($html) {
 	# html must be an object
 	if (!is_object($html)) {
 		$nobj = 1;
-		$html = str_get_html($html, true, true, 'UTF-8', false, PHP_EOL, ' ');
+		$html = fvm_str_get_html($html, true, true, 'UTF-8', false, PHP_EOL, ' ');
 	}
 	
 	# default integration
@@ -1692,6 +1792,43 @@ function fvm_can_process_common() {
 	return true;
 }
 
+
+# check if we can process the page, minimum filters
+function fvm_can_process_query_string() {
+
+	# host and uri path
+	$host = fvm_get_domain();
+	$request_uri = fvm_get_uripath(true);
+	$scheme = fvm_get_scheme();
+	$url = $scheme.'://'.$host.$request_uri;
+	$parse = parse_url($url);
+	
+	# parse query string to array, check if should be ignored
+	if(isset($parse["query"]) && !empty($parse["query"])) {
+		
+		# check
+		$qsarr = array(); parse_str($parse["query"], $qsarr);
+		
+		# remove allowed query strings from the list of detected queries
+		if(isset($fvm_settings['settings']['qs']) && !empty($fvm_settings['settings']['qs'])) {
+			$arr = fvm_string_toarray($fvm_settings['settings']['qs']);
+			if(is_array($arr) && count($arr) > 0) {
+				foreach ($arr as $a) { 
+					if(isset($qsarr[$e])) { unset($qsarr[$e]); }			
+				}
+			}
+		}
+		
+		# if there are other queries left, bypass processing
+		if(count($qsarr) > 0) { 
+			return false;
+		}
+	}
+	
+	# allow by default
+	return true;
+}
+
 # check if the user is logged in, and if the user role allows optimization
 function fvm_user_role_processing_allowed($group) {	
 	if(function_exists('is_user_logged_in') && function_exists('wp_get_current_user')) {
@@ -1715,37 +1852,6 @@ function fvm_user_role_processing_allowed($group) {
 	# allow by default
 	return true;
 }
-
-# check if we can process the page, minimum filters
-function fvm_can_process_query_string($loc) {
-
-	# host and uri path
-	$host = fvm_get_domain();
-	$request_uri = fvm_get_uripath(true);
-	$scheme = fvm_get_scheme();
-	$url = $scheme.'://'.$host.$request_uri;
-	$parse = parse_url($url);
-	
-	# parse query string to array, check if should be ignored
-	if(isset($parse["query"]) && !empty($parse["query"])) {
-		
-		# check
-		$qsarr = array(); parse_str($parse["query"], $qsarr);
-		
-		# allowed queries by default
-		if(isset($qsarr['s'])) { unset($qsarr['s']); }       # search
-		if(isset($qsarr['lang'])) { unset($qsarr['lang']); } # wpml
-	
-		# if there are other queries left, bypass cache
-		if(count($qsarr) > 0) { 
-			return false;
-		}
-	}
-	
-	# allow by default
-	return true;
-}
-
 
 
 # check if page is amp
