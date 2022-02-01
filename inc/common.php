@@ -556,15 +556,15 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 					
 				} else {
 					/* don't have direct write access. Prompt user with our notice */
-					error_log('FVM has no direct write access for CSS / JS cache files.'); 	
+					error_log('FVM has no direct write access for CSS / JS cache files under '. $ch_info['ch_dir'] . DIRECTORY_SEPARATOR); 	
 				}
 			}
 			
 		}
 	}
 	
-	# default
-	return $url;
+	# default, fail and log
+	return false;
 }
 
 
@@ -620,8 +620,17 @@ function fvm_purge_static_files() {
 	global $wpdb;
 	if(is_null($wpdb)) { return false; }
 	try {
-		$wpdb->query("TRUNCATE TABLE {$wpdb->prefix}fvm_cache");
-		$wpdb->query("TRUNCATE TABLE {$wpdb->prefix}fvm_logs");
+		
+		# table names
+		$sqla_table_name = $wpdb->prefix . 'fvm_cache';
+		$sqlb_table_name = $wpdb->prefix . 'fvm_logs';
+		
+		# test if at least one table exists and empty them
+		if (!$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $sqla_table_name)) === $sqla_table_name) {
+			$wpdb->query("TRUNCATE TABLE {$sqla_table_name}");
+			$wpdb->query("TRUNCATE TABLE {$sqlb_table_name}");
+		}
+		
 	} catch (Exception $e) {
 		error_log('Error: '.$e->getMessage(), 0);
 	}

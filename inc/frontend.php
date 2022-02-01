@@ -53,6 +53,7 @@ function fvm_process_page($html) {
 	if (!is_object($html_object)) {
 		return $html . '<!-- simplehtmldom failed to process the html -->';
 	} else {
+		$html_src = $html;
 		$html = $html_object;
 	}
 	
@@ -66,13 +67,16 @@ function fvm_process_page($html) {
 	$htmljsheader = array();
 	$htmljsdefer = array();
 	
+	# only error possible for now
+	$fvm_error = PHP_EOL . '<!-- ['.date('r').'] FVM has no write access for CSS / JS cache files under '. fvm_get_cache_location()['ch_url'] . ' -->'. PHP_EOL;
+	
 	
 	# collect all link preload headers, skip amp
 	if(fvm_is_amp_page() !== true) {
 		
 		# skip on web stories
 		if(count($html->find('script[src*=cdn.ampproject.org]')) > 0) {
-			return $html . '<!-- FVM does not support AMP -->';
+			return $html_src . DIRECTORY_SEPARATOR . '<!-- FVM ['.date('r').'] does not support AMP -->';
 		}
 		
 		# add other preloads
@@ -277,6 +281,9 @@ function fvm_process_page($html) {
 							
 						# generate url
 						$ind_css_url = fvm_generate_min_url($href, $css['tkey'], 'css', $css_code);
+						if($ind_css_url === false) { 
+							return $html_src . $fvm_error;
+						}
 						
 						# cdn
 						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
@@ -402,14 +409,17 @@ function fvm_process_page($html) {
 			
 			# generate url
 			$css_fonts_url = fvm_generate_min_url('fonts', $tkey, 'css', $css_lowpriority_code);
-			
-			# cdn
-			if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
-				$css_fonts_url = fvm_rewrite_cdn_url($css_fonts_url);
+			if($css_fonts_url === false) { 
+				return $html_src . $fvm_error;
 			}
-			
-			# preload
-			$htmlcssheader[0] = '<link id="fvm-fonts" rel="stylesheet" href="'.$css_fonts_url.'" media="fonts" onload="if(fvmuag()){this.media=\'all\'}" />';
+				
+				# cdn
+				if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
+					$css_fonts_url = fvm_rewrite_cdn_url($css_fonts_url);
+				}
+				
+				# preload
+				$htmlcssheader[0] = '<link id="fvm-fonts" rel="stylesheet" href="'.$css_fonts_url.'" media="fonts" onload="if(fvmuag()){this.media=\'all\'}" />';
 			
 		}		
 		# END OPTIMIZED FONT DELIVERY
@@ -435,29 +445,32 @@ function fvm_process_page($html) {
 					
 					# url, preload, add
 					$merged_css_url = fvm_generate_min_url('combined', $tkey, 'css', $merged_css);
-					
-					# cdn
-					if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
-						$merged_css_url = fvm_rewrite_cdn_url($merged_css_url);
+					if($merged_css_url === false) { 
+						return $html_src . $fvm_error;
 					}
-					
-					# http, html preload + header
-					if($css_method == 'block') {
 						
-						# add to header
-						$htmlcssheader[] = '<link rel="stylesheet" href="'.$merged_css_url.'" media="'.$mediatype.'" />';
-						
-						# http and html preload for render blocking css
-						if(!isset($fvm_settings['css']['nopreload']) || (isset($fvm_settings['css']['nopreload']) && $fvm_settings['css']['nopreload'] != true)) {
-							$htmlpreloads[] = '<link rel="preload" href="'.$merged_css_url.'" as="style" media="'.$mediatype.'"  />';
+						# cdn
+						if(isset($fvm_settings['cdn']['cssok']) && $fvm_settings['cdn']['cssok'] == true) {
+							$merged_css_url = fvm_rewrite_cdn_url($merged_css_url);
 						}
 						
-					} else {
+						# http, html preload + header
+						if($css_method == 'block') {
+							
+							# add to header
+							$htmlcssheader[] = '<link rel="stylesheet" href="'.$merged_css_url.'" media="'.$mediatype.'" />';
+							
+							# http and html preload for render blocking css
+							if(!isset($fvm_settings['css']['nopreload']) || (isset($fvm_settings['css']['nopreload']) && $fvm_settings['css']['nopreload'] != true)) {
+								$htmlpreloads[] = '<link rel="preload" href="'.$merged_css_url.'" as="style" media="'.$mediatype.'"  />';
+							}
+							
+						} else {
+							
+							# async
+							$htmlcssheader[] = '<link rel="preload" as="style" href="'.$merged_css_url.'" media="'.$mediatype.'" onload="this.rel=\'stylesheet\'" />';
 						
-						# async
-						$htmlcssheader[] = '<link rel="preload" as="style" href="'.$merged_css_url.'" media="'.$mediatype.'" onload="this.rel=\'stylesheet\'" />';
-					
-					}	
+						}
 					
 				}
 			}
@@ -708,6 +721,9 @@ function fvm_process_page($html) {
 										
 											# generate url
 											$ind_js_url = fvm_generate_min_url($tag->src, $js['tkey'], 'js', $js['code']);
+											if($ind_js_url === false) { 
+												return $html_src . $fvm_error;
+											}
 											
 											# cdn
 											if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
@@ -759,6 +775,9 @@ function fvm_process_page($html) {
 										
 											# generate url
 											$ind_js_url = fvm_generate_min_url($tag->src, $js['tkey'], 'js', $js['code']);
+											if($ind_js_url === false) { 
+												return $html_src . $fvm_error;
+											}
 											
 											# cdn
 											if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
@@ -885,20 +904,23 @@ function fvm_process_page($html) {
 						
 			# generate url
 			$merged_js_url = fvm_generate_min_url('combined', $tkey, 'js', $merged_js);
-			
-			# cdn
-			if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
-				$merged_js_url = fvm_rewrite_cdn_url($merged_js_url);
+			if($merged_js_url === false) { 
+				return $html_src . $fvm_error;
 			}
-			
-			# http and html preload for render blocking scripts
-			if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
-				$htmlpreloads[] = '<link rel="preload" href="'.$merged_js_url.'" as="script" />';
-			}
-			
-			# add to header
-			$htmljsheader[] = "<script data-cfasync='false' src='".$merged_js_url."'></script>";
-			
+				
+				# cdn
+				if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
+					$merged_js_url = fvm_rewrite_cdn_url($merged_js_url);
+				}
+				
+				# http and html preload for render blocking scripts
+				if(!isset($fvm_settings['js']['nopreload']) || (isset($fvm_settings['js']['nopreload']) && $fvm_settings['js']['nopreload'] != true)) {
+					$htmlpreloads[] = '<link rel="preload" href="'.$merged_js_url.'" as="script" />';
+				}
+				
+				# add to header
+				$htmljsheader[] = "<script data-cfasync='false' src='".$merged_js_url."'></script>";
+
 		}
 		
 		# deferred scripts
@@ -910,15 +932,18 @@ function fvm_process_page($html) {
 						
 			# generate url
 			$merged_js_url = fvm_generate_min_url('combined', $tkey, 'js', $merged_js);
-			
-			# cdn
-			if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
-				$merged_js_url = fvm_rewrite_cdn_url($merged_js_url);
+			if($merged_js_url === false) { 
+				return $html_src . $fvm_error;
 			}
-			
-			# header, no preload for deferred files
-			$htmljsheader[] = "<script defer='defer' src='".$merged_js_url."'></script>";
-		
+				
+				# cdn
+				if(isset($fvm_settings['cdn']['jsok']) && $fvm_settings['cdn']['jsok'] == true) {
+					$merged_js_url = fvm_rewrite_cdn_url($merged_js_url);
+				}
+				
+				# header, no preload for deferred files
+				$htmljsheader[] = "<script defer='defer' src='".$merged_js_url."'></script>";
+				
 		}
 		
 	}

@@ -66,7 +66,7 @@ function fvm_file_get_html(
 {
 	if($maxLen <= 0) { $maxLen = FVM_MAX_FILE_SIZE; }
 
-	$dom = new simple_html_dom(
+	$dom = new fvm_simple_html_dom(
 		null,
 		$lowercase,
 		$forceTagsClosed,
@@ -106,7 +106,7 @@ function fvm_str_get_html(
 	$defaultBRText = FVMDEFAULT_BR_TEXT,
 	$defaultSpanText = FVMDEFAULT_SPAN_TEXT)
 {
-	$dom = new simple_html_dom(
+	$dom = new fvm_simple_html_dom(
 		null,
 		$lowercase,
 		$forceTagsClosed,
@@ -1391,7 +1391,7 @@ class fvm_simple_html_dom_node
 
 }
 
-class simple_html_dom
+class fvm_simple_html_dom
 {
 	public $root = null;
 	public $nodes = array();
