@@ -524,40 +524,24 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 	if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
 		if(is_dir($ch_info['ch_dir']) && is_writable($ch_info['ch_dir'])) {
 			
-			# get file system type
-			if(function_exists('get_filesystem_method')) {
-				$access_type = get_filesystem_method();
-				if($access_type === 'direct') {
-					
-					# get credentials
-					$creds = request_filesystem_credentials(site_url() . '/wp-admin/', '', false, false, array());
-
-					/* initialize the API */
-					if ( ! WP_Filesystem($creds) ) {
-						error_log('FVM could not find the WP filesystem.');
-						return false;
-					}	
-
-					global $wp_filesystem;
-					/* do our file manipulations below */
-					
-					# filename
-					$file = $ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $filename;
-					$public = $ch_info['ch_url'] . '/' .$filename;
-
-					# create if doesn't exist
-					if(!$wp_filesystem->exists($file) || ($wp_filesystem->exists($file) && $wp_filesystem->mtime($file) < $tvers)) {
-						$wp_filesystem->put_contents($file, $code);
-					}
-						
-					# return url
-					return $public;
-					
-					
-				} else {
-					/* don't have direct write access. Prompt user with our notice */
-					error_log('FVM has no direct write access for CSS / JS cache files under '. $ch_info['ch_dir'] . DIRECTORY_SEPARATOR); 	
-				}
+			# filename
+			$file = $ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $filename;
+			$public = $ch_info['ch_url'] . '/' .$filename;
+			
+			# direct system
+			if(class_exists('WP_Filesystem_Direct')) {
+				
+				# wp
+				$wpfs = new WP_Filesystem_Direct(null);
+				if(!$wpfs->exists($file) || ($wpfs->exists($file) && $wpfs->mtime($file) < $tvers)) { $wpfs->put_contents($file, $code); }
+				if($wpfs->exists($file)) { return $public; }
+				
+			} else {
+				
+				# php
+				if(!file_exists($file) || (file_exists($file) && filemtime($file) < $tvers)) { file_put_contents($file, $code); }
+				if(file_exists($file)) { return $public; }
+				
 			}
 			
 		}
@@ -566,9 +550,6 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 	# default, fail and log
 	return false;
 }
-
-
-
 
 
 
@@ -636,61 +617,95 @@ function fvm_purge_static_files() {
 	}
 	
 	# increment
-	update_option('fvm_last_cache_update', time());
+	$tver = time();
+	update_option('fvm_last_cache_update', $tver);
 	
 	# check cache directory
 	$ch_info = fvm_get_cache_location();
 	if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
 		if(is_dir($ch_info['ch_dir']) && is_writable($ch_info['ch_dir'])) {
 			
-			# get file system type
-			if(function_exists('get_filesystem_method')) {
-				$access_type = get_filesystem_method();
-				if($access_type === 'direct') {
-					
-					# get credentials
-					$creds = request_filesystem_credentials(site_url() . '/wp-admin/', '', false, false, array());
-
-					/* initialize the API */
-					if ( ! WP_Filesystem($creds) ) {
-						error_log('FVM could not find the WP filesystem.');
-						return false;
-					}	
-
-					global $wp_filesystem;
-					/* do our file manipulations below */
-					
-					# instant purge
-					if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
-						$wp_filesystem->rmdir($ch_info['ch_dir'], true);
-						error_log('FVM instant cache purge.');
-						return true;
-					} else {				
-						
-						# older than 7 days and not matching current timestamp
-						error_log('FVM cache purge for files older than 7 days ago.');
-						$list = $wp_filesystem->dirlist($ch_info['ch_dir'], false, true);
-						if(is_array($list) && count($list) > 0) {
-							foreach($list as $k=>$arr) {
-								if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= time()-86400*7) {
-									if(substr($arr['name'], 0, 10) !== time()) {
-										$wp_filesystem->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
-									}
+			
+			# instant purge
+			if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
+				
+				# direct system
+				if(class_exists('WP_Filesystem_Direct')) {
+					$wpfs = new WP_Filesystem_Direct(null);
+					$wpfs->rmdir($ch_info['ch_dir'], true);
+					return true;
+				} else {
+					# iterator fallback
+					fvm_rrmdir($ch_info['ch_dir']);	
+				}
+			
+			} else {
+				
+				# older than 7 days and not matching current timestamp
+				
+				# direct system
+				if(class_exists('WP_Filesystem_Direct')) {
+					$wpfs = new WP_Filesystem_Direct(null);
+					$list = $wpfs->dirlist($ch_info['ch_dir'], false, true);
+					if(is_array($list) && count($list) > 0) {
+						foreach($list as $k=>$arr) {
+							if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= $tver-86400*7) {
+								if(substr($arr['name'], 0, 10) !== time()) {
+									$wpfs->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
 								}
 							}
 						}
-
-					}			
-				
+					}
+					
 				} else {
-					/* don't have direct write access. Prompt user with our notice */
-					error_log('FVM has no direct write access for CSS / JS cache files.'); 	
+					# iterator fallback
+					fvm_rrmdir($ch_info['ch_dir'], $tver);	
 				}
+			
 			}
 			
 		}		
 	}
 	
+}
+
+
+# remove all cache files
+function fvm_rrmdir($path, $tver=null) {
+	clearstatcache();
+	if(is_dir($path)) {
+		try {
+			
+			$i = new DirectoryIterator($path);
+			foreach($i as $f){
+				
+				# 7 days older than timestamp
+				if(isset($tver) && !is_null($tver)) {
+					
+					if($f->isFile() && $f->getMTime() <= intval($tver) - 86400 * 7) { @unlink($f->getRealPath()); }
+					if($f->isDir() && !$f->isDot()){
+						fvm_rrmdir($f->getRealPath(), $tver);
+						@rmdir($f->getRealPath());
+					}
+					
+				} else {
+					# immediate
+					if($f->isFile()){ @unlink($f->getRealPath()); }
+					if($f->isDir() && !$f->isDot()){
+						fvm_rrmdir($f->getRealPath());
+						@rmdir($f->getRealPath());
+					}
+				}
+				
+			}
+			
+		} catch (Exception $e) {
+			return get_class($e) . ": " . $e->getMessage();
+		}
+		
+		# self
+		if(is_dir($path)) { @rmdir($path); }
+	}
 }
 
 

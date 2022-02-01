@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 4.9
 Requires PHP: 5.6
-Stable tag: 3.2.4
+Stable tag: 3.2.5
 Tested up to: 5.9.1
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -48,6 +48,11 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.2.5 [2022.02.01] =
+* changed writing the css/js files to WP_Filesystem_Direct with a secondary fallback method
+* fixed a bug when merging css/js can break the site layout if the plugin failed to write the cache file (there will be an html comment on the footer if this happens)
+* renamed a common name class to avoid conflicts with other plugins
 
 = 3.2.4 [2022.01.31] =
 * WP 5.9 / PHP 8 maintenance release
