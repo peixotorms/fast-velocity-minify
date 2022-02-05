@@ -528,21 +528,9 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 			$file = $ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $filename;
 			$public = $ch_info['ch_url'] . '/' .$filename;
 			
-			# direct system
-			if(class_exists('WP_Filesystem_Direct')) {
-				
-				# wp
-				$wpfs = new WP_Filesystem_Direct(null);
-				if(!$wpfs->exists($file) || ($wpfs->exists($file) && $wpfs->mtime($file) < $tvers)) { $wpfs->put_contents($file, $code); }
-				if($wpfs->exists($file)) { return $public; }
-				
-			} else {
-				
-				# php
-				if(!file_exists($file) || (file_exists($file) && filemtime($file) < $tvers)) { file_put_contents($file, $code); }
-				if(file_exists($file)) { return $public; }
-				
-			}
+			# php
+			if(!file_exists($file) || (file_exists($file) && filemtime($file) < $tvers)) { file_put_contents($file, $code); }
+			if(file_exists($file)) { return $public; }
 			
 		}
 	}
@@ -607,7 +595,7 @@ function fvm_purge_static_files() {
 		$sqlb_table_name = $wpdb->prefix . 'fvm_logs';
 		
 		# test if at least one table exists and empty them
-		if (!$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $sqla_table_name)) === $sqla_table_name) {
+		if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $sqla_table_name)) === $sqla_table_name) {
 			$wpdb->query("TRUNCATE TABLE {$sqla_table_name}");
 			$wpdb->query("TRUNCATE TABLE {$sqlb_table_name}");
 		}
@@ -628,40 +616,9 @@ function fvm_purge_static_files() {
 			
 			# instant purge
 			if(isset($fvm_settings['cache']['min_instant_purge']) && $fvm_settings['cache']['min_instant_purge'] == true) {
-				
-				# direct system
-				if(class_exists('WP_Filesystem_Direct')) {
-					$wpfs = new WP_Filesystem_Direct(null);
-					$wpfs->rmdir($ch_info['ch_dir'], true);
-					return true;
-				} else {
-					# iterator fallback
-					fvm_rrmdir($ch_info['ch_dir']);	
-				}
-			
+				fvm_rrmdir($ch_info['ch_dir']);	
 			} else {
-				
-				# older than 7 days and not matching current timestamp
-				
-				# direct system
-				if(class_exists('WP_Filesystem_Direct')) {
-					$wpfs = new WP_Filesystem_Direct(null);
-					$list = $wpfs->dirlist($ch_info['ch_dir'], false, true);
-					if(is_array($list) && count($list) > 0) {
-						foreach($list as $k=>$arr) {
-							if(isset($arr['lastmodunix']) && $arr['type'] == 'f' && intval($arr['lastmodunix']) <= $tver-86400*7) {
-								if(substr($arr['name'], 0, 10) !== time()) {
-									$wpfs->delete($ch_info['ch_dir'] . DIRECTORY_SEPARATOR . $arr['name'], false, 'f');
-								}
-							}
-						}
-					}
-					
-				} else {
-					# iterator fallback
-					fvm_rrmdir($ch_info['ch_dir'], $tver);	
-				}
-			
+				fvm_rrmdir($ch_info['ch_dir'], $tver);	# 7 days
 			}
 			
 		}		
