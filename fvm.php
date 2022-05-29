@@ -105,7 +105,11 @@ if(!is_admin()) {
 	add_action('init', 'fvm_process_cache_purge_request');
 		
 	# actions for frontend only
-	add_action('template_redirect', 'fvm_start_buffer', -PHP_INT_MAX);
+	add_action('template_redirect', 'fvm_start_buffer', PHP_INT_MAX);
+	
+	# actions for frontend only
+	add_action('template_redirect', 'fvm_start_buffer', PHP_INT_MAX);
+	add_action('shutdown', 'fvm_end_buffer', 0);
 	
 }
 

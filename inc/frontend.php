@@ -1005,7 +1005,7 @@ function fvm_process_page($html) {
 		$element->outertext = ''; 
 	}
 	
-	# preload headers, by importance
+	# preload headers, by fetchpriority attribute
 	if(is_array($htmlpreloads)) {
 		
 		# deduplicate

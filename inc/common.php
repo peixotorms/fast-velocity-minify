@@ -262,12 +262,20 @@ function fvm_purge_others(){
 		$ret[] = __( 'Nginx Helper' );
 	}
 	
+	# Cache-Master
+    if ( function_exists( 'scm_clear_all_cache' ) ) {
+        scm_clear_all_cache();
+        return __( 'All caches on <strong>Cache-Master</strong> have been purged.', 'fast-velocity-minify' );
+    }
+	
 	
 	# Object Cache
 	
 	# WordPress OPCache
 	if (function_exists('wp_cache_flush')) {
-		wp_cache_flush();
+		if(wp_cache_flush()) {
+			return 'OPCache';
+		}
 	}
 	
 	# Purge Redis Object Cache plugin
@@ -374,7 +382,7 @@ function fvm_purge_varnish_cloudways() {
 	if ('bypass' === trim($_SERVER['HTTP_X_APPLICATION'])){ return false; } 
 	
 	# host and uri path
-	$host = wpraiser_get_domain();
+	$host = fvm_get_domain();
 		
 	# request arguments
 	$request_args = array('method' => 'PURGE', 'redirection' => 0, 'timeout' => 10, 'blocking' => false, 'headers' => array('Host' => $host, 'X-Purge-Method' => 'regex') );
@@ -396,7 +404,7 @@ function fvm_purge_varnish_cloudways() {
 # Purge Godaddy Managed WordPress Hosting (Varnish)
 function fvm_godaddy_request( $method) {
 	$url = home_url();
-	$host = wpraiser_get_domain();
+	$host = fvm_get_domain();
 	$url  = set_url_scheme( str_replace( $host, WPaas\Plugin::vip(), $url ), 'http' );
 	update_option( 'gd_system_last_cache_flush', time(), 'no'); # purge apc
 	wp_remote_request( esc_url_raw( $url ), array('method' => $method, 'blocking' => false, 'headers' => array('Host' => $host)) );
