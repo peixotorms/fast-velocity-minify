@@ -39,7 +39,7 @@ function fvm_start_buffer() {
 	}
 }
 
-# process html from fvm_end_buffer
+# process html
 function fvm_process_page($html) {
 	
 	# get globals
