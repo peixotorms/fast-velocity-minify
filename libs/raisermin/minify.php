@@ -15,6 +15,20 @@ if (!defined('ABSPATH')){ exit(); }
 
 # minify js, whitespace only
 function fvm_raisermin_js($code){
+	
+	# tags to preserve
+	$restore = array();
+	
+	# encode pre tags
+	$pattern = "/<pre\s?(.*)>(.*)<\/pre>/ium";
+	$matches = array();
+	if(preg_match_all($pattern, $code, $matches)) {
+		foreach($matches[0] as $tag) {
+			$enc = base64_encode($tag);		
+			$restore[$enc] = $tag;
+			$code = str_replace($tag, $enc, $code);
+		}
+	}
 
 	# remove // comments
 	$code = preg_replace('/(^|\s)\/\/(.*)\n/m', '', $code);
@@ -46,6 +60,20 @@ function fvm_raisermin_js($code){
 	$code = preg_replace('/(\,)(\h+)/ui', '$1 ', $code);
 	$code = preg_replace('/(\h+)(\,)/ui', ' $2', $code);
 	$code = preg_replace('/([if])(\h+)(\()/ui', '$1$3', $code);
+	
+	# restore pre tags
+	if(is_array($restore) && count($restore) > 0) {
+		foreach($restore as $enc=>$tag) {
+			$code = str_replace($enc, $tag, $code);
+		}
+	}
+	
+	# restore pre tags
+	if(is_array($restore) && count($restore) > 0) {
+		foreach($restore as $enc=>$tag) {
+			$code = str_replace($enc, $tag, $code);
+		}
+	}
 			
 	# trim whitespace on beginning/end
 	return trim($code);

@@ -6,7 +6,7 @@ Description: Improve your speed score on GTmetrix, Pingdom Tools and Google Page
 Author: Raul Peixoto
 Author URI: http://fastvelocity.com
 Text Domain: fast-velocity-minify
-Version: 3.2.9
+Version: 3.3.0
 License: GPL2
 
 ------------------------------------------------------------------------
@@ -34,13 +34,14 @@ if(function_exists('wp_opcache_invalidate') && stripos(__FILE__, '/fvm.php') !==
 }
 
 # info, variables, paths
-$fvm_var_file = __FILE__;                                           # /home/path/plugins/pluginname/wpr.php
+if (!defined('WPR_DIR')) { define('WPR_DIR', __DIR__ . '/'); }  # /home/path/plugins/pluginname/
+$fvm_var_dir_path = WPR_DIR;                               		# /home/path/plugins/pluginname/
+$fvm_var_file = WPR_DIR . 'wpr.php';                       		# /home/path/plugins/pluginname/wpr.php
+$fvm_var_inc_dir = WPR_DIR . 'inc' . DIRECTORY_SEPARATOR;  		# /home/path/plugins/pluginname/inc/
+$fvm_var_inc_lib = WPR_DIR . 'libs' . DIRECTORY_SEPARATOR; 		# /home/path/plugins/pluginname/libs/
 $fvm_var_basename = plugin_basename($fvm_var_file);                 # pluginname/wpr.php
-$fvm_var_dir_path = plugin_dir_path($fvm_var_file);                 # /home/path/plugins/pluginname/
 $fvm_var_url_path = plugins_url(dirname($fvm_var_basename)) . '/';  # https://example.com/wp-content/plugins/pluginname/
 $fvm_var_plugin_version = get_file_data($fvm_var_file, array('Version' => 'Version'), false)['Version'];
-$fvm_var_inc_dir = $fvm_var_dir_path . 'inc' . DIRECTORY_SEPARATOR;  # /home/path/plugins/pluginname/inc/
-$fvm_var_inc_lib = $fvm_var_dir_path . 'libs' . DIRECTORY_SEPARATOR; # /home/path/plugins/pluginname/libs/
 
 # global functions for backend, frontend, ajax, etc
 require_once($fvm_var_inc_dir . 'common.php');
@@ -85,7 +86,7 @@ if(is_admin()) {
 	add_action('avada_clear_dynamic_css_cache', 'fvm_purge_all');
 	add_action('upgrader_process_complete', 'fvm_purge_all');
 	add_action('update_option_theme_mods_' . get_option('stylesheet'), 'fvm_purge_all');
-		
+	
 }
 
 
@@ -104,10 +105,7 @@ if(!is_admin()) {
 	add_action('init', 'fvm_process_cache_purge_request');
 		
 	# actions for frontend only
-	add_action('template_redirect', 'fvm_start_buffer', PHP_INT_MAX);
-	
-	# actions for frontend only
-	add_action('template_redirect', 'fvm_start_buffer', PHP_INT_MAX);
+	add_action('template_redirect', 'fvm_start_buffer', 999999);
 	
 }
 
