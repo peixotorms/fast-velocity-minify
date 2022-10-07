@@ -32,10 +32,17 @@ include_once($fvm_var_inc_lib_mm . 'path-converter' . DIRECTORY_SEPARATOR . 'src
 ################################################
 
 
-# start buffering before template
+# start buffering on template load
 function fvm_start_buffer() {
 	if(fvm_can_minify_css() || fvm_can_minify_js() || fvm_can_process_html()) {
-		ob_start('fvm_process_page', 0, PHP_OUTPUT_HANDLER_REMOVABLE);
+		ob_start('fvm_process_page', 0, PHP_OUTPUT_HANDLER_FLUSHABLE);
+	}
+}
+
+# process the buffer
+function fvm_end_buffer() {
+	if(fvm_can_minify_css() || fvm_can_minify_js() || fvm_can_process_html()) {
+		ob_end_flush();	
 	}
 }
 
