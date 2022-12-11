@@ -6,7 +6,7 @@ Description: Improve your speed score on GTmetrix, Pingdom Tools and Google Page
 Author: Raul Peixoto
 Author URI: http://fastvelocity.com
 Text Domain: fast-velocity-minify
-Version: 3.3.2
+Version: 3.3.3
 License: GPL2
 
 ------------------------------------------------------------------------
@@ -34,11 +34,11 @@ if(function_exists('wp_opcache_invalidate') && stripos(__FILE__, '/fvm.php') !==
 }
 
 # info, variables, paths
-if (!defined('FVM_DIR')) { define('FVM_DIR', __DIR__ . '/'); }  # /home/path/plugins/pluginname/
-$fvm_var_dir_path = FVM_DIR;                               		# /home/path/plugins/pluginname/
-$fvm_var_file = FVM_DIR . 'fvm.php';                       		# /home/path/plugins/pluginname/wpr.php
-$fvm_var_inc_dir = FVM_DIR . 'inc' . DIRECTORY_SEPARATOR;  		# /home/path/plugins/pluginname/inc/
-$fvm_var_inc_lib = FVM_DIR . 'libs' . DIRECTORY_SEPARATOR; 		# /home/path/plugins/pluginname/libs/
+if (!defined('FVM_PDIR')) { define('FVM_PDIR', __DIR__ . '/'); }  # /home/path/plugins/pluginname/
+$fvm_var_dir_path = FVM_PDIR;                               		# /home/path/plugins/pluginname/
+$fvm_var_file = FVM_PDIR . 'fvm.php';                       		# /home/path/plugins/pluginname/wpr.php
+$fvm_var_inc_dir = FVM_PDIR . 'inc' . DIRECTORY_SEPARATOR;  		# /home/path/plugins/pluginname/inc/
+$fvm_var_inc_lib = FVM_PDIR . 'libs' . DIRECTORY_SEPARATOR; 		# /home/path/plugins/pluginname/libs/
 $fvm_var_basename = plugin_basename($fvm_var_file);                 # pluginname/wpr.php
 $fvm_var_url_path = plugins_url(dirname($fvm_var_basename)) . '/';  # https://example.com/wp-content/plugins/pluginname/
 $fvm_var_plugin_version = get_file_data($fvm_var_file, array('Version' => 'Version'), false)['Version'];
@@ -107,20 +107,13 @@ if(!is_admin()) {
 	# actions for frontend only
 	add_action('template_redirect', 'fvm_start_buffer', 999999);
 	
-	
 	# add with positive priority, remove with negative as suggested by:
 	# https://github.com/nextend/wp-ob-plugins-themes
 		
 	# allow overwrite
-	if (defined('FVM_INIT_EARLIER')) {
-		add_action('init', 'fvm_start_buffer', 50);
-	} else {
-		if (!defined('FVM_HOOK_INTO')) { define('FVM_HOOK_INTO', 'setup_theme'); }
-		add_action(constant("FVM_HOOK_INTO"), 'fvm_start_buffer', 50);
-	}
-		
-	# close
-	add_action('shutdown', 'fvm_end_buffer', -50);		
+	if (!defined('FVM_HOOK_INTO')) { define('FVM_HOOK_INTO', 'setup_theme'); }
+	add_action(constant("FVM_HOOK_INTO"), 'fvm_start_buffer', 50);
+	add_action('shutdown', 'fvm_end_buffer', -50);	
 	
 }
 

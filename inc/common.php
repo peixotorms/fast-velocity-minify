@@ -59,12 +59,12 @@ function fvm_admintoolbar() {
 function fvm_get_cache_location() {
 	
 	# custom path
-	if (defined('FVM_DIR') && defined('FVM_URL')){
+	if (defined('FVM_CACHE_DIR') && defined('FVM_CACHE_URL')){
 		
 		# define paths and url
 		$sep = DIRECTORY_SEPARATOR;
-		$dir = trim(rtrim(FVM_DIR, '/\\')). $sep . 'cache' . $sep . 'fvm'. $sep . 'min';
-		$durl = trim(rtrim(FVM_URL, '/')). '/cache/fvm/min';
+		$dir = trim(rtrim(FVM_CACHE_DIR, '/\\')). $sep . 'cache' . $sep . 'fvm'. $sep . 'min';
+		$durl = trim(rtrim(FVM_CACHE_URL, '/')). '/cache/fvm/min';
 		
 		# create and return
 		if(!is_dir($dir) && function_exists('wp_mkdir_p')) { wp_mkdir_p($dir); }

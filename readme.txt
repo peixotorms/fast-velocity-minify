@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 5.0
 Requires PHP: 7.0
-Stable tag: 3.3.2
+Stable tag: 3.3.3
 Tested up to: 6.0.2
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -32,7 +32,7 @@ I can offer you additional `custom made` optimization on top of this plugin. If 
 *	Purge all caches on the entire network (linux): `wp site list --field=url | xargs -n1 -I % wp --url=% fvm purge`
 
 = How to customize the cache path ? =
-You need a public directory to store and serve minified cache files. If you need to customize the path and url, you need to edit your `wp-config.php` and add both `define('FVM_DIR', '/path/to/example.com/your/public/directory');` and `define('FVM_URL', 'https://example.com/your/public/directory');` .
+You need a public directory to store and serve minified cache files. If you need to customize the path and url, you need to edit your `wp-config.php` and add both `define('FVM_CACHE_DIR', '/absolute/path/to/example.com/your/public/directory');` and `define('FVM_CACHE_URL', 'https://example.com/your/public/directory');` .
 
 
 == Installation ==
@@ -48,6 +48,11 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.3.3 [2022.12.11] =
+* custom cache directory fixes
+* upgraded matthiasmullie's PHP Minify to 1.3.70
+* move the viewport meta tag up, before preloading tags
 
 = 3.3.2 [2022.10.07] =
 * improved compatibility with WP Links and All in One SEO
