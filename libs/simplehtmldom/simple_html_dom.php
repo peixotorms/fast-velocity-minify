@@ -1034,7 +1034,7 @@ class fvm_simple_html_dom_node
 
 		if ($this->dom) {
 			$sourceCharset = strtoupper($this->dom->_charset);
-			$targetCharset = strtoupper($this->dom->_target_charset);
+			$targetCharset = strtoupper($this->dom->_target_charset).'//IGNORE';
 		}
 
 		if (is_object($debug_object)) {
