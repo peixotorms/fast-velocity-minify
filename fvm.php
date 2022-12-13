@@ -118,7 +118,7 @@ if(!is_admin()) {
 		} else if (defined('CE_VERSION')) {
 			add_filter( 'cache_enabler_page_contents_before_store', 'fvm_process_page' );   # Cache Enabler
 		} else {
-			if (!defined('FVM_HOOK_INTO')) { define('FVM_HOOK_INTO', 'template_redirect'); }
+			if (!defined('FVM_HOOK_INTO')) { define('FVM_HOOK_INTO', 'setup_theme'); }
 			add_action(constant("FVM_HOOK_INTO"), 'fvm_start_buffer', 999999);
 		}
 	}
