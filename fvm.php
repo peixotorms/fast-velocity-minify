@@ -6,7 +6,7 @@ Description: Improve your speed score on GTmetrix, Pingdom Tools and Google Page
 Author: Raul Peixoto
 Author URI: http://fastvelocity.com
 Text Domain: fast-velocity-minify
-Version: 3.3.5
+Version: 3.3.6
 License: GPL2
 
 ------------------------------------------------------------------------
@@ -104,10 +104,24 @@ if(!is_admin()) {
 	add_action('admin_bar_menu', 'fvm_admintoolbar', 100);
 	add_action('init', 'fvm_process_cache_purge_request');
 	
-	# allow overwrite
-	if (!defined('FVM_HOOK_INTO')) { define('FVM_HOOK_INTO', 'setup_theme'); }
-	add_action(constant("FVM_HOOK_INTO"), 'fvm_start_buffer', 50);
-	add_action('shutdown', 'fvm_end_buffer', -50);	
-	
+	# load after all plugins
+	add_action( 'plugins_loaded', 'fvm_loader' );
+	function fvm_loader() {
+		if (defined('WPCACHECONFIGPATH')) {
+			add_filter( 'wpsupercache_buffer', 'fvm_process_page' );          # WP-Super-Cache
+		} else if (defined('W3TC')) {
+			add_filter( 'w3tc_process_content', 'fvm_process_page' );         # W3 Total Cache
+		} else if (defined('WP_ROCKET_VERSION')) {
+			add_filter( 'rocket_buffer', 'fvm_process_page' );                # WP Rocket
+		} else if (defined('LSCWP_V')) {
+			add_filter( 'litespeed_buffer_before', 'fvm_process_page' );      # LiteSpeed Cache
+		} else if (defined('CE_VERSION')) {
+			add_filter( 'cache_enabler_page_contents_before_store', 'fvm_process_page' );   # Cache Enabler
+		} else {
+			if (!defined('FVM_HOOK_INTO')) { define('FVM_HOOK_INTO', 'template_redirect'); }
+			add_action(constant("FVM_HOOK_INTO"), 'fvm_start_buffer', 999999);
+		}
+	}
+		
 }
 
