@@ -378,7 +378,7 @@ function fvm_purge_varnish_cloudways() {
 	# must have
 	if (!isset($_SERVER['HTTP_X_VARNISH']) || !isset($_SERVER['HTTP_X_APPLICATION'])){ return false; }
 	if (is_null($_SERVER['HTTP_X_VARNISH']) || is_null($_SERVER['HTTP_X_APPLICATION'])){ return false; }
-	if ('varnishpass' === trim($_SERVER['HTTP_X_APPLICATION'])){ return false; } 
+	if (isset('varnishpass' === trim($_SERVER['HTTP_X_APPLICATION'])){ return false; } 
 	if ('bypass' === trim($_SERVER['HTTP_X_APPLICATION'])){ return false; } 
 	
 	# host and uri path
@@ -1717,7 +1717,7 @@ function fvm_can_process_common() {
 	global $fvm_settings, $fvm_urls;
 	
 	# only GET requests allowed
-	if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+	if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] !== 'GET') {
 		return false;
 	}
 	
