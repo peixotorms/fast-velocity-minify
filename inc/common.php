@@ -1788,7 +1788,7 @@ function fvm_can_process_common() {
 
 
 # check if we can process the page, minimum filters
-function fvm_can_process_query_string() {
+function fvm_can_process_query_string($target) {
 
 	# host and uri path
 	$host = fvm_get_domain();
@@ -1796,7 +1796,8 @@ function fvm_can_process_query_string() {
 	$scheme = fvm_get_scheme();
 	$url = $scheme.'://'.$host.$request_uri;
 	$parse = parse_url($url);
-	
+	global $fvm_settings;
+		
 	# parse query string to array, check if should be ignored
 	if(isset($parse["query"]) && !empty($parse["query"])) {
 		
@@ -1804,11 +1805,11 @@ function fvm_can_process_query_string() {
 		$qsarr = array(); parse_str($parse["query"], $qsarr);
 		
 		# remove allowed query strings from the list of detected queries
-		if(isset($fvm_settings['settings']['qs']) && !empty($fvm_settings['settings']['qs'])) {
+		if(isset($fvm_settings['settings']['qs']) && !empty($fvm_settings['settings']['qs'])) {echo 'found';
 			$arr = fvm_string_toarray($fvm_settings['settings']['qs']);
 			if(is_array($arr) && count($arr) > 0) {
 				foreach ($arr as $a) { 
-					if(isset($qsarr[$e])) { unset($qsarr[$e]); }			
+					if(isset($qsarr[$a])) { unset($qsarr[$a]); }			
 				}
 			}
 		}
