@@ -1805,7 +1805,7 @@ function fvm_can_process_query_string($target) {
 		$qsarr = array(); parse_str($parse["query"], $qsarr);
 		
 		# remove allowed query strings from the list of detected queries
-		if(isset($fvm_settings['settings']['qs']) && !empty($fvm_settings['settings']['qs'])) {echo 'found';
+		if(isset($fvm_settings['settings']['qs']) && !empty($fvm_settings['settings']['qs'])) {
 			$arr = fvm_string_toarray($fvm_settings['settings']['qs']);
 			if(is_array($arr) && count($arr) > 0) {
 				foreach ($arr as $a) { 
