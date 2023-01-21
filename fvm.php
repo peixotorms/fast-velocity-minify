@@ -1,29 +1,17 @@
 <?php
-/*
-Plugin Name: Fast Velocity Minify
-Plugin URI: http://fastvelocity.com
-Description: Improve your speed score on GTmetrix, Pingdom Tools and Google PageSpeed Insights by merging and minifying CSS and JavaScript files into groups, compressing HTML and other speed optimizations. 
-Author: Raul Peixoto
-Author URI: http://fastvelocity.com
-Text Domain: fast-velocity-minify
-Version: 3.3.7
-License: GPL2
-
-------------------------------------------------------------------------
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+/**
+ * Plugin Name: Fast Velocity Minify
+ * Plugin URI: https://www.upwork.com/fl/raulpeixoto
+ * Description: Improve your speed score on GTmetrix, Pingdom Tools and Google PageSpeed Insights by merging and minifying CSS and JavaScript files into groups, compressing HTML and other speed optimizations. 
+ * Version: 3.3.8
+ * Author: Raul Peixoto
+ * Author URI: https://www.upwork.com/fl/raulpeixoto
+ * Text Domain: fast-velocity-minify
+ * Requires at least: 5.6
+ * Requires PHP: 7.3
+ * License: GPL2 / https://wordpress.org/about/license/
 */
+
 
 # Exit if accessed directly				
 if (!defined('ABSPATH')){ exit(); }	

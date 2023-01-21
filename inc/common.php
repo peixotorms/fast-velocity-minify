@@ -338,7 +338,7 @@ function fvm_purge_others(){
 	# Purge Savvii
 	if (defined( '\Savvii\CacheFlusherPlugin::NAME_DOMAINFLUSH_NOW')) {
 		$purge_savvii = new \Savvii\CacheFlusherPlugin();
-		if ( method_exists( $plugin, 'domainflush' ) ) {
+		if ( method_exists( $purge_savvii, 'domainflush' ) ) {
 			$purge_savvii->domainflush();
 			return __( 'A cache purge request has been sent to <strong>Savvii</strong>', 'fast-velocity-minify' );
 		}
@@ -961,6 +961,10 @@ function fvm_replace_css_imports($css, $rq=null) {
 	$cssimports = array();
 	$cssimports_prepend = array();
 	$css = trim($css);
+	
+	# cache version
+	global $tvers;
+	if(!is_numeric($tvers)) { $tvers = get_option('fvm_last_cache_update', '0'); }
 
 	# handle import url rules
 	preg_match_all ("/@import[ ]*['\"]{0,}(url\()*['\"]*([^\(\{'\"\)]*)['\"\)]*[;]{0,}/ui", $css, $cssimports);
@@ -1484,7 +1488,7 @@ function fvm_get_transient($key, $check=null, $with_meta=null) {
 		
 		# return content and meta
 		if(is_null($check) && !is_null($with_meta) && isset($result->date) && isset($result->content) && isset($result->meta)) {
-			return array('date'=>$result->date, 'content'=>$result->content, 'meta'=>json_decode($result->meta, true), 'cache-method'=>$cache_method);
+			return array('date'=>$result->date, 'content'=>$result->content, 'meta'=>json_decode($result->meta, true));
 		}
 			
 	} catch (Exception $e) {
@@ -1698,9 +1702,10 @@ function fvm_is_html($html) {
 
 # ensure that string is utf8	
 function fvm_ensure_utf8($str) {
-	$enc = mb_detect_encoding($str, mb_list_encodings(), true);
+	$encodings = [ "UTF-32", "UTF-32BE", "UTF-32LE", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-8", "ASCII", "EUC-JP", "SJIS", "eucJP-win", "SJIS-win", "JIS", "ISO-2022-JP", "Windows-1252", "ISO-8859-1", "ISO-8859-2", "ISO-8859-3", "ISO-8859-4", "ISO-8859-5", "ISO-8859-6", "ISO-8859-7", "ISO-8859-8", "ISO-8859-9", "ISO-8859-10", "ISO-8859-13", "ISO-8859-14", "ISO-8859-15", "EUC-CN", "CP936", "EUC-TW", "BIG-5", "EUC-KR", "UHC", "ISO-2022-KR", "Windows-1251", "KOI8-R" ];
+	$enc = mb_detect_encoding($str, $encodings, true);
 	if ($enc === false){
-		return false; // could not detect encoding
+		return mb_convert_encoding($str, "UTF-8", "UTF-8"); // could not detect encoding, so try as utf-8
 	} else if ($enc !== "UTF-8") {
 		return mb_convert_encoding($str, "UTF-8", $enc); // converted to utf8
 	} else {

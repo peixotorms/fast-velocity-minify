@@ -995,17 +995,17 @@ function fvm_process_page($html) {
 		if(fvm_can_minify_css() || fvm_can_minify_js()) { 
 			$hm = fvm_add_header_function($hm);
 		}
-			
-		# move viewport meta tag up
-		if(!is_null($html->find('meta[viewport]', 0))) {
-			$hm = str_replace('<!-- h_preheader -->', $html->find('meta[viewport]', 0)->outertext.'<!-- h_preheader -->', $hm);
-			foreach($html->find('meta[viewport]') as $element) { $element->outertext = ''; }
-		}
 		
 		# move charset meta tag up
 		if(!is_null($html->find('meta[charset]', 0))) {
 			$hm = str_replace('<!-- h_preheader -->', $html->find('meta[charset]', 0)->outertext.'<!-- h_preheader -->', $hm);
 			foreach($html->find('meta[charset]') as $element) { $element->outertext = ''; }
+		}
+		
+		# move viewport meta tag up
+		if(!is_null($html->find('meta[viewport]', 0))) {
+			$hm = str_replace('<!-- h_preheader -->', $html->find('meta[name=viewport]', 0)->outertext.'<!-- h_preheader -->', $hm);
+			foreach($html->find('meta[viewport]') as $element) { $element->outertext = ''; }
 		}
 		
 		# remove other meta tag and collect them between preload and css/js files
