@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 5.6
 Requires PHP: 7.2
-Stable tag: 3.3.8
+Stable tag: 3.4.0
 Tested up to: 6.1.3
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -49,8 +49,14 @@ You need a public directory to store and serve minified cache files. If you need
 
 == Changelog ==
 
-= 3.3.8 [2022.01.21] =
+= 3.4.0 [2022.01.21] =
+* better third party cache plugins detection
+
+= 3.3.9 [2022.01.21] =
 * fixed a bug with PHP 8.1 detected encodings and a few notices
+
+= 3.3.8 [2022.12.28] =
+* fixed a typo
 
 = 3.3.7 [2022.12.28] =
 * fixed a bug with the Allowed Query Strings setting
