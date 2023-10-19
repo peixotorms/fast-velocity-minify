@@ -122,7 +122,7 @@ function fvm_process_page($html) {
 			
 			# START CSS LOOP
 			foreach($allcss as $k=>$tag) {
-				
+
 				# mediatypes
 				if(isset($tag->media)) {
 				
@@ -146,6 +146,11 @@ function fvm_process_page($html) {
 				
 				# START CSS FILES
 				if($tag->tag == 'link' && isset($tag->href)) {
+					
+					# remove integrity checks
+					if ($tag->hasAttribute('integrity')) {
+						$tag->removeAttribute('integrity');
+					}
 					
 					# filter url
 					$href = fvm_normalize_url($tag->href);
@@ -532,6 +537,11 @@ function fvm_process_page($html) {
 					
 					# START JS FILES
 					if(isset($tag->src)) {
+						
+						# remove integrity checks
+						if ($tag->hasAttribute('integrity')) {
+							$tag->removeAttribute('integrity');
+						}
 						
 						# filter url
 						$href = fvm_normalize_url($tag->src);
