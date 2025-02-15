@@ -1070,9 +1070,15 @@ function fvm_process_page($html) {
 		}	
 				
 		# cleanup leftover markers
-		$hm = str_replace(array('<!-- h_preheader -->', '<!-- h_header_function -->'), '', $hm); 
-		$hm_late = str_replace(array('<!-- h_cssheader -->', '<!-- h_jsheader -->'), '', $hm_late);
-		$fm = str_replace('<!-- h_footer_fvm_scripts -->', '', $fm);
+		if(isset($hm) && !null($hm)) {
+			$hm = str_replace(array('<!-- h_preheader -->', '<!-- h_header_function -->'), '', $hm);
+		}
+		if(isset($hm_late) && !null($hm_late)) {
+			$hm_late = str_replace(array('<!-- h_cssheader -->', '<!-- h_jsheader -->'), '', $hm_late);
+		}
+		if(isset($fm) && !null($fm)) {
+			$fm = str_replace('<!-- h_footer_fvm_scripts -->', '', $fm);
+		}
 		
 		# append header and footer
 		if(!is_null($html->find('head', 0)) && !is_null($html->find('body', -1))) {
