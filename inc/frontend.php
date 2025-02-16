@@ -1070,13 +1070,13 @@ function fvm_process_page($html) {
 		}	
 				
 		# cleanup leftover markers
-		if(isset($hm) && !null($hm)) {
+		if(isset($hm) && !is_null($hm)) {
 			$hm = str_replace(array('<!-- h_preheader -->', '<!-- h_header_function -->'), '', $hm);
 		}
-		if(isset($hm_late) && !null($hm_late)) {
+		if(isset($hm_late) && !is_null($hm_late)) {
 			$hm_late = str_replace(array('<!-- h_cssheader -->', '<!-- h_jsheader -->'), '', $hm_late);
 		}
-		if(isset($fm) && !null($fm)) {
+		if(isset($fm) && !is_null($fm)) {
 			$fm = str_replace('<!-- h_footer_fvm_scripts -->', '', $fm);
 		}
 		

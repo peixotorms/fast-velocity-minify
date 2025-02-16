@@ -1733,6 +1733,7 @@ function fvm_can_process_common() {
 	if( defined('WP_IMPORTING') && WP_IMPORTING ){ return false; }
 	if( defined('DOING_AJAX') && DOING_AJAX ){ return false; }
 	if( defined('WP_CLI') && WP_CLI ){ return false; }
+	if( defined('DOING_CRON') && DOING_CRON ){ return false; }
 	if( defined('XMLRPC_REQUEST') && XMLRPC_REQUEST ){ return false; }
 	if( defined('WP_ADMIN') && WP_ADMIN ){ return false; }
 	if( defined('SHORTINIT') && SHORTINIT ){ return false; }
