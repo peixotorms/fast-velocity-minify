@@ -3,8 +3,8 @@ Contributors: Alignak
 Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
 Requires at least: 5.6
 Requires PHP: 7.2
-Stable tag: 3.4.3
-Tested up to: 6.7.3
+Stable tag: 3.5.0
+Tested up to: 6.8.3
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -48,6 +48,13 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.5.0 [2025.10.05] =
+* Fixed UTF-8 encoding issues with CSS minification that caused icon fonts to display incorrectly
+* Added @charset "UTF-8" declaration to all minified CSS files for proper encoding
+* Fixed undefined variable warnings for $enable_css_minification
+* Improved encoding detection to prevent double-encoding of valid UTF-8 content
+* Enhanced compatibility with icon fonts using literal Unicode characters
 
 = 3.4.3 [2025.02.15] =
 * bugfix

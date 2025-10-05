@@ -542,7 +542,13 @@ function fvm_generate_min_url($url, $tkey, $type, $code) {
 			}
 			
 			# php
-			if(!file_exists($file) || (file_exists($file) && filemtime($file) < $tvers)) { file_put_contents($file, $code); }
+			if(!file_exists($file) || (file_exists($file) && filemtime($file) < $tvers)) {
+				# add @charset "UTF-8"; for CSS files only
+				if ($type == 'css' && !empty($code)) {
+					$code = '@charset "UTF-8";' . PHP_EOL . $code;
+				}
+				file_put_contents($file, $code);
+			}
 			if(file_exists($file)) { return $public; }
 			
 		}
@@ -992,6 +998,7 @@ function fvm_replace_css_imports($css, $rq=null) {
 				if ($subcss === false) {
 				
 					# get minification settings for files
+					$enable_css_minification = false;
 					if(isset($fvm_settings['css']['css_enable_min_files'])) {
 						$enable_css_minification = $fvm_settings['css']['css_enable_min_files'];
 					}					
@@ -1702,18 +1709,38 @@ function fvm_is_html($html) {
 
 # ensure that string is utf8	
 function fvm_ensure_utf8($str) {
+
+	# remove UTF-8 BOM if present
+	$bom = pack('H*','EFBBBF');
+	if (strpos($str, $bom) === 0) {
+		$str = substr($str, 3);
+	}
+
+	# FIRST: check if it's already valid UTF-8 - if yes, return unchanged
+	# This prevents double-encoding issues with files that contain valid UTF-8 characters
+	# (e.g., icon fonts with literal Unicode characters in private use areas)
+	if (mb_check_encoding($str, 'UTF-8')) {
+		return $str; // already valid UTF-8, no conversion needed
+	}
+
+	# NOT valid UTF-8, so try to detect the actual encoding and convert
 	$encodings = [ "UTF-32", "UTF-32BE", "UTF-32LE", "UTF-16", "UTF-16BE", "UTF-16LE", "UTF-8", "ASCII", "EUC-JP", "SJIS", "eucJP-win", "SJIS-win", "JIS", "ISO-2022-JP", "Windows-1252", "ISO-8859-1", "ISO-8859-2", "ISO-8859-3", "ISO-8859-4", "ISO-8859-5", "ISO-8859-6", "ISO-8859-7", "ISO-8859-8", "ISO-8859-9", "ISO-8859-10", "ISO-8859-13", "ISO-8859-14", "ISO-8859-15", "EUC-CN", "CP936", "EUC-TW", "BIG-5", "EUC-KR", "UHC", "ISO-2022-KR", "Windows-1251", "KOI8-R" ];
 	$enc = mb_detect_encoding($str, $encodings, true);
-	if ($enc === false){
-		return mb_convert_encoding($str, "UTF-8", "UTF-8"); // could not detect encoding, so try as utf-8
+
+	if ($enc === false) {
+		# Could not detect - try assuming Windows-1252 (common for mis-encoded files)
+		$converted = @mb_convert_encoding($str, "UTF-8", "Windows-1252");
+		if ($converted !== false && mb_check_encoding($converted, 'UTF-8')) {
+			return $converted;
+		}
+		# Last resort: force UTF-8 interpretation
+		return mb_convert_encoding($str, "UTF-8", "UTF-8");
 	} else if ($enc !== "UTF-8") {
 		return mb_convert_encoding($str, "UTF-8", $enc); // converted to utf8
-	} else {
-		return $str; // already utf8
 	}
-	
-	# fail
-	return false;
+
+	# fallback
+	return $str;
 }
 
 
