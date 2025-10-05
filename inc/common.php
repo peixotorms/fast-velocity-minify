@@ -354,6 +354,24 @@ function fvm_purge_others(){
 		$ret[] = __('Cloudways (Varnish)');
 	}
 
+	# Purge CLP Varnish Cache (cloudpanel.io)
+	if ( class_exists('ClpVarnishCacheManager') ) {
+		try {
+			$clp_varnish = new ClpVarnishCacheManager();
+			if ( method_exists($clp_varnish, 'is_enabled') && $clp_varnish->is_enabled() ) {
+				if ( method_exists($clp_varnish, 'purge_host') ) {
+					$host = parse_url( home_url(), PHP_URL_HOST );
+					if ( !empty($host) ) {
+						$clp_varnish->purge_host( $host );
+						return __( 'All caches on <strong>CLP Varnish Cache</strong> have been purged.', 'fast-velocity-minify' );
+					}
+				}
+			}
+		} catch (\Exception $e) {
+			return __( 'CLP Varnish Cache purge failed: ' . $e->getMessage(), 'fast-velocity-minify' );
+		}
+	}
+
 	# bigscoots.com
 	if(has_action('bs_cache_purge_cache')) {
 		do_action('bs_cache_purge_cache');

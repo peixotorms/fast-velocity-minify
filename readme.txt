@@ -1,6 +1,6 @@
 === Fast Velocity Minify ===
 Contributors: Alignak
-Tags: PHP Minify, Lighthouse, GTmetrix, Pingdom, Pagespeed, Merging, Minification, Optimization, Speed, Performance, FVM
+Tags: Lighthouse, GTmetrix, Speed Optimization, Pagespeed, Web Vitals
 Requires at least: 5.6
 Requires PHP: 7.2
 Stable tag: 3.5.0
@@ -9,7 +9,7 @@ Text Domain: fast-velocity-minify
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Improve your speed score on GTmetrix, Pingdom Tools and Google PageSpeed Insights by adjusting CSS and JS files (defer, async, minify, combine, etc), compressing HTML, simplifying fonts and a few more speed optimization options. 
+Maximize GTmetrix, PageSpeed and enhance Web Vitals by minifying CSS/JS, lazy loading scripts, optimizing images, and improving load speed overall.
  
 
 == Description ==
@@ -55,6 +55,7 @@ You need a public directory to store and serve minified cache files. If you need
 * Fixed undefined variable warnings for $enable_css_minification
 * Improved encoding detection to prevent double-encoding of valid UTF-8 content
 * Enhanced compatibility with icon fonts using literal Unicode characters
+* Added support for CLP Varnish Cache (cloudpanel.io) integration for automatic cache purging
 
 = 3.4.3 [2025.02.15] =
 * bugfix
