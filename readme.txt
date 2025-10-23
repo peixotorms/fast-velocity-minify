@@ -49,6 +49,10 @@ You need a public directory to store and serve minified cache files. If you need
 
 == Changelog ==
 
+= 3.5.3 [2025.10.23] =
+* Introduces a new 'Cache External Fonts locally' setting in the admin layout
+* Refactors and improves CSS URL handling for better URL normalization and updates font-face simplification logic.
+
 = 3.5.2 [2025.10.22] =
 * **SECURITY**: Fixed Stored XSS vulnerability in CDN domain input validation (CVE-2025-12034)
 * **SECURITY**: Fixed Path Traversal vulnerability allowing arbitrary local file disclosure
