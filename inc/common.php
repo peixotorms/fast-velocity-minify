@@ -1006,9 +1006,9 @@ function fvm_replace_css_imports($css, $rq=null) {
 			
 			# must have
 			if(!empty($url)) {
-				
+
 				# make sure we have a complete url
-				$href = fvm_normalize_url($url);
+				$href = fvm_normalize_url($url, $rq);
 
 				# download, minify, cache (no ver query string)
 				$tkey = fvm_generate_hash_with_prefix($href, 'css');
@@ -1612,9 +1612,16 @@ function fvm_normalize_url($href, $purl=null) {
 	if(empty($href)) { return false; }
 
 	# Detect and block path traversal attempts
-	if (strpos($href, '../') !== false || strpos($href, '..\\') !== false) {
-		error_log('FVM Security: Path traversal attempt blocked in URL: ' . $href);
-		return false;
+	# Exception: Allow relative paths when resolving CSS @import or url() references
+	# (when $purl is provided, we're resolving a relative path within CSS, not user input)
+	if (!is_null($purl) && !empty($purl)) {
+		# CSS relative path - allow it, will be resolved against parent URL
+	} else {
+		# Direct URL input - block path traversal for security
+		if (strpos($href, '../') !== false || strpos($href, '..\\') !== false) {
+			error_log('FVM Security: Path traversal attempt blocked in URL: ' . $href);
+			return false;
+		}
 	}
 
 	# some fixes

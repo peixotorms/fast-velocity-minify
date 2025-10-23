@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: Lighthouse, GTmetrix, Speed Optimization, Pagespeed, Web Vitals
 Requires at least: 5.6
 Requires PHP: 7.2
-Stable tag: 3.5.2
+Stable tag: 3.5.3
 Tested up to: 6.8.3
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -48,6 +48,12 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.5.3 [2025.10.23] =
+* **BUGFIX**: Fixed icon fonts and theme icons disappearing after 3.5.2 security update
+* **BUGFIX**: Path traversal security check was too aggressive and blocked legitimate CSS relative paths like url(../fonts/icons.woff)
+* **IMPROVEMENT**: Modified security validation to distinguish between CSS relative paths (allowed) and malicious path traversal attempts (blocked)
+* Resolves compatibility issues with Porto theme, WooCommerce icons, social media icons, rating stars, and other icon fonts
 
 = 3.5.2 [2025.10.22] =
 * **SECURITY**: Fixed Stored XSS vulnerability in CDN domain input validation (CVE-2025-12034)

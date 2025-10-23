@@ -6,41 +6,49 @@ if (!defined('ABSPATH')){ exit(); }
 # check for minimum requirements and prevent activation or disable if not fully compatible
 function fvm_check_minimum_requirements() {
 	if(current_user_can('manage_options')) {
-		
+
 		# defaults
 		$error = '';
+		$warning = '';
 
 		# php version requirements
-		if (version_compare( PHP_VERSION, '5.6', '<' )) { 
-			$error = __( 'FVM requires PHP 5.6 or higher. You’re still on', 'fast-velocity-minify' ) .' '. PHP_VERSION; 
+		if (version_compare( PHP_VERSION, '5.6', '<' )) {
+			$error = __( 'FVM requires PHP 5.6 or higher. You're still on', 'fast-velocity-minify' ) .' '. PHP_VERSION;
 		}
 
-		# php extension requirements	
-		if (!extension_loaded('mbstring')) { 
-			$error = __( 'FVM requires the PHP mbstring module to be installed on the server.', 'fast-velocity-minify' ); 
+		# php extension requirements
+		if (!extension_loaded('mbstring')) {
+			$error = __( 'FVM requires the PHP mbstring module to be installed on the server.', 'fast-velocity-minify' );
 		}
-		
+
 		# wp version requirements
 		if ( version_compare( $GLOBALS['wp_version'], '4.9', '<' ) ) {
-			$error = __( 'FVM requires WP 4.9 or higher. You’re still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version']; 
+			$error = __( 'FVM requires WP 4.9 or higher. You're still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version'];
 		}
-		
-		# check cache directory
+
+		# check cache directory (soft check - don't deactivate, just warn)
 		$ch_info = fvm_get_cache_location();
 		if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
-			if(is_dir($ch_info['ch_dir']) && !is_writable($ch_info['ch_dir'])) {
-				$error = __( 'FVM needs writing permissions on ', 'fast-velocity-minify' ). ' ['.$ch_info['ch_dir'].']';
+			if(!is_dir($ch_info['ch_dir'])) {
+				$warning = __( 'FVM cache directory does not exist yet. It will be created automatically when cache files are written: ', 'fast-velocity-minify' ). ' ['.$ch_info['ch_dir'].']';
+			} elseif(!is_writable($ch_info['ch_dir'])) {
+				$warning = __( 'FVM cache directory is currently not writable. Please ensure write permissions when ready: ', 'fast-velocity-minify' ). ' ['.$ch_info['ch_dir'].']';
 			}
-		}		
-		
-		# deactivate plugin forcefully
-		global $fvm_var_basename;
-		if ((is_plugin_active($fvm_var_basename) && !empty($error)) || !empty($error)) { 
-		if (isset($_GET['activate'])) { unset($_GET['activate']); }
-			deactivate_plugins($fvm_var_basename); 
-			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', $error, 'success' );
 		}
-		
+
+		# deactivate plugin forcefully only for critical errors (not cache directory issues)
+		global $fvm_var_basename;
+		if ((is_plugin_active($fvm_var_basename) && !empty($error)) || !empty($error)) {
+			if (isset($_GET['activate'])) { unset($_GET['activate']); }
+			deactivate_plugins($fvm_var_basename);
+			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', $error, 'error' );
+		}
+
+		# show warning for cache directory issues (non-critical)
+		if(!empty($warning)) {
+			add_settings_error( 'fvm_admin_notice', 'fvm_admin_cache_warning', $warning, 'warning' );
+		}
+
 	}
 }
 
