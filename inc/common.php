@@ -1606,10 +1606,16 @@ function fvm_del_transient($key) {
 
 # functions, get full url
 function fvm_normalize_url($href, $purl=null) {
-	
+
 	# preserve empty source handles
-	$href = trim($href); 
-	if(empty($href)) { return false; }      
+	$href = trim($href);
+	if(empty($href)) { return false; }
+
+	# Detect and block path traversal attempts
+	if (strpos($href, '../') !== false || strpos($href, '..\\') !== false) {
+		error_log('FVM Security: Path traversal attempt blocked in URL: ' . $href);
+		return false;
+	}
 
 	# some fixes
 	$href = str_replace(array('&#038;', '&amp;'), '&', $href);
@@ -2181,10 +2187,27 @@ function fvm_rewrite_assets_cdn($html) {
 
 # try to open the file from the disk, before downloading
 function fvm_maybe_download($url) {
-	
+
 	# must have
 	if(is_null($url) || empty($url)) { return false; }
-	
+
+	# Validate URL format and protocol
+	$parsed = parse_url($url);
+	if (!$parsed || !isset($parsed['scheme']) || !isset($parsed['host'])) {
+		return array('error' => 'Invalid URL format');
+	}
+
+	# Only allow http and https protocols (prevent file://, ftp://, etc.)
+	if (!in_array(strtolower($parsed['scheme']), array('http', 'https'))) {
+		return array('error' => 'Only HTTP and HTTPS protocols are allowed');
+	}
+
+	# Block internal/private IP ranges to prevent SSRF
+	$ip = gethostbyname($parsed['host']);
+	if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+		return array('error' => 'Access to private/internal IPs is not allowed');
+	}
+
 	# get domain
 	global $fvm_urls;
 	
@@ -2193,9 +2216,26 @@ function fvm_maybe_download($url) {
 		
 		# file path + windows compatibility
 		$f =  strtok(str_replace('/', DIRECTORY_SEPARATOR, str_replace(rtrim($fvm_urls['wp_site_url'], '/'), rtrim(ABSPATH, '/'), $url)), '?');
-					
-		# did it work?
+
+		# did it work? - with path traversal protection
 		if (file_exists($f) && is_file($f)) {
+
+			# Validate file path to prevent directory traversal attacks
+			$realfile = realpath($f);
+			$realbase = realpath(ABSPATH);
+
+			# Verify file is within WordPress installation
+			if ($realfile === false || $realbase === false || strpos($realfile, $realbase) !== 0) {
+				return array('error' => 'Invalid file path - outside allowed directory');
+			}
+
+			# Block sensitive files
+			$basename = basename($realfile);
+			$blocked_files = array('wp-config.php', '.htaccess', '.env', 'php.ini', '.user.ini');
+			if (in_array(strtolower($basename), $blocked_files)) {
+				return array('error' => 'Access to this file is not allowed');
+			}
+
 			return array('content'=>file_get_contents($f), 'src'=>'Disk');
 		}
 	}
@@ -2205,8 +2245,8 @@ function fvm_maybe_download($url) {
 	# this useragent is needed for google fonts (woff files only + hinted fonts)
 	$uagent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586';
 
-	# fetch via wordpress functions
-	$response = wp_remote_get($url, array('user-agent'=>$uagent, 'timeout' => 7, 'httpversion' => '1.1', 'sslverify'=>false)); 
+	# fetch via wordpress functions (SSL verification enabled by default for security)
+	$response = wp_remote_get($url, array('user-agent'=>$uagent, 'timeout' => 7, 'httpversion' => '1.1')); 
 	if ( is_wp_error( $response ) ) {
 		$error_message = $response->get_error_message();
 		return array('error'=>"Something went wrong: $error_message");

@@ -149,7 +149,7 @@
 <th scope="row"><?php _e( 'Ignore CSS files', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_css_ignore"><span class="fvm-bold-green fvm-rowintro"><?php _e( "Ignore the following CSS URL's", 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[css][ignore]" rows="7" cols="50" id="fvm_settings_css_ignore" class="large-text code" placeholder="ex: /plugins/something/assets/problem.css"><?php echo fvm_get_settings_value($fvm_settings, 'css', 'ignore'); ?></textarea></p>
+<p><textarea name="fvm_settings[css][ignore]" rows="7" cols="50" id="fvm_settings_css_ignore" class="large-text code" placeholder="ex: /plugins/something/assets/problem.css"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'css', 'ignore')); ?></textarea></p>
 <p class="description">[ <?php _e( 'CSS files are merged and grouped automatically by mediatype, hence you have an option to exclude files.', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the <code>href attribute</code> on the <code>link tag</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
@@ -159,7 +159,7 @@
 <th scope="row"><?php _e( 'Remove CSS Files', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_css_remove"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Remove the following CSS files', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[css][remove]" rows="7" cols="50" id="fvm_settings_css_remove" class="large-text code" placeholder="ex: fonts.googleapis.com"><?php echo fvm_get_settings_value($fvm_settings, 'css', 'remove'); ?></textarea></p>
+<p><textarea name="fvm_settings[css][remove]" rows="7" cols="50" id="fvm_settings_css_remove" class="large-text code" placeholder="ex: fonts.googleapis.com"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'css', 'remove')); ?></textarea></p>
 <p class="description">[ <?php _e( 'This will allow you to remove unwanted CSS files by URI path from the frontend', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the <code>href attribute</code> on the <code>link tag</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
@@ -169,7 +169,7 @@
 <th scope="row"><?php _e( 'Async CSS Files', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_css_async"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Async the following CSS files', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[css][async]" rows="7" cols="50" id="fvm_settings_css_async" class="large-text code" placeholder="ex: /plugins/something/assets/low-priority.css"><?php echo fvm_get_settings_value($fvm_settings, 'css', 'async'); ?></textarea></p>
+<p><textarea name="fvm_settings[css][async]" rows="7" cols="50" id="fvm_settings_css_async" class="large-text code" placeholder="ex: /plugins/something/assets/low-priority.css"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'css', 'async')); ?></textarea></p>
 <p class="description">[ <?php _e( 'This will allow you to Async CSS files by URI path from the frontend', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the <code>href attribute</code> on the <code>link tag</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
@@ -238,7 +238,7 @@
 <th scope="row"><?php _e( 'Ignore Script Files', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_js_ignore"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Will prevent merging or minification for all JS files matching the paths below', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[js][ignore]" rows="7" cols="50" id="fvm_settings_js_ignore" class="large-text code" placeholder="<?php _e( '--- ex: /plugins/something/assets/problem.js ---', 'fast-velocity-minify' ); ?>"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'ignore'); ?></textarea></p>
+<p><textarea name="fvm_settings[js][ignore]" rows="7" cols="50" id="fvm_settings_js_ignore" class="large-text code" placeholder="<?php _e( '--- ex: /plugins/something/assets/problem.js ---', 'fast-velocity-minify' ); ?>"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'js', 'ignore')); ?></textarea></p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the script <code>src</code> attribute', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'It is highly recommended to try to leave this empty and later be more specific on what to merge', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
@@ -248,10 +248,10 @@
 <th scope="row"><?php _e( 'Render Blocking JS files', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_merge_header"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'This will render block all JS files matching the paths below', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[js][merge_header]" rows="7" cols="50" id="fvm_settings_js_merge_header" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?> 
-/jquery-migrate.js 
-/jquery.js 
-/jquery.min.js"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'merge_header'); ?></textarea></p>
+<p><textarea name="fvm_settings[js][merge_header]" rows="7" cols="50" id="fvm_settings_js_merge_header" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?>
+/jquery-migrate.js
+/jquery.js
+/jquery.min.js"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'js', 'merge_header')); ?></textarea></p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the script <code>src attribute</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
 </tr>
@@ -260,10 +260,10 @@
 <th scope="row"><?php _e( 'Defer JS Files', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_merge_defer"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'This will defer all JS files matching the paths below', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[js][merge_defer]" rows="7" cols="50" id="fvm_settings_js_merge_defer" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?> 
-/wp-admin/ 
-/wp-includes/ 
-/wp-content/"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'merge_defer'); ?></textarea></p>
+<p><textarea name="fvm_settings[js][merge_defer]" rows="7" cols="50" id="fvm_settings_js_merge_defer" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?>
+/wp-admin/
+/wp-includes/
+/wp-content/"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'js', 'merge_defer')); ?></textarea></p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the script <code>src attribute', 'fast-velocity-minify' ); ?></code> ]</p>
 </fieldset></td>
 </tr>
@@ -272,12 +272,12 @@
 <th scope="row"><?php _e( 'Defer Inline JavaScript', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_defer_dependencies"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Preserve the order of scripts execution when deferring JS files dependencies', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[js][defer_dependencies]" rows="7" cols="50" id="fvm_settings_js_defer_dependencies" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?> 
+<p><textarea name="fvm_settings[js][defer_dependencies]" rows="7" cols="50" id="fvm_settings_js_defer_dependencies" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?>
 wp.i18n
 wp.apiFetch.use
 window.lodash
 wp.hooks
-wp.url"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'defer_dependencies'); ?></textarea></p>
+wp.url"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'js', 'defer_dependencies')); ?></textarea></p>
 <p class="description">[ <?php _e( 'Inline JavaScript matching these rules, will be deferred with script type module', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the script <code>innerHTML</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
@@ -287,11 +287,11 @@ wp.url"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'defer_dependenci
 <th scope="row"><?php _e( 'Delay third party scripts until user interaction', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_js_thirdparty"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Delay JS files or inline scripts until user interaction', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[js][thirdparty]" rows="7" cols="50" id="fvm_settings_js_thirdparty" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?> 
-function(w,d,s,l,i) 
+<p><textarea name="fvm_settings[js][thirdparty]" rows="7" cols="50" id="fvm_settings_js_thirdparty" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?>
+function(w,d,s,l,i)
 function(f,b,e,v,n,t,s)
 function(h,o,t,j,a,r)
-www.googletagmanager.com/gtm.js"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'thirdparty'); ?></textarea></p>
+www.googletagmanager.com/gtm.js"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'js', 'thirdparty')); ?></textarea></p>
 <p class="description">[ <?php _e( 'Used interaction events: mouseover, keydown, touchstart, touchmove and wheel', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the inline script <code>innerHTML</code> or <code>src</code> attribute for JS files', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
@@ -301,8 +301,8 @@ www.googletagmanager.com/gtm.js"><?php echo fvm_get_settings_value($fvm_settings
 <th scope="row"><?php _e( 'Remove JavaScript Scripts', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_js_remove"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Remove the following JS files or Inline Scripts', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[js][remove]" rows="7" cols="50" id="fvm_settings_js_remove" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?> 
-/some/duplicate/file.js"><?php echo fvm_get_settings_value($fvm_settings, 'js', 'remove'); ?></textarea></p>
+<p><textarea name="fvm_settings[js][remove]" rows="7" cols="50" id="fvm_settings_js_remove" class="large-text code" placeholder="<?php _e( '--- example ---', 'fast-velocity-minify' ); ?>
+/some/duplicate/file.js"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'js', 'remove')); ?></textarea></p>
 <p class="description">[ <?php _e( 'This will allow you to remove unwanted script tags from the frontend', 'fast-velocity-minify' ); ?> ]</p>
 <p class="description">[ <?php _e( 'Will match using <code>PHP stripos</code> against the script <code>outerHTML</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
@@ -346,7 +346,7 @@ www.googletagmanager.com/gtm.js"><?php echo fvm_get_settings_value($fvm_settings
 <th scope="row"><span class="fvm-label-special"><?php _e( 'CDN URL', 'fast-velocity-minify' ); ?></span></th>
 <td><fieldset>
 <label for="fvm_settings_cdn_domain">
-<p><input type="text" name="fvm_settings[cdn][domain]" id="fvm_settings_cdn_domain" value="<?php echo fvm_get_settings_value($fvm_settings, 'cdn', 'domain'); ?>" size="80" /></p>
+<p><input type="text" name="fvm_settings[cdn][domain]" id="fvm_settings_cdn_domain" value="<?php echo esc_attr(fvm_get_settings_value($fvm_settings, 'cdn', 'domain')); ?>" size="80" /></p>
 <p class="description">[ <?php _e( 'You can ignore this if your CDN url matches your domain name (ie: Cloudflare)', 'fast-velocity-minify' ); ?> ]</p>
 </label>
 <br />
@@ -356,7 +356,7 @@ www.googletagmanager.com/gtm.js"><?php echo fvm_get_settings_value($fvm_settings
 <th scope="row"><?php _e( 'CDN Integration', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_cdn_integration"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'Missing HTML elements to replace', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[cdn][integration]" rows="7" cols="50" id="fvm_settings_cdn_integration" class="large-text code" placeholder="--- check the help section for suggestions ---"><?php echo fvm_get_settings_value($fvm_settings, 'cdn', 'integration'); ?></textarea></p>
+<p><textarea name="fvm_settings[cdn][integration]" rows="7" cols="50" id="fvm_settings_cdn_integration" class="large-text code" placeholder="--- check the help section for suggestions ---"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'cdn', 'integration')); ?></textarea></p>
 <p class="description">[ <?php _e( 'Additional replacement rules with syntax from <code>https://simplehtmldom.sourceforge.io/manual.htm</code>', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
 </tr>
@@ -372,7 +372,7 @@ www.googletagmanager.com/gtm.js"><?php echo fvm_get_settings_value($fvm_settings
 <th scope="row"><?php _e( 'Allowed Query Strings', 'fast-velocity-minify' ); ?></th>
 <td><fieldset>
 <label for="fvm_settings_settings_qs"><span class="fvm-bold-green fvm-rowintro"><?php _e( 'One query string key per line', 'fast-velocity-minify' ); ?></span></label>
-<p><textarea name="fvm_settings[settings][qs]" rows="7" cols="50" id="fvm_settings_settings_qs" class="large-text code" placeholder="--- check the help section for suggestions ---"><?php echo fvm_get_settings_value($fvm_settings, 'settings', 'qs'); ?></textarea></p>
+<p><textarea name="fvm_settings[settings][qs]" rows="7" cols="50" id="fvm_settings_settings_qs" class="large-text code" placeholder="--- check the help section for suggestions ---"><?php echo esc_textarea(fvm_get_settings_value($fvm_settings, 'settings', 'qs')); ?></textarea></p>
 <p class="description">[ <?php _e( 'Additional query strings, keys only', 'fast-velocity-minify' ); ?> ]</p>
 </fieldset></td>
 </tr>

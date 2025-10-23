@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: Lighthouse, GTmetrix, Speed Optimization, Pagespeed, Web Vitals
 Requires at least: 5.6
 Requires PHP: 7.2
-Stable tag: 3.5.0
+Stable tag: 3.5.2
 Tested up to: 6.8.3
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -48,6 +48,20 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.5.2 [2025.10.22] =
+* **SECURITY**: Fixed Stored XSS vulnerability in CDN domain input validation (CVE-2025-12034)
+* **SECURITY**: Fixed Path Traversal vulnerability allowing arbitrary local file disclosure
+* **SECURITY**: Enabled TLS certificate verification for external resource downloads
+* **SECURITY**: Added AJAX nonce validation for log retrieval endpoint (CSRF protection)
+* **SECURITY**: Added URL protocol whitelist and SSRF prevention for external requests
+* **SECURITY**: Added sensitive file protection blocking access to wp-config.php, .htaccess, .env files
+* **SECURITY**: Added output escaping for all admin textarea fields
+* Fixed transient checker operator precedence bug causing unnecessary database checks
+* Fixed AJAX nonce implementation to properly pass security token from JavaScript
+
+= 3.5.1 [2025.10.22] =
+* Plugin and Author URL update
 
 = 3.5.0 [2025.10.05] =
 * Fixed UTF-8 encoding issues with CSS minification that caused icon fonts to display incorrectly

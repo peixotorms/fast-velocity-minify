@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Fast Velocity Minify
- * Plugin URI: https://www.upwork.com/fl/raulpeixoto
+ * Plugin URI: https://fastvelocity.com
  * Description: Improve your speed score on GTmetrix, Pingdom Tools and Google PageSpeed Insights by merging and minifying CSS and JavaScript files into groups, compressing HTML and other speed optimizations. 
- * Version: 3.5.0
+ * Version: 3.5.2
  * Author: Raul Peixoto
- * Author URI: https://www.upwork.com/fl/raulpeixoto
+ * Author URI: https://fastvelocity.com
  * Text Domain: fast-velocity-minify
  * Requires at least: 5.6
  * Requires PHP: 7.2
@@ -66,7 +66,7 @@ if(is_admin()) {
 	add_action('admin_enqueue_scripts', 'fvm_add_admin_jscss');
 	add_action('admin_menu', 'fvm_add_admin_menu');
 	add_action('admin_notices', 'fvm_show_admin_notice_from_transient');
-	add_action('wp_ajax_fvm_get_logs', 'fvm_get_logs_callback');
+	add_action('wp_ajax_fvm_get_logs', 'fvm_get_logs_callback'); # Note: JS must pass nonce as 'fvm_logs_nonce'
 		
 	# purge everything
 	add_action('switch_theme', 'fvm_purge_all');

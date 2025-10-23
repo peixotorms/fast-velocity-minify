@@ -1,9 +1,9 @@
 // get logs via ajax
 function fvm_get_logs() {
-		
+
 	// ajax request
 	jQuery( document ).ready(function() {
-		var data = { 'action': 'fvm_get_logs' };
+		var data = { 'action': 'fvm_get_logs', 'nonce': fvm_ajax_object.ajax_nonce };
 		jQuery.post(ajaxurl, data, function(resp) {
 			if(resp.success == 'OK') { 
 
