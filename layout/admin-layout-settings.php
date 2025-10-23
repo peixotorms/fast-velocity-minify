@@ -102,10 +102,16 @@
 <?php _e( 'Enable CSS Processing', 'fast-velocity-minify' ); ?> <span class="note-info">[ <?php _e( 'Will enable processing for the settings below', 'fast-velocity-minify' ); ?> ]</span></label>
 <br />
 
-<label for="fvm_settings_css_fonts">
-<input name="fvm_settings[css][fonts]" type="checkbox" id="fvm_settings_css_fonts" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'fonts')); ?>>
-<?php _e( 'Merge Fonts and Icons separately', 'fast-velocity-minify' ); ?><span class="note-info">[ <?php _e( 'Will merge fonts and icons into a separate CSS file', 'fast-velocity-minify' ); ?> ]</span></label>
-<br />
+	<label for="fvm_settings_css_fonts">
+	<input name="fvm_settings[css][fonts]" type="checkbox" id="fvm_settings_css_fonts" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'fonts')); ?>>
+	<?php _e( 'Merge Fonts and Icons separately', 'fast-velocity-minify' ); ?><span class="note-info">[ <?php _e( 'Will merge fonts and icons into a separate CSS file', 'fast-velocity-minify' ); ?> ]</span></label>
+	<br />
+
+	<label for="fvm_settings_css_local_fonts">
+	<input name="fvm_settings[css][local_fonts]" type="checkbox" id="fvm_settings_css_local_fonts" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'local_fonts')); ?>>
+    <?php _e( 'Cache External Fonts locally', 'fast-velocity-minify' ); ?>
+    <span class="note-info">[ <?php _e( 'Caches external font files referenced in CSS to /wp-content/cache/fvm/fonts and rewrites CSS url() to local absolute URLs.', 'fast-velocity-minify' ); ?> ]</span></label>
+	<br />
 
 <label for="fvm_settings_css_noprint">
 <input name="fvm_settings[css][noprint]" type="checkbox" id="fvm_settings_css_noprint" value="1" <?php echo fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'css', 'noprint')); ?>>

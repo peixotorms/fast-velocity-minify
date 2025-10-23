@@ -33,16 +33,7 @@ function fvm_admintoolbar() {
 			'href'  => admin_url('admin.php?page=fvm')
 		));
 		
-		/*
-		# Add submenu
-		$wp_admin_bar->add_node(array(
-			'id'    => 'fvm_submenu_upgrade',
-			'parent'    => 'fvm_menu', 
-			'title' => __("Upgrade", 'fvm'),
-			'href'  => admin_url('admin.php?page=fvm&tab=upgrade')
-		));
-		*/
-		
+
 		# Add submenu
 		$wp_admin_bar->add_node(array(
 			'id'    => 'fvm_submenu_help',
@@ -680,7 +671,7 @@ function fvm_rrmdir($path, $tver=null) {
 					if($f->isDir() && !$f->isDot()){
 						fvm_rrmdir($f->getRealPath(), $tver);
 						@rmdir($f->getRealPath());
-					}
+						}
 					
 				} else {
 					# immediate
@@ -1124,30 +1115,35 @@ function fvm_extract_fonts($css_code, $url=null) {
 	$css_code_ff = preg_replace('/(.eot|.woff2|.woff|.ttf)+[?+](.+?)(\)|\'|\")/ui', "$1"."$3", $css_code_ff);
 	$css_code = preg_replace('/(.eot|.woff2|.woff|.ttf)+[?+](.+?)(\)|\'|\")/ui', "$1"."$3", $css_code);
 	
-	# fix url paths css_code_ff
-	if(!empty($url)) {
-		$matches = array(); preg_match_all("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"])(.+?)['\"]?\s*\)/ui", $css_code_ff, $matches);
-		foreach($matches[1] as $a) { $b = trim($a); if($b != $a) { $css_code_ff = str_replace($a, $b, $css_code_ff); } }
-		$css_code_ff = preg_replace("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"#])(.+?)['\"]?\s*\)/ui", "url(".dirname($url)."/$1)", $css_code_ff);	
-	}
+        # fix url paths css_code_ff (robust)
+        if(!empty($url)) {
+            $css_code_ff = fvm_fix_css_urls($css_code_ff, $url);
+        }
 	
-	# fix url paths css_code
-	if(!empty($url)) {
-		$matches = array(); preg_match_all("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"])(.+?)['\"]?\s*\)/ui", $css_code, $matches);
-		foreach($matches[1] as $a) { $b = trim($a); if($b != $a) { $css_code = str_replace($a, $b, $css_code); } }
-		$css_code = preg_replace("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"#])(.+?)['\"]?\s*\)/ui", "url(".dirname($url)."/$1)", $css_code);	
-	}
-	
-	# relative paths
-	$css_code_ff = str_replace('https://'.$fvm_urls['wp_domain'], '', $css_code_ff);
-	$css_code_ff = str_replace('http://'.$fvm_urls['wp_domain'], '', $css_code_ff);
-	$css_code_ff = str_replace('//'.$fvm_urls['wp_domain'], '', $css_code_ff);
-	
-	# fixes
-	$css_code_ff = str_replace('/./', '/', $css_code_ff);
+        # fix url paths css_code (robust)
+        if(!empty($url)) {
+            $css_code = fvm_fix_css_urls($css_code, $url);
+        }
 
-	# return
-	$result = array('code'=>$css_code, 'fonts'=>$css_code_ff);
+        # ensure font urls are absolute and (optionally) cached locally in font-face block
+        $css_code_ff = fvm_cache_css_fonts_locally($css_code_ff, $url);
+
+        # relative paths
+        $css_code_ff = str_replace('https://'.$fvm_urls['wp_domain'], '', $css_code_ff);
+        $css_code_ff = str_replace('http://'.$fvm_urls['wp_domain'], '', $css_code_ff);
+        $css_code_ff = str_replace('//'.$fvm_urls['wp_domain'], '', $css_code_ff);
+        
+        # fixes
+        $css_code_ff = str_replace('/./', '/', $css_code_ff);
+
+        # after relative stripping, force font URLs to absolute and cache externals
+        $css_code_ff = fvm_cache_css_fonts_locally($css_code_ff, $url);
+
+        # prefer absolute/local for main css code too
+        $css_code = fvm_cache_css_fonts_locally($css_code, $url);
+
+        # return
+        $result = array('code'=>$css_code, 'fonts'=>$css_code_ff);
 	return $result;
 }
 
@@ -1270,9 +1266,10 @@ function fvm_process_cdn($html) {
 		$html = trim($html->save());
 	}
 	
-	# return
-	return $html;
+    # return
+    return $html;
 }
+
 
 
 # rewrite url with cdn
@@ -1291,52 +1288,63 @@ function fvm_simplify_fontface($css_code) {
 	$before = array();
 	$after = array();
 	
-	# extract font faces
-	preg_match_all('/\@\s*font-face\s*\{([^}]+)\}/iUu', $css_code, $mff);
-	if(isset($mff[0]) && isset($mff[1]) && is_array($mff[1])) {
-		foreach($mff[1] as $kf=>$ff) {
+        # extract font faces
+        preg_match_all('/\@\s*font-face\s*\{([^}]+)\}/iUu', $css_code, $mff);
+        if(isset($mff[0]) && isset($mff[1]) && is_array($mff[1])) {
+            foreach($mff[1] as $kf=>$ff) {
 
-			# simplify font urls
-			$cssrules = preg_split("/;(?![^(]*\))/iu", $ff);
-			foreach ($cssrules as $k=>$csr) {
-				if(preg_match('/src\s*\:\s*url/Uui', $csr)) {
+                $original_block = $mff[0][$kf];
+                $modified = false;
 
-					# woff				
-					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff[\'\"]*\s*\)/Uui', $csr, $fonts);
-					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
+                # split into declarations (preserve content inside url()/format())
+                $cssrules = preg_split("/;(?![^(]*\))/iu", $ff);
 
-					# woff2
-					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*woff2[\'\"]*\s*\)/Uui', $csr, $fonts);
-					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
-				
-					# svg
-					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*svg[\'\"]*\s*\)/Uui', $csr, $fonts);
-					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
-					
-					# truetype
-					$fonts = array();
-					preg_match('/url\s*\(\s*[\'\"]*([^\'\"]*)[\'\"]*\)\s*format\s*\([\'\"]*truetype[\'\"]*\s*\)/Uui', $csr, $fonts);
-					if(isset($fonts[0])) { $cssrules[$k] = 'src:'.$fonts[0]; break; }
-					
-					# delete other src:url rules
-					if(stripos($csr, 'format') === false) {
-						unset($cssrules[$k]);
-					}
-					
-				}		
-			}
-			
-			# merge and create font face rule
-			$after[] = '@font-face{'.implode(';', $cssrules).'}';
-											
-			# strip and collect
-			$before[] = $mff[0][$kf];
-		
-		}
-	}
+                # collect all src declarations indices
+                $src_idx = array();
+                foreach ($cssrules as $k=>$csr) {
+                    if (preg_match('/^\s*src\s*:/i', $csr)) { $src_idx[] = $k; }
+                }
+
+                if (count($src_idx) > 0) {
+                    $first = $src_idx[0];
+                    $woff2 = null; $woff = null;
+
+                    # scan all src rules for woff2/woff segments
+                    foreach ($src_idx as $idx) {
+                        $csr = $cssrules[$idx];
+                        if (preg_match_all('/(url\s*\(\s*[^\)]+\)\s*format\s*\(\s*[\'\"]?(woff2|woff)[\'\"]?\s*\))/i', $csr, $m2, PREG_SET_ORDER)) {
+                            foreach ($m2 as $mm) {
+                                $seg = trim($mm[1]);
+                                $fmt = strtolower($mm[2]);
+                                if ($fmt === 'woff2' && !$woff2) { $woff2 = $seg; }
+                                if ($fmt === 'woff' && !$woff) { $woff = $seg; }
+                            }
+                        }
+                    }
+
+                    if ($woff2 || $woff) {
+                        $keep = array();
+                        if ($woff2) { $keep[] = $woff2; }
+                        if ($woff) { $keep[] = $woff; }
+                        $cssrules[$first] = 'src:' . implode(',', $keep);
+                        # remove other src declarations
+                        foreach (array_slice($src_idx, 1) as $idx) { unset($cssrules[$idx]); }
+                        $modified = true;
+                    }
+                }
+
+                # merge and create replacement or keep original if no woff2/woff found
+                if ($modified) {
+                    $after[] = '@font-face{'.implode(';', $cssrules).'}';
+                } else {
+                    $after[] = $original_block;
+                }
+
+                # strip and collect original
+                $before[] = $original_block;
+                
+            }
+        }
 
 	# return
 	if(count($before) > 0) {
@@ -1604,6 +1612,100 @@ function fvm_del_transient($key) {
 }
 
 
+# resolve dot segments in a URL path (RFC 3986 section 5.2.4)
+function fvm_url_remove_dot_segments($path) {
+    if ($path === '' || $path === '/') { return $path === '' ? '/' : $path; }
+    $query = '';
+    $fragment = '';
+    // detach query/fragment to avoid breaking segment resolution
+    if (false !== $qpos = strpos($path, '?')) {
+        $query = substr($path, $qpos);
+        $path = substr($path, 0, $qpos);
+    }
+    if (false !== $hpos = strpos($path, '#')) {
+        $fragment = substr($path, $hpos);
+        $path = substr($path, 0, $hpos);
+    }
+    $segments = explode('/', $path);
+    $output = [];
+    foreach ($segments as $seg) {
+        if ($seg === '' || $seg === '.') { continue; }
+        if ($seg === '..') { array_pop($output); continue; }
+        $output[] = $seg;
+    }
+    $normalized = '/' . implode('/', $output);
+    return $normalized . $query . $fragment;
+}
+
+# join a relative URL to a base URL and return absolute URL
+function fvm_join_url($base, $rel) {
+    if ($rel === '' || $rel === null) { return $base; }
+    $rel = trim($rel);
+    // keep data URIs and fragments as-is
+    if (preg_match('~^(data:|blob:|about:|javascript:)~i', $rel)) { return $rel; }
+    // protocol-relative
+    if (strpos($rel, '//') === 0) {
+        $parts = parse_url($base);
+        if (!isset($parts['scheme'])) { $parts['scheme'] = 'https'; }
+        return $parts['scheme'] . ':' . $rel;
+    }
+    // already absolute
+    if (preg_match('~^[a-z][a-z0-9+\-.]*://~i', $rel)) { return $rel; }
+
+    // base parts
+    $b = parse_url($base);
+    if (!$b || !isset($b['scheme']) || !isset($b['host'])) { return $rel; }
+    $scheme = $b['scheme'];
+    $host   = $b['host'];
+    $port   = isset($b['port']) ? ':' . $b['port'] : '';
+    $base_path = isset($b['path']) && $b['path'] !== '' ? $b['path'] : '/';
+
+    // handle root-relative
+    if (substr($rel, 0, 1) === '/') {
+        return $scheme . '://' . $host . $port . fvm_url_remove_dot_segments($rel);
+    }
+
+    // remove filename from base path to get directory
+    if (substr($base_path, -1) !== '/') {
+        $base_dir = rtrim(dirname($base_path), '/') . '/';
+    } else {
+        $base_dir = $base_path;
+    }
+
+    // resolve ./ and ../ against base_dir
+    $joined = $base_dir . $rel;
+    $joined = fvm_url_remove_dot_segments($joined);
+    return $scheme . '://' . $host . $port . $joined;
+}
+
+# robustly rewrite CSS url() references relative to a parent CSS URL
+function fvm_fix_css_urls($css, $parent_url) {
+    if (empty($css) || empty($parent_url)) { return $css; }
+    $parent_url = trim($parent_url);
+    $parent_parts = parse_url($parent_url);
+    $parent_scheme = isset($parent_parts['scheme']) ? $parent_parts['scheme'] : 'https';
+    $pattern = '/url\s*\(\s*(?:([\"\'])\s*(.*?)\s*\1|([^\)\s][^\)]*?))\s*\)/i';
+    $css = preg_replace_callback($pattern, function($m) use ($parent_url, $parent_scheme) {
+        $raw = isset($m[2]) && $m[2] !== '' ? $m[2] : (isset($m[3]) ? $m[3] : '');
+        $quote = isset($m[1]) ? $m[1] : '';
+        $u = trim($raw);
+        if ($u === '') { return 'url(' . ($quote ?: '') . ($quote ?: '') . ')'; }
+        // skip fragments like url(#id) and data/blob URLs
+        if ($u[0] === '#' || preg_match('~^(data:|blob:|javascript:|about:)~i', $u)) {
+            return 'url(' . ($quote ? $quote . $u . $quote : $u) . ')';
+        }
+        // protocol-relative
+        if (strpos($u, '//') === 0) {
+            $u = $parent_scheme . ':' . $u;
+        } else if (!preg_match('~^[a-z][a-z0-9+\-.]*://~i', $u)) {
+            // relative path -> join with parent
+            $u = fvm_join_url($parent_url, $u);
+        }
+        return 'url(' . ($quote ? $quote . $u . $quote : $u) . ')';
+    }, $css);
+    return $css;
+}
+
 # functions, get full url
 function fvm_normalize_url($href, $purl=null) {
 
@@ -1639,25 +1741,26 @@ function fvm_normalize_url($href, $purl=null) {
 	# domain info
 	$scheme = $parse['scheme'];
 	$host = $parse['host'];
-	$path = $parse['path'];
-	
-	# relative to full urls
-	if (substr($href, 0, 2) === "//") {
-		$href = $scheme.':'.$href; # scheme missing
-	} else if (substr($href, 0, 1) === "/") { 
-		$href = $scheme.'://'.$host . $href; # scheme and domain missing
-	} else if (substr($href, 0, 3) === '../' && !is_null($purl) && !empty($purl)) {
-		$href = $scheme.':'.$host . dirname($path) . '/' . $href;
-	} else if ($scheme == 'https' && substr($href, 0, 4) == 'http' && substr($href, 0, 5) !== $scheme) {
-		$href = str_replace('http://', 'https://', $href); # force https
-	} else {
-		# url should be fine
-	}
+	$path = isset($parse['path']) ? $parse['path'] : '/';
 
-	# prevent double forward slashes in the middle
-	$href = str_replace('###', '://', str_replace('//', '/', str_replace('://', '###', $href)));
+    # relative to full urls (robust join)
+    if (substr($href, 0, 2) === "//") {
+        $href = $scheme . ':' . $href; # scheme missing
+    } else if (!preg_match('~^[a-z][a-z0-9+\-.]*://~i', $href)) {
+        # join relative path (handles /, ./, ../ and multi-level ../)
+        $base = (!is_null($purl) && !empty($purl)) ? $purl : ($scheme.'://'.$host.$path);
+        $href = fvm_join_url($base, $href);
+    } else if ($scheme == 'https' && substr($href, 0, 4) == 'http' && substr($href, 0, 5) !== $scheme) {
+        $href = str_replace('http://', 'https://', $href); # force https
+    } else {
+        # url should be fine
+    }
 
-	return $href;	
+    # prevent double forward slashes in the path portion only
+    $href = preg_replace('~^(https?:)//+~i', '$1//', $href);       # scheme
+    $href = preg_replace('~(?<!:)//+~', '/', $href);                # path
+
+    return $href; 
 }
 
 
@@ -1961,12 +2064,10 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 		$css = preg_replace('/(\/\/\s*[#]\s*sourceMappingURL\s*[=]\s*)([a-zA-Z0-9-_\.\/]+)(\.map)/ui', '', $css);
 		$css = preg_replace('/(\/[*]\s*[#]\s*sourceMappingURL\s*[=]\s*)([a-zA-Z0-9-_\.\/]+)(\.map)\s*[*]\s*[\/]/ui', '', $css);
 		
-		# fix url paths
-		if(!empty($url)) {
-			$matches = array(); preg_match_all("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"])(.+?)['\"]?\s*\)/ui", $css, $matches);
-			foreach($matches[1] as $a) { $b = trim($a); if($b != $a) { $css = str_replace($a, $b, $css); } }
-			$css = preg_replace("/url\(\s*['\"]?(?!data:)(?!http)(?![\/'\"#])(.+?)['\"]?\s*\)/ui", "url(".dirname($url)."/$1)", $css);	
-		}
+            # fix url paths (robust)
+            if(!empty($url)) {
+                $css = fvm_fix_css_urls($css, $url);
+            }
 		
 		# minify string with relative urls
 		if($min === true) {
@@ -1987,9 +2088,9 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 			$css
 		);
 		
-		# make relative urls when possible
-				
-		# get root url, preserve subdirectories
+            # make relative urls when possible
+                        
+            # get root url, preserve subdirectories
 		if(isset($fvm_urls['wp_site_url']) && !empty($fvm_urls['wp_site_url'])) {
 			
 			# parse url and extract domain without uri path
@@ -2028,21 +2129,26 @@ function fvm_maybe_minify_css_file($css, $url, $min) {
 				}
 			}
 			
-			# remove empty url()
-			$css = preg_replace('/url\s*\(\s*[\'"]?\s*[\'"]?\)/Uui', 'none', $css);
-			
-			# relative paths
-			$css = str_replace('https://'.$fvm_urls['wp_domain'], '', $css);
-			$css = str_replace('http://'.$fvm_urls['wp_domain'], '', $css);
-			$css = str_replace('//'.$fvm_urls['wp_domain'], '', $css);
+				# removed legacy empty url() cleanup
+                
+                # ensure font urls are absolute and (optionally) cached locally
+                $css = fvm_cache_css_fonts_locally($css, $url);
+
+                # relative paths
+                $css = str_replace('https://'.$fvm_urls['wp_domain'], '', $css);
+                $css = str_replace('http://'.$fvm_urls['wp_domain'], '', $css);
+                $css = str_replace('//'.$fvm_urls['wp_domain'], '', $css);
 			
 			# fixes
 			$css = str_replace('/./', '/', $css);
 			
 		}
 		
-		# simplify font face
-		$arr = fvm_simplify_fontface($css);
+            # after relative stripping above, force font URLs to absolute and cache externals
+            $css = fvm_cache_css_fonts_locally($css, $url);
+
+            # simplify font face
+            $arr = fvm_simplify_fontface($css);
 		if($arr !== false && is_array($arr)) {
 			$css = str_replace($arr['before'], $arr['after'], $css);
 		}
@@ -2118,6 +2224,95 @@ function fvm_minify_css_string($css) {
 	
 	# fallback
 	return $css;
+}
+
+# ensure font urls are absolute and optionally cache external fonts locally
+function fvm_cache_css_fonts_locally($css, $css_url = null) {
+    if (empty($css)) { return $css; }
+
+    global $fvm_settings, $fvm_urls;
+
+    $enable_local_fonts = false;
+    if (isset($fvm_settings['css']['local_fonts']) && $fvm_settings['css']['local_fonts'] == true) {
+        $enable_local_fonts = true;
+    }
+
+    $local_domain = isset($fvm_urls['wp_domain']) ? $fvm_urls['wp_domain'] : '';
+
+    $allowed_ext = array('woff2','woff','ttf','otf','eot','svg','ttc');
+
+    # compute cache dir/url
+    $fonts_dir = trailingslashit(WP_CONTENT_DIR) . 'cache/fvm/fonts/';
+    $fonts_url = trailingslashit(content_url('cache/fvm/fonts'));
+
+    # create cache dir if enabled
+    if ($enable_local_fonts) {
+        if (!is_dir($fonts_dir)) {
+            if (function_exists('wp_mkdir_p')) { @wp_mkdir_p($fonts_dir); } else { @mkdir($fonts_dir, 0755, true); }
+        }
+    }
+
+    # prefer https in output URLs
+    $force_https = function($u) {
+        if (stripos($u, 'http://') === 0) { return 'https://' . substr($u, 7); }
+        return $u;
+    };
+
+    $pattern = '/url\s*\(\s*(?:([\"\'])\s*(.*?)\s*\1|([^\)\s][^\)]*?))\s*\)/i';
+
+    $css = preg_replace_callback($pattern, function($m) use ($css_url, $local_domain, $allowed_ext, $enable_local_fonts, $fonts_dir, $fonts_url, $force_https) {
+        $raw = isset($m[2]) && $m[2] !== '' ? $m[2] : (isset($m[3]) ? $m[3] : '');
+        $quote = isset($m[1]) ? $m[1] : '';
+        $u = trim($raw);
+        if ($u === '' || $u[0] === '#' || preg_match('~^(data:|blob:|javascript:|about:)~i', $u)) {
+            return $m[0];
+        }
+
+        # normalize to absolute to evaluate
+        $abs = fvm_normalize_url($u, $css_url);
+        if (empty($abs)) { return $m[0]; }
+
+        # filter by font extensions
+        $path = parse_url($abs, PHP_URL_PATH);
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed_ext, true)) {
+            # not a font file: do not alter (other passes handle general URLs)
+            return $m[0];
+        }
+
+        # prefer absolute for local fonts
+        $host = parse_url($abs, PHP_URL_HOST);
+        if (!empty($local_domain) && strcasecmp($host, $local_domain) === 0) {
+            $abs = $force_https($abs);
+            return 'url(' . ($quote ? $quote . $abs . $quote : $abs) . ')';
+        }
+
+        # external font -> optionally cache locally
+        if ($enable_local_fonts) {
+            # safe filename (strip query/fragment)
+            $fname = basename($path);
+            if ($fname === '' || strpos($fname, '.') === false) { $fname = substr(md5($abs), 0, 12) . '.'. $ext; }
+            $target = $fonts_dir . $fname;
+            $target_url = $force_https(trailingslashit($fonts_url) . $fname);
+
+            if (!file_exists($target)) {
+                $dl = fvm_maybe_download($abs);
+                if (is_array($dl) && isset($dl['content']) && !empty($dl['content'])) {
+                    @file_put_contents($target, $dl['content']);
+                }
+            }
+
+            if (file_exists($target)) {
+                return 'url(' . ($quote ? $quote . $target_url . $quote : $target_url) . ')';
+            }
+        }
+
+        # fallback: keep absolute external URL
+        $abs = $force_https($abs);
+        return 'url(' . ($quote ? $quote . $abs . $quote : $abs) . ')';
+    }, $css);
+
+    return $css;
 }
 
 

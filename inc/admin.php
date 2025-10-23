@@ -13,7 +13,7 @@ function fvm_check_minimum_requirements() {
 
 		# php version requirements
 		if (version_compare( PHP_VERSION, '5.6', '<' )) {
-			$error = __( 'FVM requires PHP 5.6 or higher. You're still on', 'fast-velocity-minify' ) .' '. PHP_VERSION;
+			$error = __( 'FVM requires PHP 5.6 or higher. You\'re still on', 'fast-velocity-minify' ) .' '. PHP_VERSION;
 		}
 
 		# php extension requirements
@@ -23,7 +23,7 @@ function fvm_check_minimum_requirements() {
 
 		# wp version requirements
 		if ( version_compare( $GLOBALS['wp_version'], '4.9', '<' ) ) {
-			$error = __( 'FVM requires WP 4.9 or higher. You're still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version'];
+			$error = __( 'FVM requires WP 4.9 or higher. You\'re still on', 'fast-velocity-minify' ) .' '. $GLOBALS['wp_version'];
 		}
 
 		# check cache directory (soft check - don't deactivate, just warn)
@@ -129,8 +129,10 @@ function fvm_check_misconfiguration() {
 			} catch (Exception $e) {
 				error_log('Error: '.$e->getMessage(), 0);
 			}
-			
-			
+
+			# set transient to prevent running maintenance again for 24 hours
+			set_transient('fvm_table_checker', true, DAY_IN_SECONDS);
+
 		}
 		
 
