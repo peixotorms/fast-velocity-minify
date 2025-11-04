@@ -3,7 +3,7 @@ Contributors: Alignak
 Tags: Lighthouse, GTmetrix, Speed Optimization, Pagespeed, Web Vitals
 Requires at least: 5.6
 Requires PHP: 7.2
-Stable tag: 3.5.3
+Stable tag: 3.5.4
 Tested up to: 6.8.3
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
@@ -48,6 +48,9 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.5.4 [2025.11.04] =
+* Removed the unecessary SSRF checks for external requests that were blocking sites behind NAT or intranet deployments
 
 = 3.5.3 [2025.10.23] =
 * Introduces a new 'Cache External Fonts locally' setting in the admin layout
