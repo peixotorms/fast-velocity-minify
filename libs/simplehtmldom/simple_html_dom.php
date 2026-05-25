@@ -1205,6 +1205,8 @@ class fvm_simple_html_dom_node
 
 	function addClass($class)
 	{
+		global $debug_object;
+
 		if (is_string($class)) {
 			$class = explode(' ', $class);
 		}
@@ -1230,6 +1232,8 @@ class fvm_simple_html_dom_node
 
 	function hasClass($class)
 	{
+		global $debug_object;
+
 		if (is_string($class)) {
 			if (isset($this->class)) {
 				return in_array($class, explode(' ', $this->class), true);
@@ -1498,7 +1502,7 @@ class fvm_simple_html_dom
 		// Forcing tags to be closed implies that we don't trust the html, but
 		// it can lead to parsing errors if we SHOULD trust the html.
 		if (!$forceTagsClosed) {
-			$this->optional_closing_array = array();
+			$this->optional_closing_tags = array();
 		}
 
 		$this->_target_charset = $target_charset;

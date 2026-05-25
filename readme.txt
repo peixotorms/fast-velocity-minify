@@ -3,8 +3,8 @@ Contributors: Alignak
 Tags: Lighthouse, GTmetrix, Speed Optimization, Pagespeed, Web Vitals
 Requires at least: 5.6
 Requires PHP: 7.2
-Stable tag: 3.5.4
-Tested up to: 6.8.3
+Stable tag: 3.5.5
+Tested up to: 7.0
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -48,6 +48,13 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.5.5 [2026.05.25] =
+* Updated compatibility for WordPress 7.0
+* Preserved third-party SEO/meta head blocks by avoiding broad head metadata relocation
+* Improved cache purging on deactivation/uninstall and supported third-party cache plugins
+* Fixed PHP 8.5 compatibility notices in the bundled Simple HTML DOM parser
+* Updated the bundled PHP Minify library to 1.3.75
 
 = 3.5.4 [2025.11.04] =
 * Removed the unecessary SSRF checks for external requests that were blocking sites behind NAT or intranet deployments

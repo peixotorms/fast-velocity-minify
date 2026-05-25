@@ -157,65 +157,66 @@ function fvm_purge_all() {
 function fvm_purge_others(){
 
 	# third party plugins
+	$ret = array();
 		
 	# Purge all W3 Total Cache
 	if (function_exists('w3tc_pgcache_flush')) {
 		w3tc_pgcache_flush();
-		return __( 'All caches on <strong>W3 Total Cache</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>W3 Total Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge WP Super Cache
 	if (function_exists('wp_cache_clear_cache')) {
 		wp_cache_clear_cache();
-		return __( 'All caches on <strong>WP Super Cache</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>WP Super Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge WP Rocket
 	if (function_exists('rocket_clean_domain')) {
 		rocket_clean_domain();
-		return __( 'All caches on <strong>WP Rocket</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>WP Rocket</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Cachify
 	if (function_exists('cachify_flush_cache')) {
 		cachify_flush_cache();
-		return __( 'All caches on <strong>Cachify</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>Cachify</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Comet Cache
 	if ( class_exists("comet_cache") ) {
 		comet_cache::clear();
-		return __( 'All caches on <strong>Comet Cache</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>Comet Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Zen Cache
 	if ( class_exists("zencache") ) {
 		zencache::clear();
-		return __( 'All caches on <strong>Comet Cache</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>Comet Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge LiteSpeed Cache
 	if ( has_action('litespeed_purge_all') ) {
 		do_action('litespeed_purge_all');
-		return __( 'All caches on <strong>LiteSpeed Cache</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>LiteSpeed Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 	
 	# Purge WP Cloudflare Super Page Cache
 	if( class_exists('SW_CLOUDFLARE_PAGECACHE') ) {
 		do_action("swcfpc_purge_everything");
-		return __( 'All caches on <strong>WP Cloudflare Super Page Cache</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>WP Cloudflare Super Page Cache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 	
 	# Purge Hyper Cache
 	if (class_exists( 'HyperCache' )) {
 		do_action( 'autoptimize_action_cachepurged' );
-		return __( 'All caches on <strong>HyperCache</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>HyperCache</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# purge cache enabler
 	if ( has_action('ce_clear_cache') ) {
 		do_action('ce_clear_cache');
-		return __( 'All caches on <strong>Cache Enabler</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>Cache Enabler</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# purge wpfc
@@ -226,25 +227,25 @@ function fvm_purge_others(){
 	# add breeze cache purge support
 	if (class_exists("Breeze_PurgeCache")) {
 		Breeze_PurgeCache::breeze_cache_flush();
-		return __( 'All caches on <strong>Breeze</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>Breeze</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# swift
 	if (class_exists("Swift_Performance_Cache")) {
 		Swift_Performance_Cache::clear_all_cache();
-		return __( 'All caches on <strong>Swift Performance</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>Swift Performance</strong> have been purged.', 'fast-velocity-minify' );
 	}
 	
 	# Hummingbird
 	if(has_action('wphb_clear_page_cache')) {
 		do_action('wphb_clear_page_cache');
-		return __( 'All caches on <strong>Hummingbird</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>Hummingbird</strong> have been purged.', 'fast-velocity-minify' );
 	}
 	
 	# WP-Optimize
 	if(has_action('wpo_cache_flush')) {
 		do_action('wpo_cache_flush');
-		return __( 'All caches on <strong>WP-Optimize</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>WP-Optimize</strong> have been purged.', 'fast-velocity-minify' );
 	}
 	
 	# nginx helper
@@ -256,7 +257,7 @@ function fvm_purge_others(){
 	# Cache-Master
     if ( function_exists( 'scm_clear_all_cache' ) ) {
         scm_clear_all_cache();
-        return __( 'All caches on <strong>Cache-Master</strong> have been purged.', 'fast-velocity-minify' );
+        $ret[] = __( 'All caches on <strong>Cache-Master</strong> have been purged.', 'fast-velocity-minify' );
     }
 	
 	
@@ -265,7 +266,7 @@ function fvm_purge_others(){
 	# WordPress OPCache
 	if (function_exists('wp_cache_flush')) {
 		if(wp_cache_flush()) {
-			return 'OPCache';
+			$ret[] = 'OPCache';
 		}
 	}
 	
@@ -284,46 +285,46 @@ function fvm_purge_others(){
 	# Purge SG Optimizer (Siteground)
 	if (function_exists('sg_cachepress_purge_everything')) {
 		sg_cachepress_purge_everything();
-		return __( 'All caches on <strong>SG Optimizer</strong> have been purged.', 'fast-velocity-minify' );
+		$ret[] = __( 'All caches on <strong>SG Optimizer</strong> have been purged.', 'fast-velocity-minify' );
 	}
 
 	# Purge Godaddy Managed WordPress Hosting (Varnish + APC)
 	if (class_exists('WPaaS\Plugin') && method_exists( 'WPass\Plugin', 'vip' )) {
 		fvm_godaddy_request('BAN');
-		return __( 'A cache purge request has been sent to <strong>Go Daddy Varnish</strong>', 'fast-velocity-minify' );
+		$ret[] = __( 'A cache purge request has been sent to <strong>Go Daddy Varnish</strong>', 'fast-velocity-minify' );
 	}
 
 
 	# Purge WP Engine
 	if (class_exists("WpeCommon")) {
 		if (method_exists('WpeCommon', 'purge_memcached')) { WpeCommon::purge_memcached(); }
-		if (method_exists('WpeCommon', 'purge_varnish_cache')) { WpeCommon::purge_varnish_cache(); }
-		if (method_exists('WpeCommon', 'purge_memcached') || method_exists('WpeCommon', 'purge_varnish_cache')) {
-			return __( 'A cache purge request has been sent to <strong>WP Engine</strong>', 'fast-velocity-minify' );
+			if (method_exists('WpeCommon', 'purge_varnish_cache')) { WpeCommon::purge_varnish_cache(); }
+			if (method_exists('WpeCommon', 'purge_memcached') || method_exists('WpeCommon', 'purge_varnish_cache')) {
+				$ret[] = __( 'A cache purge request has been sent to <strong>WP Engine</strong>', 'fast-velocity-minify' );
+			}
 		}
-	}
 
 	# Purge Kinsta
 	global $kinsta_cache;
-	if ( isset($kinsta_cache) && class_exists('\\Kinsta\\CDN_Enabler')) {
-		if (!empty( $kinsta_cache->kinsta_cache_purge)){
-			$kinsta_cache->kinsta_cache_purge->purge_complete_caches();
-			return __( 'A cache purge request has been sent to <strong>Kinsta</strong>', 'fast-velocity-minify' );
+		if ( isset($kinsta_cache) && class_exists('\\Kinsta\\CDN_Enabler')) {
+			if (!empty( $kinsta_cache->kinsta_cache_purge)){
+				$kinsta_cache->kinsta_cache_purge->purge_complete_caches();
+				$ret[] = __( 'A cache purge request has been sent to <strong>Kinsta</strong>', 'fast-velocity-minify' );
+			}
 		}
-	}
 
 	# Purge Pagely
 	if ( class_exists( 'PagelyCachePurge' ) ) {
 		$purge_pagely = new PagelyCachePurge();
 		$purge_pagely->purgeAll();
-		return __( 'A cache purge request has been sent to <strong>Pagely</strong>', 'fast-velocity-minify' );
+		$ret[] = __( 'A cache purge request has been sent to <strong>Pagely</strong>', 'fast-velocity-minify' );
 	}
 
 	# Purge Pressidum
 	if (defined('WP_NINUKIS_WP_NAME') && class_exists('Ninukis_Plugin')){
 		$purge_pressidum = Ninukis_Plugin::get_instance();
 		$purge_pressidum->purgeAllCaches();
-		return __( 'A cache purge request has been sent to <strong>Pressidium</strong>', 'fast-velocity-minify' );
+		$ret[] = __( 'A cache purge request has been sent to <strong>Pressidium</strong>', 'fast-velocity-minify' );
 	}
 
 	# Purge Savvii
@@ -331,7 +332,7 @@ function fvm_purge_others(){
 		$purge_savvii = new \Savvii\CacheFlusherPlugin();
 		if ( method_exists( $purge_savvii, 'domainflush' ) ) {
 			$purge_savvii->domainflush();
-			return __( 'A cache purge request has been sent to <strong>Savvii</strong>', 'fast-velocity-minify' );
+			$ret[] = __( 'A cache purge request has been sent to <strong>Savvii</strong>', 'fast-velocity-minify' );
 		}
 	}
 
@@ -350,18 +351,18 @@ function fvm_purge_others(){
 		try {
 			$clp_varnish = new ClpVarnishCacheManager();
 			if ( method_exists($clp_varnish, 'is_enabled') && $clp_varnish->is_enabled() ) {
-				if ( method_exists($clp_varnish, 'purge_host') ) {
-					$host = parse_url( home_url(), PHP_URL_HOST );
-					if ( !empty($host) ) {
-						$clp_varnish->purge_host( $host );
-						return __( 'All caches on <strong>CLP Varnish Cache</strong> have been purged.', 'fast-velocity-minify' );
+					if ( method_exists($clp_varnish, 'purge_host') ) {
+						$host = parse_url( home_url(), PHP_URL_HOST );
+						if ( !empty($host) ) {
+							$clp_varnish->purge_host( $host );
+							$ret[] = __( 'All caches on <strong>CLP Varnish Cache</strong> have been purged.', 'fast-velocity-minify' );
+						}
 					}
 				}
+			} catch (\Exception $e) {
+				$ret[] = __( 'CLP Varnish Cache purge failed: ' . $e->getMessage(), 'fast-velocity-minify' );
 			}
-		} catch (\Exception $e) {
-			return __( 'CLP Varnish Cache purge failed: ' . $e->getMessage(), 'fast-velocity-minify' );
 		}
-	}
 
 	# bigscoots.com
 	if(has_action('bs_cache_purge_cache')) {
@@ -375,6 +376,12 @@ function fvm_purge_others(){
 		$ret[] = __( 'GoDaddy' );
 	}
 	
+	if(count($ret) > 0) {
+		return implode('<br />', array_unique($ret));
+	}
+	
+	return false;
+		
 }
 
 

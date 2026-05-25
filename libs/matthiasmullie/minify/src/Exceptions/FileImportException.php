@@ -17,6 +17,4 @@ namespace FVM\MatthiasMullie\Minify\Exceptions;
  *
  * @author Matthias Mullie <minify@mullie.eu>
  */
-class FileImportException extends BasicException
-{
-}
+class FileImportException extends BasicException {}

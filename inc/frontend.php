@@ -16,7 +16,7 @@ include_once($fvm_var_inc_lib . DIRECTORY_SEPARATOR . 'raisermin' . DIRECTORY_SE
 # https://sourceforge.net/projects/simplehtmldom/
 include_once($fvm_var_inc_lib . DIRECTORY_SEPARATOR . 'simplehtmldom' . DIRECTORY_SEPARATOR . 'simple_html_dom.php');
 
-# PHP Minify [1.3.60] for CSS minification only
+# PHP Minify [1.3.75] for CSS minification only
 # https://github.com/matthiasmullie/minify
 $fvm_var_inc_lib_mm = $fvm_var_inc_lib . DIRECTORY_SEPARATOR . 'matthiasmullie' . DIRECTORY_SEPARATOR;
 include_once($fvm_var_inc_lib_mm . 'minify' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Minify.php');
@@ -26,6 +26,7 @@ include_once $fvm_var_inc_lib_mm . 'minify'. DIRECTORY_SEPARATOR .'src'. DIRECTO
 include_once $fvm_var_inc_lib_mm . 'minify'. DIRECTORY_SEPARATOR .'src'. DIRECTORY_SEPARATOR .'Exceptions'. DIRECTORY_SEPARATOR .'BasicException.php';
 include_once $fvm_var_inc_lib_mm . 'minify'. DIRECTORY_SEPARATOR .'src'. DIRECTORY_SEPARATOR .'Exceptions'. DIRECTORY_SEPARATOR .'FileImportException.php';
 include_once $fvm_var_inc_lib_mm . 'minify'. DIRECTORY_SEPARATOR .'src'. DIRECTORY_SEPARATOR .'Exceptions'. DIRECTORY_SEPARATOR .'IOException.php';
+include_once $fvm_var_inc_lib_mm . 'minify'. DIRECTORY_SEPARATOR .'src'. DIRECTORY_SEPARATOR .'Exceptions'. DIRECTORY_SEPARATOR .'PatternMatchException.php';
 include_once($fvm_var_inc_lib_mm . 'path-converter' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'ConverterInterface.php');
 include_once($fvm_var_inc_lib_mm . 'path-converter' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Converter.php');
 
@@ -1013,15 +1014,9 @@ function fvm_process_page($html) {
 		}
 		
 		# move viewport meta tag up
-		if(!is_null($html->find('meta[viewport]', 0))) {
+		if(!is_null($html->find('meta[name=viewport]', 0))) {
 			$hm = str_replace('<!-- h_preheader -->', $html->find('meta[name=viewport]', 0)->outertext.'<!-- h_preheader -->', $hm);
-			foreach($html->find('meta[viewport]') as $element) { $element->outertext = ''; }
-		}
-		
-		# remove other meta tag and collect them between preload and css/js files
-		foreach($html->find('head meta, head title, head link[rel=canonical], head link[rel=alternate], head link[rel=pingback], head script[type=application/ld+json]') as $element) { 
-			$hm_late = str_replace('<!-- h_cssheader -->', $element->outertext.'<!-- h_cssheader -->', $hm_late);
-			$element->outertext = ''; 
+			foreach($html->find('meta[name=viewport]') as $element) { $element->outertext = ''; }
 		}
 		
 		# preload headers, by fetchpriority attribute
@@ -1083,7 +1078,7 @@ function fvm_process_page($html) {
 		# append header and footer
 		if(!is_null($html->find('head', 0)) && !is_null($html->find('body', -1))) {
 			if(!is_null($html->find('head', 0)->first_child()) && !is_null($html->find('body', -1)->last_child())) {
-				$html->find('head', 0)->first_child()->outertext = $hm . $html->find('head', 0)->first_child()->outertext . $hm_late;
+				$html->find('head', 0)->first_child()->outertext = $hm . $hm_late . $html->find('head', 0)->first_child()->outertext;
 				$html->find('body', -1)->last_child()->outertext = $html->find('body', -1)->last_child ()->outertext . $fm;
 			}
 		}
