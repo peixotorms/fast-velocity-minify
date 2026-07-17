@@ -2427,17 +2427,21 @@ function fvm_maybe_download($url) {
 		# did it work? - with path traversal protection
 		if (file_exists($f) && is_file($f)) {
 
-			# Validate file path to prevent directory traversal attacks
-			$realfile = realpath($f);
-			$realbase = realpath(ABSPATH);
+			# Validate file path to prevent directory traversal attacks.
+			# Compare on normalized (unresolved) paths so symlinked WordPress
+			# installs (common on managed hosts) are not rejected as false
+			# positives: realpath() follows symlinks to the physical target,
+			# which no longer shares a prefix with the symlinked ABSPATH.
+			$normfile = wp_normalize_path($f);
+			$normbase = rtrim(wp_normalize_path(ABSPATH), '/') . '/';
 
 			# Verify file is within WordPress installation
-			if ($realfile === false || $realbase === false || strpos($realfile, $realbase) !== 0) {
+			if (strpos($normfile, $normbase) !== 0 || strpos($normfile, '../') !== false) {
 				return array('error' => 'Invalid file path - outside allowed directory');
 			}
 
 			# Block sensitive files
-			$basename = basename($realfile);
+			$basename = basename($normfile);
 			$blocked_files = array('wp-config.php', '.htaccess', '.env', 'php.ini', '.user.ini');
 			if (in_array(strtolower($basename), $blocked_files)) {
 				return array('error' => 'Access to this file is not allowed');
