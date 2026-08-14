@@ -114,14 +114,14 @@ function fvm_check_misconfiguration() {
 					$lim = 20000;
 					$res = $wpdb->get_row("SELECT MAX(id) as maxid FROM ".$wpdb->prefix."fvm_cache");
 					if(isset($res->maxid) && intval($res->maxid) > $lim) {
-						$wpdb->query($wpdb->prepare("DELETE FROM ".$wpdb->prefix."fvm_cache WHERE id < %d LIMIT 1", (intval($res->maxid) - $lim)));
+						$wpdb->query($wpdb->prepare("DELETE FROM ".$wpdb->prefix."fvm_cache WHERE id < %d LIMIT 10000", (intval($res->maxid) - $lim)));
 					}
 					
 					# limit logs table to 500 records
 					$lim = 500;
 					$res = $wpdb->get_row("SELECT MAX(id) as maxid FROM ".$wpdb->prefix."fvm_logs");
 					if(isset($res->maxid) && intval($res->maxid) > $lim) {
-						$wpdb->query($wpdb->prepare("DELETE FROM ".$wpdb->prefix."fvm_logs WHERE id < %d LIMIT 1", (intval($res->maxid) - $lim)));
+						$wpdb->query($wpdb->prepare("DELETE FROM ".$wpdb->prefix."fvm_logs WHERE id < %d LIMIT 10000", (intval($res->maxid) - $lim)));
 					}					
 					
 				}
