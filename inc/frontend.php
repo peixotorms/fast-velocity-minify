@@ -72,7 +72,7 @@ function fvm_process_page($html) {
 		$htmljsdefer = array();
 		
 		# only error possible for now
-		$fvm_error = PHP_EOL . '<!-- ['.date('r').'] FVM has no write access for CSS / JS cache files under '. fvm_get_cache_location()['ch_url'] . ' -->'. PHP_EOL;
+		$fvm_error = PHP_EOL . '<!-- ['.gmdate('r').'] FVM has no write access for CSS / JS cache files under '. fvm_get_cache_location()['ch_url'] . ' -->'. PHP_EOL;
 		
 		
 		# collect all link preload headers, skip amp
@@ -80,7 +80,7 @@ function fvm_process_page($html) {
 			
 			# skip on web stories
 			if(count($html->find('script[src*=cdn.ampproject.org]')) > 0) {
-				return $html_src . DIRECTORY_SEPARATOR . '<!-- FVM ['.date('r').'] does not support AMP -->';
+				return $html_src . DIRECTORY_SEPARATOR . '<!-- FVM ['.gmdate('r').'] does not support AMP -->';
 			}
 			
 			# add other preloads
@@ -468,7 +468,7 @@ function fvm_process_page($html) {
 							if($css_method == 'block') {
 								
 								# add to header
-								$htmlcssheader[] = '<link rel="stylesheet" href="'.$merged_css_url.'" media="'.$mediatype.'" />';
+								$htmlcssheader[] = '<link rel="stylesheet" href="'.$merged_css_url.'" media="'.$mediatype.'" />'; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -- rewrites the page HTML in the output buffer, enqueueing does not apply.
 								
 								# http and html preload for render blocking css
 								if(!isset($fvm_settings['css']['nopreload']) || (isset($fvm_settings['css']['nopreload']) && $fvm_settings['css']['nopreload'] != true)) {
@@ -690,9 +690,9 @@ function fvm_process_page($html) {
 								
 								# header
 								if(stripos($tag->src, '/jquery-migrate') !== false) {
-									$htmljsheader[1] = "<script data-cfasync='false' src='".$href."'></script>"; # jquery migrate
+									$htmljsheader[1] = "<script data-cfasync='false' src='".$href."'></script>"; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- jquery migrate: rewrites the page HTML in the output buffer, enqueueing does not apply.
 								} else {
-									$htmljsheader[0] = "<script data-cfasync='false' src='".$href."'></script>"; # jquery
+									$htmljsheader[0] = "<script data-cfasync='false' src='".$href."'></script>"; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- jquery: rewrites the page HTML in the output buffer, enqueueing does not apply.
 								}
 								
 								# content
@@ -710,7 +710,7 @@ function fvm_process_page($html) {
 						if(!isset($fvm_settings['js']['min_disable']) || (isset($fvm_settings['js']['min_disable'])&& $fvm_settings['js']['min_disable'] != true)) {
 							
 							# skip third party scripts, unless allowed
-							$allowed = array($fvm_urls['wp_domain'], '/ajax.aspnetcdn.com/ajax/', '/ajax.googleapis.com/ajax/libs/',  '/cdnjs.cloudflare.com/ajax/libs/');
+							$allowed = array($fvm_urls['wp_domain'], '/ajax.aspnetcdn.com/ajax/', '/ajax.googleapis.com/ajax/libs/',  '/cdnjs.cloudflare.com/ajax/libs/'); // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- URL patterns to match scripts against, nothing is loaded from them.
 							if(str_replace($allowed, '', $href) == $href) {
 								unset($allscripts[$k]);
 								continue;
@@ -933,7 +933,7 @@ function fvm_process_page($html) {
 					}
 					
 					# add to header
-					$htmljsheader[] = "<script data-cfasync='false' src='".$merged_js_url."'></script>";
+					$htmljsheader[] = "<script data-cfasync='false' src='".$merged_js_url."'></script>"; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- rewrites the page HTML in the output buffer, enqueueing does not apply.
 
 			}
 			
@@ -956,7 +956,7 @@ function fvm_process_page($html) {
 					}
 					
 					# header, no preload for deferred files
-					$htmljsheader[] = "<script defer='defer' src='".$merged_js_url."'></script>";
+					$htmljsheader[] = "<script defer='defer' src='".$merged_js_url."'></script>"; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- rewrites the page HTML in the output buffer, enqueueing does not apply.
 					
 			}
 			

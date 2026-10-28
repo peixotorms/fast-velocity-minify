@@ -22,17 +22,17 @@ function fvm_update_changes() {
 		if (stripos($fvm_var_dir_path, 'fast-velocity-minify') !== false) {
 		
 			# delete		
-			if(file_exists($fvm_var_inc_dir.'functions-cache.php')) { @unlink($fvm_var_inc_dir.'functions-cache.php'); }
-			if(file_exists($fvm_var_inc_dir.'functions-cli.php')) { @unlink($fvm_var_inc_dir.'functions-cli.php'); }
-			if(file_exists($fvm_var_inc_dir.'functions-serverinfo.php')) { @unlink($fvm_var_inc_dir.'functions-serverinfo.php'); }
-			if(file_exists($fvm_var_inc_dir.'functions-upgrade.php')) { @unlink($fvm_var_inc_dir.'functions-upgrade.php'); }
-			if(file_exists($fvm_var_inc_dir.'functions.php')) { @unlink($fvm_var_inc_dir.'functions.php'); }
-			if(file_exists($fvm_var_dir_path.'fvm.css')) { @unlink($fvm_var_dir_path.'fvm.css'); }
-			if(file_exists($fvm_var_dir_path.'fvm.js')) { @unlink($fvm_var_dir_path.'fvm.js'); }
+			if(file_exists($fvm_var_inc_dir.'functions-cache.php')) { wp_delete_file($fvm_var_inc_dir.'functions-cache.php'); }
+			if(file_exists($fvm_var_inc_dir.'functions-cli.php')) { wp_delete_file($fvm_var_inc_dir.'functions-cli.php'); }
+			if(file_exists($fvm_var_inc_dir.'functions-serverinfo.php')) { wp_delete_file($fvm_var_inc_dir.'functions-serverinfo.php'); }
+			if(file_exists($fvm_var_inc_dir.'functions-upgrade.php')) { wp_delete_file($fvm_var_inc_dir.'functions-upgrade.php'); }
+			if(file_exists($fvm_var_inc_dir.'functions.php')) { wp_delete_file($fvm_var_inc_dir.'functions.php'); }
+			if(file_exists($fvm_var_dir_path.'fvm.css')) { wp_delete_file($fvm_var_dir_path.'fvm.css'); }
+			if(file_exists($fvm_var_dir_path.'fvm.js')) { wp_delete_file($fvm_var_dir_path.'fvm.js'); }
 			if(file_exists($fvm_var_inc_lib.'mrclay' . DIRECTORY_SEPARATOR . 'HTML.php')) { 
-				@unlink($fvm_var_inc_lib.'mrclay' . DIRECTORY_SEPARATOR . 'HTML.php');
-				@unlink($fvm_var_inc_lib.'mrclay' . DIRECTORY_SEPARATOR . 'index.html');
-				@rmdir($fvm_var_inc_lib.'mrclay');
+				wp_delete_file($fvm_var_inc_lib.'mrclay' . DIRECTORY_SEPARATOR . 'HTML.php');
+				wp_delete_file($fvm_var_inc_lib.'mrclay' . DIRECTORY_SEPARATOR . 'index.html');
+				fvm_fs()->rmdir($fvm_var_inc_lib.'mrclay');
 			}
 		
 		}

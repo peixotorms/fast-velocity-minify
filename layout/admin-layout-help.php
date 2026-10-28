@@ -1,3 +1,4 @@
+<?php if (!defined('ABSPATH')) { exit(); } ?>
 <?php if( $active_tab == 'help' ) { ?>
 
 <div class="fvm-wrapper">
@@ -199,10 +200,12 @@
 	<p>Note that this is an advanced feature, hence it requires manual configuration for it to work.</p>
 	<p><strong>Recommended Default Settings:</strong></p>
 	<p class="fvm-code-full">
+<?php // phpcs:disable PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- help text listing URL patterns to paste into the settings, nothing is loaded from them. ?>
 	/ajax.aspnetcdn.com/ajax/<br>
 	/ajax.googleapis.com/ajax/libs/<br>
 	/cdnjs.cloudflare.com/ajax/libs/<br>
 	/stackpath.bootstrapcdn.com/bootstrap/<br>
+<?php // phpcs:enable PluginCheck.CodeAnalysis.Offloading.OffloadedContent ?>
 	/wp-admin/<br>
 	/wp-content/<br>
 	/wp-includes/
@@ -274,7 +277,7 @@
   <h3>CDN URL</h3>
   <div>
     <p><strong>Notes:</strong></p>
-    <p>This is not required for providers such as Cloudflare.com as well as any reverse proxy CDN service that doesn't change your domain name (the whole site goes through their service).</p>
+    <p>This is not required for providers such as Cloudflare as well as any reverse proxy CDN service that doesn't change your domain name (the whole site goes through their service).</p>
 	<p>For other types of CDN, you are usually provided with an alternative domain name from where your static files can be served and in those cases, you would introduce your new domain name here.</p>
   </div>
   <h3>CDN Integration</h3>

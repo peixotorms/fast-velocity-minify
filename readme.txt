@@ -3,11 +3,11 @@ Contributors: Alignak
 Tags: Lighthouse, GTmetrix, Speed Optimization, Pagespeed, Web Vitals
 Requires at least: 5.6
 Requires PHP: 7.2
-Stable tag: 3.5.7
-Tested up to: 7.0.2
+Stable tag: 3.5.8
+Tested up to: 7.1.4
 Text Domain: fast-velocity-minify
 License: GPLv3 or later
-License URI: http://www.gnu.org/licenses/gpl-3.0.html
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 Maximize GTmetrix, PageSpeed and enhance Web Vitals by minifying CSS/JS, lazy loading scripts, optimizing images, and improving load speed overall.
  
@@ -48,6 +48,20 @@ You need a public directory to store and serve minified cache files. If you need
 
 
 == Changelog ==
+
+= 3.5.8 [2026.10.28] =
+* Security: fixed a stored cross-site scripting issue in the bundled HTML parser. Text in visitor content can no longer imitate the parser's internal placeholders, and attribute values changed by the plugin are escaped. Reported by Alpaslan Fatih Sözer through Patchstack.
+* Security: the HTML minifier's internal placeholders can no longer be imitated by page content
+* Fixed pages that could hang when their content contained text resembling a parser placeholder
+* Fixed attribute quotes when the plugin removes an attribute or a tag repeats one, which could break markup
+* Fixed pages being cut short when an HTML comment marker appeared inside an attribute value
+* Fixed a fatal error on settings save when Redis requires a password; the object cache is now flushed through the active object cache drop-in only
+* Fixed the object cache label in the purge message
+* Fixed the "Clear Everything" notice, which was saved under the wrong key and never shown
+* Fixed settings that contain quotes or backslashes gaining an extra backslash on every save
+* Fixed a database error logged when the plugin is reactivated, caused by two indexes sharing one line in the cache table definition
+* Plugin Check: escaped all admin output, used the plugin's text domain everywhere, moved file operations to WordPress functions and fully prepared every database query
+* Tested up to WordPress 7.1.4
 
 = 3.5.7 [2026.07.17] =
 * Fixed "outside allowed directory" errors on symlinked WordPress installs.

@@ -3,13 +3,14 @@
  * Plugin Name: Fast Velocity Minify
  * Plugin URI: https://fastvelocity.com
  * Description: Improve your speed score on GTmetrix, Pingdom Tools and Google PageSpeed Insights by merging and minifying CSS and JavaScript files into groups, compressing HTML and other speed optimizations.
- * Version: 3.5.7
+ * Version: 3.5.8
  * Author: Raul Peixoto
  * Author URI: https://fastvelocity.com
  * Text Domain: fast-velocity-minify
  * Requires at least: 5.6
  * Requires PHP: 7.2
- * License: GPL2 / https://wordpress.org/about/license/
+ * License: GPLv3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 */
 
 

@@ -132,7 +132,7 @@ abstract class Minify
 
             // check if we can read the file
             if (!$this->canImportFile($path)) {
-                throw new IOException('The file "' . $path . '" could not be opened for reading. Check if PHP has enough permissions.');
+                throw new IOException('The file "' . esc_html($path) . '" could not be opened for reading. Check if PHP has enough permissions.');
             }
 
             $this->add($path);
@@ -237,11 +237,10 @@ abstract class Minify
      */
     protected function save($content, $path)
     {
-        $handler = $this->openFileForWriting($path);
-
-        $this->writeToFile($handler, $content);
-
-        @fclose($handler);
+        // FVM: one write call instead of fopen/fwrite/fclose (FVM itself never passes a path)
+        if ($path === '' || @file_put_contents($path, $content) !== strlen($content)) {
+            throw new IOException('The file "' . esc_html($path) . '" could not be written to. Check your disk space and file permissions.');
+        }
     }
 
     /**
@@ -351,7 +350,7 @@ abstract class Minify
                 } else {
                     if ($matchResult === false) {
                         throw PatternMatchException::fromLastError(
-                            "Failed to match pattern '$pattern' at $processedOffset"
+                            esc_html("Failed to match pattern '$pattern' at $processedOffset")
                         );
                     }
                     // if the pattern couldn't be matched, there's no point in
@@ -502,7 +501,7 @@ abstract class Minify
      */
     protected function canImportFile($path)
     {
-        $parsed = parse_url($path);
+        $parsed = wp_parse_url($path);
         if (
             // file is elsewhere
             isset($parsed['host'])
@@ -518,44 +517,6 @@ abstract class Minify
         // catch openbasedir exceptions which are not caught by @ on is_file()
         catch (\Exception $e) {
             return false;
-        }
-    }
-
-    /**
-     * Attempts to open file specified by $path for writing.
-     *
-     * @param string $path The path to the file
-     *
-     * @return resource Specifier for the target file
-     *
-     * @throws IOException
-     */
-    protected function openFileForWriting($path)
-    {
-        if ($path === '' || ($handler = @fopen($path, 'w')) === false) {
-            throw new IOException('The file "' . $path . '" could not be opened for writing. Check if PHP has enough permissions.');
-        }
-
-        return $handler;
-    }
-
-    /**
-     * Attempts to write $content to the file specified by $handler. $path is used for printing exceptions.
-     *
-     * @param resource $handler The resource to write to
-     * @param string $content The content to write
-     * @param string $path The path to the file (for exception printing only)
-     *
-     * @throws IOException
-     */
-    protected function writeToFile($handler, $content, $path = '')
-    {
-        if (
-            !is_resource($handler)
-            || ($result = @fwrite($handler, $content)) === false
-            || ($result < strlen($content))
-        ) {
-            throw new IOException('The file "' . $path . '" could not be written to. Check your disk space and file permissions.');
         }
     }
 

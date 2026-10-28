@@ -13,18 +13,24 @@
 # Exit if accessed directly				
 if (!defined('ABSPATH')){ exit(); }	
 
+# random placeholder token, so content can never imitate a placeholder
+function fvm_raisermin_token() {
+	try { return bin2hex(random_bytes(8)); } catch (Throwable $e) { return md5(uniqid((string) wp_rand(), true)); }
+}
+
 # minify js, whitespace only
 function fvm_raisermin_js($code){
 	
 	# tags to preserve
 	$restore = array();
 	
-	# encode pre tags
+	# encode pre tags, as random per call placeholders the code itself can't contain
+	$token = fvm_raisermin_token();
 	$pattern = "/<pre\s?(.*)>(.*)<\/pre>/ium";
 	$matches = array();
 	if(preg_match_all($pattern, $code, $matches)) {
-		foreach($matches[0] as $tag) {
-			$enc = base64_encode($tag);		
+		foreach($matches[0] as $i=>$tag) {
+			$enc = 'fvmpre' . $token . 'x' . $i . 'x';
 			$restore[$enc] = $tag;
 			$code = str_replace($tag, $enc, $code);
 		}
@@ -102,10 +108,11 @@ function fvm_raisermin_html($html) {
 	$skp = array();
 	preg_match_all('/(\<script(.*?)\<(\s*)\/script(\s*)\>|\<noscript(.*?)\<(\s*)\/noscript(\s*)\>|\<code(.*?)\<(\s*)\/code(\s*)\>|\<pre(.*?)\<(\s*)\/pre(\s*)\>)/uis', $html, $skp);
 	
-	# replace all skippable patterns with comment
+	# replace all skippable patterns with comment, random per call so page content can't imitate one
+	$token = fvm_raisermin_token();
 	if(is_array($skp) && isset($skp[0]) && count($skp[0]) > 0) {
 		foreach ($skp[0] as $k=>$v) {
-			$content = str_replace($v, '<!-- SKIP '.$k.' -->', $content);
+			$content = str_replace($v, '<!-- SKIP '.$token.' '.$k.' -->', $content);
 		}
 	}
 	
@@ -127,7 +134,7 @@ function fvm_raisermin_html($html) {
 	# replace markers for scripts last		
 	if(is_array($skp) && isset($skp[0]) && count($skp[0]) > 0) {
 		foreach ($skp[0] as $k=>$v) {
-			$content = str_replace('<!-- SKIP '.$k.' -->',  PHP_EOL . $v . PHP_EOL, $content);
+			$content = str_replace('<!-- SKIP '.$token.' '.$k.' -->',  PHP_EOL . $v . PHP_EOL, $content);
 		}
 	}
 

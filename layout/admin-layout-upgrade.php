@@ -1,3 +1,4 @@
+<?php if (!defined('ABSPATH')) { exit(); } ?>
 <?php if( $active_tab == 'upgrade' ) { ?>
 
 <div class="fvm-wrapper">

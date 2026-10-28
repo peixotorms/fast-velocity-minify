@@ -23,7 +23,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			$others = fvm_purge_others();
 			
 			# notices
-			WP_CLI::success( __( 'FVM: All Caches are now cleared.', 'fast-velocity-minify' ) .' ('.date("D, d M Y @ H:i:s e").')');
+			WP_CLI::success( __( 'FVM: All Caches are now cleared.', 'fast-velocity-minify' ) .' ('.gmdate("D, d M Y @ H:i:s e").')');
 			if(is_string($cache)) { WP_CLI::warning($cache); }
 			if(is_string($others)) { WP_CLI::success($others); }
 					

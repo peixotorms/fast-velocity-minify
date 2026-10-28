@@ -138,6 +138,9 @@ class fvm_simple_html_dom_node
 	public $nodes = array();
 	public $parent = null;
 	public $_ = array();
+	// attribute values exactly as parsed; makeup() writes these back untouched
+	// and escapes only values that were set or changed after parsing
+	public $attr_parsed = array();
 	public $tag_start = 0;
 	private $dom = null;
 
@@ -167,12 +170,12 @@ class fvm_simple_html_dom_node
 
 	function dump($show_attr = true, $depth = 0)
 	{
-		echo str_repeat("\t", $depth) . $this->tag;
+		echo esc_html(str_repeat("\t", $depth) . $this->tag);
 
 		if ($show_attr && count($this->attr) > 0) {
 			echo '(';
 			foreach ($this->attr as $k => $v) {
-				echo "[$k]=>\"$v\", ";
+				echo esc_html("[$k]=>\"$v\", ");
 			}
 			echo ')';
 		}
@@ -232,7 +235,7 @@ class fvm_simple_html_dom_node
 		$string .= "\n";
 
 		if ($echo) {
-			echo $string;
+			echo esc_html($string);
 			return;
 		} else {
 			return $string;
@@ -477,31 +480,42 @@ class fvm_simple_html_dom_node
 		}
 
 		$ret = '<' . $this->tag;
-		$i = -1;
 
 		foreach ($this->attr as $key => $val) {
-			++$i;
-
 			// skip removed attribute
 			if ($val === null || $val === false) { continue; }
 
-			$ret .= $this->_[FVMHDOM_INFO_SPACE][$i][0];
+			// quote and spacing are kept per attribute name, so removing or adding an
+			// attribute can never hand its neighbours the wrong quotes
+			$space = isset($this->_[FVMHDOM_INFO_SPACE][$key]) ? $this->_[FVMHDOM_INFO_SPACE][$key] : array(' ', '', '');
+			$quote_type = isset($this->_[FVMHDOM_INFO_QUOTE][$key]) ? $this->_[FVMHDOM_INFO_QUOTE][$key] : FVMHDOM_QUOTE_DOUBLE;
+
+			$ret .= $space[0];
 
 			//no value attr: nowrap, checked selected...
 			if ($val === true) {
 				$ret .= $key;
 			} else {
-				switch ($this->_[FVMHDOM_INFO_QUOTE][$i])
+				switch ($quote_type)
 				{
 					case FVMHDOM_QUOTE_DOUBLE: $quote = '"'; break;
 					case FVMHDOM_QUOTE_SINGLE: $quote = '\''; break;
 					default: $quote = '';
 				}
 
+				// a value set or changed after parsing is escaped for its quote type, so
+				// it can never close the attribute and add markup of its own
+				if (!array_key_exists($key, $this->attr_parsed) || $this->attr_parsed[$key] !== $val) {
+					$val = (string) $val;
+					if ($quote === '' && ($val === '' || strpbrk($val, " \t\n\r\f\"'=<>`") !== false)) { $quote = '"'; }
+					if ($quote === '"') { $val = str_replace('"', '&quot;', $val); }
+					elseif ($quote === '\'') { $val = str_replace('\'', '&#039;', $val); }
+				}
+
 				$ret .= $key
-				. $this->_[FVMHDOM_INFO_SPACE][$i][1]
+				. $space[1]
 				. '='
-				. $this->_[FVMHDOM_INFO_SPACE][$i][2]
+				. $space[2]
 				. $quote
 				. $val
 				. $quote;
@@ -999,8 +1013,8 @@ class fvm_simple_html_dom_node
 		}
 
 		if (!isset($this->attr[$name])) {
-			$this->_[FVMHDOM_INFO_SPACE][] = array(' ', '', '');
-			$this->_[FVMHDOM_INFO_QUOTE][] = FVMHDOM_QUOTE_DOUBLE;
+			$this->_[FVMHDOM_INFO_SPACE][$name] = array(' ', '', '');
+			$this->_[FVMHDOM_INFO_QUOTE][$name] = FVMHDOM_QUOTE_DOUBLE;
 		}
 
 		$this->attr[$name] = $value;
@@ -1419,6 +1433,11 @@ class fvm_simple_html_dom
 	protected $cursor;
 	protected $parent;
 	protected $noise = array();
+	// placeholder prefix, random per parse: input can't predict it, so text that
+	// looks like a placeholder is never expanded into stored script/style/comment bodies
+	protected $noise_marker = '';
+	// elements whose content is raw text up to the closing tag, see remove_noise_html()
+	protected $noise_raw_tags = array('script', 'style');
 	protected $token_blank = " \t\r\n";
 	protected $token_equal = ' =/>';
 	protected $token_slash = " />\r\n\t";
@@ -1526,11 +1545,12 @@ class fvm_simple_html_dom
 		// prepare
 		$this->prepare($str, $lowercase, $defaultBRText, $defaultSpanText);
 
-		// Per sourceforge http://sourceforge.net/tracker/?func=detail&aid=2949097&group_id=218559&atid=1044037
-		// Script tags removal now preceeds style tag removal.
-		// strip out <script> tags
-		$this->remove_noise("'<\s*script[^>]*[^/]>(.*?)<\s*/\s*script\s*>'is");
-		$this->remove_noise("'<\s*script\s*>(.*?)<\s*/\s*script\s*>'is");
+		// Stash <script> bodies first, then (after the optional \r\n strip) CDATA,
+		// comments, <style>, <code> and server side (php) blocks. Both passes walk the
+		// document the way the parser reads it, so text that only looks like one of
+		// these inside an attribute value is never mistaken for one.
+		$this->noise_raw_tags = array('script', 'style', 'code');
+		$this->remove_noise_html(array('script' => 1));
 
 		// strip out the \r \n's if we are told to.
 		if ($stripRN) {
@@ -1541,17 +1561,7 @@ class fvm_simple_html_dom
 			$this->size = strlen($this->doc);
 		}
 
-		// strip out cdata
-		$this->remove_noise("'<!\[CDATA\[(.*?)\]\]>'is", true);
-		// strip out comments
-		$this->remove_noise("'<!--(.*?)-->'is");
-		// strip out <style> tags
-		$this->remove_noise("'<\s*style[^>]*[^/]>(.*?)<\s*/\s*style\s*>'is");
-		$this->remove_noise("'<\s*style\s*>(.*?)<\s*/\s*style\s*>'is");
-		// strip out preformatted tags
-		$this->remove_noise("'<\s*(?:code)[^>]*>(.*?)<\s*/\s*(?:code)\s*>'is");
-		// strip out server side scripts
-		$this->remove_noise("'(<\?)(.*?)(\?>)'s", true);
+		$this->remove_noise_html(array('cdata' => 1, 'comment' => 1, 'style' => 1, 'code' => 1, 'php' => 1));
 
 		if($options & FVMHDOM_SMARTY_AS_TEXT) { // Strip Smarty scripts
 			$this->remove_noise("'(\{\w)(.*?)(\})'s", true);
@@ -1651,6 +1661,8 @@ class fvm_simple_html_dom
 		$this->pos = 0;
 		$this->cursor = 1;
 		$this->noise = array();
+		try { $rand = bin2hex(random_bytes(8)); } catch (Throwable $e) { $rand = md5(uniqid((string) wp_rand(), true)); }
+		$this->noise_marker = '___noise_' . $rand . '___';
 		$this->nodes = array();
 		$this->lowercase = $lowercase;
 		$this->default_br_text = $defaultBRText;
@@ -2047,21 +2059,34 @@ class fvm_simple_html_dom
 				// [1] Whitespace after attribute name
 				$space[1] = $this->copy_skip($this->token_blank);
 
-				$name = $this->restore_noise($name); // might be a noisy name
+				// might be a noisy name; one that held a stashed placeholder is reduced
+				// to characters valid in a name, so restored text can't become markup
+				$restored = $this->restore_noise($name);
+				if ($restored !== $name) {
+					$name = preg_replace('/[\s"\'<>\/=`]+/', '', $restored);
+					if ($name === '') { $name = 'data-invalid'; }
+				}
 
 				if ($this->lowercase) { $name = strtolower($name); }
+
+				// a repeated attribute is dropped, as browsers do: it adds no value,
+				// quote or spacing entry, so those stay aligned with $node->attr and
+				// makeup() writes every value back with its own quotes
+				$is_duplicate = array_key_exists($name, $node->attr);
 
 				if ($this->char === '=') { // attribute with value
 					$this->char = (++$this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
 					$this->parse_attr($node, $name, $space); // get attribute value
 				} else {
 					//no value attr: nowrap, checked selected...
-					$node->_[FVMHDOM_INFO_QUOTE][] = FVMHDOM_QUOTE_NO;
-					$node->attr[$name] = true;
+					if (!$is_duplicate) {
+						$node->_[FVMHDOM_INFO_QUOTE][$name] = FVMHDOM_QUOTE_NO;
+						$node->attr[$name] = true;
+					}
 					if ($this->char != '>') { $this->char = $this->doc[--$this->pos]; } // prev
 				}
 
-				$node->_[FVMHDOM_INFO_SPACE][] = $space;
+				if (!$is_duplicate) { $node->_[FVMHDOM_INFO_SPACE][$name] = $space; }
 
 				// prepare for next attribute
 				$space = array(
@@ -2104,8 +2129,9 @@ class fvm_simple_html_dom
 	{
 		$is_duplicate = isset($node->attr[$name]);
 
-		if (!$is_duplicate) // Copy whitespace between "=" and value
-			$space[2] = $this->copy_skip($this->token_blank);
+		// Copy whitespace between "=" and value. Done for a repeated attribute too,
+		// or its quoted value would be read as further attribute names.
+		$space[2] = $this->copy_skip($this->token_blank);
 
 		switch ($this->char) {
 			case '"':
@@ -2125,7 +2151,11 @@ class fvm_simple_html_dom
 				$value = $this->copy_until($this->token_attr);
 		}
 
+		// a value that held a stashed placeholder is not recorded as parsed, so
+		// makeup() escapes it for its quotes instead of writing it back raw
+		$raw_value = $value;
 		$value = $this->restore_noise($value);
+		$restored = $value !== $raw_value;
 
 		// PaperG: Attributes should not have \r or \n in them, that counts as
 		// html whitespace.
@@ -2139,8 +2169,9 @@ class fvm_simple_html_dom
 		}
 
 		if (!$is_duplicate) {
-			$node->_[FVMHDOM_INFO_QUOTE][] = $quote_type;
+			$node->_[FVMHDOM_INFO_QUOTE][$name] = $quote_type;
 			$node->attr[$name] = $value;
+			if (!$restored) { $node->attr_parsed[$name] = $value; }
 		}
 	}
 
@@ -2207,6 +2238,112 @@ class fvm_simple_html_dom
 		return substr($this->doc, $pos_old, $pos - $pos_old);
 	}
 
+	/**
+	 * Stash comment, CDATA, <?...?> and raw text element bodies in one pass in
+	 * document order, the way an HTML tokenizer meets them. Every other tag is
+	 * skipped as a whole together with its quoted attribute values (read exactly
+	 * as parse_attr() reads them), so "<!--" or "<script" inside an attribute value
+	 * is left alone instead of being paired with markup further down the page.
+	 * $kinds selects what this pass stashes; everything else is still recognised,
+	 * so its contents are skipped rather than searched.
+	 */
+	protected function remove_noise_html($kinds)
+	{
+		$doc = $this->doc;
+		$len = strlen($doc);
+		$out = '';
+		$copied = 0;
+		$pos = 0;
+		$raw = '/\G<\s*(' . implode('|', $this->noise_raw_tags) . ')(?=[\s\/>])/i';
+		// a closing sequence not found once can't be found further on either, so
+		// many unclosed openers cost one search instead of one each
+		$unclosed = array();
+		// first letters of the raw text tags, so most "<" skip the regex below
+		$raw_first = array();
+		foreach ($this->noise_raw_tags as $tag) { $raw_first[$tag[0]] = true; }
+
+		while ($pos < $len && ($pos = strpos($doc, '<', $pos)) !== false) {
+			$from = $to = null;
+			$next = $pos + 1 < $len ? $doc[$pos + 1] : '';
+
+			if (substr_compare($doc, '<!--', $pos, 4) === 0) {
+				$end = isset($unclosed['-->']) ? false : strpos($doc, '-->', $pos + 4);
+				if ($end === false) { $unclosed['-->'] = true; $pos += 4; continue; }
+				if (isset($kinds['comment'])) { $from = $pos + 4; $to = $end; }
+				$skip = $end + 3;
+			} elseif (substr_compare($doc, '<![CDATA[', $pos, 9, true) === 0) {
+				$end = isset($unclosed[']]>']) ? false : strpos($doc, ']]>', $pos + 9);
+				if ($end === false) { $unclosed[']]>'] = true; $pos += 9; continue; }
+				if (isset($kinds['cdata'])) { $from = $pos; $to = $end + 3; }
+				$skip = $end + 3;
+			} elseif ($next === '?') {
+				$end = isset($unclosed['php']) ? false : strpos($doc, '?' . '>', $pos + 2);
+				if ($end === false) { $unclosed['php'] = true; $pos += 2; continue; }
+				if (isset($kinds['php'])) { $from = $pos; $to = $end + 2; }
+				$skip = $end + 2;
+			} elseif (($k = $pos + 1 + strspn($doc, $this->token_blank, $pos + 1)) < $len
+				&& isset($raw_first[strtolower($doc[$k])])
+				&& preg_match($raw, $doc, $m, 0, $pos)) {
+				$open_end = $this->noise_tag_end($doc, $pos + strlen($m[0]));
+				if ($open_end === false) { break; }
+				$skip = $open_end + 1;
+				// a self-closed raw tag has no body
+				if ($doc[$open_end - 1] !== '/') {
+					$name = strtolower($m[1]);
+					if (!isset($unclosed[$name]) && preg_match('/<\s*\/\s*' . $name . '\s*>/i', $doc, $c, PREG_OFFSET_CAPTURE, $open_end + 1)) {
+						if (isset($kinds[$name])) { $from = $open_end + 1; $to = $c[0][1]; }
+						$skip = $c[0][1] + strlen($c[0][0]);
+					} else {
+						$unclosed[$name] = true;
+					}
+				}
+			// any other tag; like read_tag(), a name may start with a letter, digit or "_"
+			} elseif ($next === '/' || $next === '!' || $next === '_' || ctype_alnum($next)) {
+				$end = $this->noise_tag_end($doc, $pos + 1);
+				if ($end === false) { break; }
+				$skip = $end + 1;
+			} else {
+				$skip = $pos + 1; // a lone "<" in text
+			}
+
+			if ($from !== null) {
+				$key = $this->noise_marker . sprintf('%010d', count($this->noise));
+				$this->noise[$key] = substr($doc, $from, $to - $from);
+				$out .= substr($doc, $copied, $from - $copied) . $key;
+				$copied = $to;
+			}
+			$pos = $skip;
+		}
+
+		if ($copied > 0) {
+			$this->doc = $out . substr($doc, $copied);
+			$this->size = strlen($this->doc);
+			if ($this->size > 0) { $this->char = $this->doc[0]; }
+		}
+	}
+
+	// position of the ">" that ends the tag whose attributes start at $i, or false;
+	// a quoted value after "=" runs to its closing quote, as in parse_attr()
+	protected function noise_tag_end($doc, $i)
+	{
+		$len = strlen($doc);
+		while ($i < $len) {
+			$j = $i + strcspn($doc, '>=', $i);
+			if ($j >= $len) { return false; }
+			if ($doc[$j] === '>') { return $j; }
+			$j += 1 + strspn($doc, $this->token_blank, $j + 1);
+			if ($j < $len && ($doc[$j] === '"' || $doc[$j] === '\'')) {
+				$close = strpos($doc, $doc[$j], $j + 1);
+				if ($close === false) { return false; }
+				$i = $close + 1;
+			} else {
+				// unquoted: runs to a space or ">", like copy_until($this->token_attr)
+				$i = $j + strcspn($doc, $this->token_attr, $j);
+			}
+		}
+		return false;
+	}
+
 	protected function remove_noise($pattern, $remove_tag = false)
 	{
 		global $debug_object;
@@ -2220,7 +2357,7 @@ class fvm_simple_html_dom
 		);
 
 		for ($i = $count - 1; $i > -1; --$i) {
-			$key = '___noise___' . sprintf('% 5d', count($this->noise) + 1000);
+			$key = $this->noise_marker . sprintf('%010d', count($this->noise));
 
 			if (is_object($debug_object)) {
 				$debug_object->debug_log(2, 'key is: ' . $key);
@@ -2244,42 +2381,26 @@ class fvm_simple_html_dom
 		global $debug_object;
 		if (is_object($debug_object)) { $debug_object->debug_log_entry(1); }
 
-		while (($pos = strpos($text, '___noise___')) !== false) {
-			// Sometimes there is a broken piece of markup, and we don't GET the
-			// pos+11 etc... token which indicates a problem outside of us...
+		// nothing was stashed by this parser (or it was never prepared)
+		if ($this->noise_marker === '' || empty($this->noise)) { return $text; }
 
-			// todo: "___noise___1000" (or any number with four or more digits)
-			// in the DOM causes an infinite loop which could be utilized by
-			// malicious software
-			if (strlen($text) > $pos + 15) {
-				$key = '___noise___'
-				. $text[$pos + 11]
-				. $text[$pos + 12]
-				. $text[$pos + 13]
-				. $text[$pos + 14]
-				. $text[$pos + 15];
+		// a key is the marker plus a ten digit number (sprintf '%010d')
+		$marker_len = strlen($this->noise_marker);
+		$key_len = $marker_len + 10;
 
+		// Every pass either expands a key this parser created, whose stored body can
+		// only hold keys created before it, or removes an unknown marker outright, so
+		// the loop always terminates.
+		while (($pos = strpos($text, $this->noise_marker)) !== false) {
+			$key = substr($text, $pos, $key_len);
+
+			if (strlen($key) === $key_len && isset($this->noise[$key])) {
 				if (is_object($debug_object)) {
 					$debug_object->debug_log(2, 'located key of: ' . $key);
 				}
-
-				if (isset($this->noise[$key])) {
-					$text = substr($text, 0, $pos)
-					. $this->noise[$key]
-					. substr($text, $pos + 16);
-				} else {
-					// do this to prevent an infinite loop.
-					$text = substr($text, 0, $pos)
-					. 'UNDEFINED NOISE FOR KEY: '
-					. $key
-					. substr($text, $pos + 16);
-				}
+				$text = substr($text, 0, $pos) . $this->noise[$key] . substr($text, $pos + $key_len);
 			} else {
-				// There is no valid key being given back to us... We must get
-				// rid of the ___noise___ or we will have a problem.
-				$text = substr($text, 0, $pos)
-				. 'NO NUMERIC NOISE KEY'
-				. substr($text, $pos + 11);
+				$text = substr($text, 0, $pos) . substr($text, $pos + $marker_len);
 			}
 		}
 		return $text;

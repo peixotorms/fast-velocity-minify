@@ -31,7 +31,7 @@ function fvm_check_minimum_requirements() {
 		if(isset($ch_info['ch_url'])  && !empty($ch_info['ch_url']) && isset($ch_info['ch_dir']) && !empty($ch_info['ch_dir'])) {
 			if(!is_dir($ch_info['ch_dir'])) {
 				$warning = __( 'FVM cache directory does not exist yet. It will be created automatically when cache files are written: ', 'fast-velocity-minify' ). ' ['.$ch_info['ch_dir'].']';
-			} elseif(!is_writable($ch_info['ch_dir'])) {
+			} elseif(!wp_is_writable($ch_info['ch_dir'])) {
 				$warning = __( 'FVM cache directory is currently not writable. Please ensure write permissions when ready: ', 'fast-velocity-minify' ). ' ['.$ch_info['ch_dir'].']';
 			}
 		}
@@ -39,7 +39,7 @@ function fvm_check_minimum_requirements() {
 		# deactivate plugin forcefully only for critical errors (not cache directory issues)
 		global $fvm_var_basename;
 		if ((is_plugin_active($fvm_var_basename) && !empty($error)) || !empty($error)) {
-			if (isset($_GET['activate'])) { unset($_GET['activate']); }
+			if (isset($_GET['activate'])) { unset($_GET['activate']); } // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only hides core's "Plugin activated" notice, nothing is processed.
 			deactivate_plugins($fvm_var_basename);
 			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', $error, 'error' );
 		}
@@ -151,40 +151,43 @@ function fvm_save_settings() {
 	if(isset($_POST['fvm_action']) && isset($_POST['fvm_settings_nonce']) && $_POST['fvm_action'] == 'save_settings') {
 		
 		if(!current_user_can('manage_options')) {
-			wp_die( __('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
+			wp_die( esc_html__('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), esc_html__('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 		
-		if(!wp_verify_nonce($_POST['fvm_settings_nonce'], 'fvm_settings_nonce')) {
-			wp_die( __('Invalid nounce. Please refresh and try again.', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
+		if(!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['fvm_settings_nonce'])), 'fvm_settings_nonce')) {
+			wp_die( esc_html__('Invalid nounce. Please refresh and try again.', 'fast-velocity-minify'), esc_html__('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 		
 		# update fvm_settings in the global scope
 		if(isset($_POST['fvm_settings']) && is_array($_POST['fvm_settings'])) {
 			
+			# unslash once, every field is sanitized below
+			$fvm_post = wp_unslash($_POST['fvm_settings']); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized field by field below.
+			
 			# sanitize recursively
-			if(is_array($_POST['fvm_settings'])) {
-				foreach ($_POST['fvm_settings'] as $group=>$arr) {
+			if(is_array($fvm_post)) {
+				foreach ($fvm_post as $group=>$arr) {
 					if(is_array($arr)) {
 						foreach ($arr as $k=>$v) {
 							
 							# only numeric, string or arrays allowed at this level
-							if(!is_string($v) && !is_numeric($v) && !is_array($v)) { $_POST['fvm_settings'][$group][$k] = ''; }
+							if(!is_string($v) && !is_numeric($v) && !is_array($v)) { $fvm_post[$group][$k] = ''; }
 							
 							# numeric fields, only positive integers allowed 
-							if(is_numeric($v)) { $_POST['fvm_settings'][$group][$k] = abs(intval($v)); }
+							if(is_numeric($v)) { $fvm_post[$group][$k] = abs(intval($v)); }
 							
 							# sanitize text area content
-							if(is_string($v)) { $_POST['fvm_settings'][$group][$k] = strip_tags($v); }
+							if(is_string($v)) { $fvm_post[$group][$k] = wp_strip_all_tags($v); }
 							
 							# clean cdn url with strict validation to prevent XSS
 							if($group == 'cdn' && $k == 'domain') {
 								$domain = trim(str_replace(array('http://', 'https://'), '', $v), '/');
 								// Only allow valid hostnames (alphanumeric, hyphens, dots)
 								if (!empty($domain) && !preg_match('/^[a-zA-Z0-9\-\.]+$/', $domain)) {
-									$_POST['fvm_settings'][$group][$k] = '';
+									$fvm_post[$group][$k] = '';
 									add_settings_error('fvm_admin_notice', 'fvm_admin_notice', __('Invalid CDN domain format. Only alphanumeric characters, hyphens and dots allowed.', 'fast-velocity-minify'), 'error');
 								} else {
-									$_POST['fvm_settings'][$group][$k] = sanitize_text_field($domain);
+									$fvm_post[$group][$k] = sanitize_text_field($domain);
 								}
 							}
 		
@@ -195,7 +198,7 @@ function fvm_save_settings() {
 			
 			# get mandatory default exclusions
 			global $fvm_settings;
-			$fvm_settings = fvm_get_default_settings($_POST['fvm_settings']);
+			$fvm_settings = fvm_get_default_settings($fvm_post);
 			
 			# purge caches
 			fvm_purge_all();
@@ -205,7 +208,7 @@ function fvm_save_settings() {
 			add_settings_error( 'fvm_admin_notice', 'fvm_admin_notice', 'Settings saved successfully!', 'success' );
 		
 		} else {
-			wp_die( __('Invalid data!', 'fast-velocity-minify'), __('Error:', 'fast-velocity-minify'), array('response'=>200)); 
+			wp_die( esc_html__('Invalid data!', 'fast-velocity-minify'), esc_html__('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 		}
 	}
 }
@@ -246,7 +249,7 @@ function fvm_add_admin_jscss($hook) {
 		wp_enqueue_script( 'jquery-ui-accordion' );
 		
 		# js
-		wp_enqueue_script('fvm', $fvm_var_url_path . 'assets/fvm.js', array('jquery'), filemtime($fvm_var_dir_path.'assets'. DIRECTORY_SEPARATOR .'fvm.js'));
+		wp_enqueue_script('fvm', $fvm_var_url_path . 'assets/fvm.js', array('jquery'), filemtime($fvm_var_dir_path.'assets'. DIRECTORY_SEPARATOR .'fvm.js'), false); # header: the status tab calls fvm_get_logs() inline
 
 		# localize nonce for AJAX security
 		wp_localize_script('fvm', 'fvm_ajax_object', array(
@@ -304,7 +307,7 @@ function fvm_add_settings_admin() {
 	
 	# admin only
 	if (!current_user_can('manage_options')) { 
-		wp_die( __('You do not have sufficient permissions to access this page.'), __('Error:'), array('response'=>200)); 
+		wp_die( esc_html__('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), esc_html__('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 	}
 
 	# include admin html template
@@ -324,18 +327,18 @@ function fvm_get_logs_callback() {
 
 	# must be able to cleanup cache
 	if (!current_user_can('manage_options')) {
-		wp_die( __('You do not have sufficient permissions to access this page.'), __('Error:'), array('response'=>200));
+		wp_die( esc_html__('You do not have sufficient permissions to access this page.', 'fast-velocity-minify'), esc_html__('Error:', 'fast-velocity-minify'), array('response'=>200));
 	}
 	
 	# must have
 	if(!defined('WP_CONTENT_DIR')) { 
-		wp_die( __('WP_CONTENT_DIR is undefined!'), __('Error:'), array('response'=>200)); 
+		wp_die( esc_html__('WP_CONTENT_DIR is undefined!', 'fast-velocity-minify'), esc_html__('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 	}
 	
 	# defaults
 	global $wpdb;
 	if(is_null($wpdb)) { 
-		wp_die( __('Database error!'), __('Error:'), array('response'=>200)); 
+		wp_die( esc_html__('Database error!', 'fast-velocity-minify'), esc_html__('Error:', 'fast-velocity-minify'), array('response'=>200)); 
 	}
 	
 	# initialize log
@@ -347,7 +350,7 @@ function fvm_get_logs_callback() {
 	# build log
 	if(is_array($results)) {
 		foreach (array_reverse($results, true) as $r) {
-			$log.= 'PROCESSED ON - ' . date('r', $r['date']) . PHP_EOL;
+			$log.= 'PROCESSED ON - ' . gmdate('r', $r['date']) . PHP_EOL;
 			$log.= $r['msg'] .  PHP_EOL . PHP_EOL;
 		}
 	}
@@ -390,7 +393,8 @@ function fvm_plugin_activate() {
 		meta mediumtext NOT NULL,
 		PRIMARY KEY  (id),
 		UNIQUE KEY uid (uid), 
-		KEY date (date), KEY type (type) 
+		KEY date (date), 
+		KEY type (type) 
 		) $charset_collate;";
 
 	# create logs table	
@@ -482,12 +486,12 @@ function fvm_get_user_roles_checkboxes() {
 		$roles = (array) $wp_roles->get_names();
 		foreach ($roles as $role=>$rname) {
 			
-			$roles_list[] = '<label for="fvm_settings_minify_'.$role.'"><input name="fvm_settings[minify]['.$role.']" type="checkbox" id="fvm_settings_minify_'.$role.'" value="1" '. fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'minify', $role)).'> '.$rname.' </label><br />';
+			$roles_list[] = '<label for="fvm_settings_minify_'.esc_attr($role).'"><input name="fvm_settings[minify]['.esc_attr($role).']" type="checkbox" id="fvm_settings_minify_'.esc_attr($role).'" value="1" '. esc_attr(fvm_get_settings_checkbox(fvm_get_settings_value($fvm_settings, 'minify', $role))).'> '.esc_html($rname).' </label><br />';
 		
 		}
 	}
 	
 	# return
-	if(!empty($roles_list)) { return implode(PHP_EOL, $roles_list); } else { return __( 'No roles detected!', 'fast-velocity-minify' ); }
+	if(!empty($roles_list)) { return implode(PHP_EOL, $roles_list); } else { return esc_html__( 'No roles detected!', 'fast-velocity-minify' ); }
 
 }

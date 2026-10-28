@@ -8,34 +8,37 @@ function fvm_get_generalinfo() {
 	
 	# check if user has admin rights
 	if(!current_user_can('manage_options')) {
-		echo __( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
+		echo esc_html__( 'You are not allowed to execute this function!', 'fast-velocity-minify' );
+		return;
 	}
 
-	echo'+++'. PHP_EOL;
-	echo'SERVER INFO:'. PHP_EOL;
-	echo'OS:           '. PHP_OS . PHP_EOL;
-	echo'Server:       '. $_SERVER["SERVER_SOFTWARE"] . PHP_EOL;
-	echo'PHP:          '. PHP_VERSION . PHP_EOL;
-	echo'MySQL:        '. fvm_get_mysql_version() . PHP_EOL;
-	echo'CPU Cores:    '. fvm_get_servercpu() . PHP_EOL;
-	echo'Server Load:  '. fvm_get_serverload() . PHP_EOL;
+	# collect, then print once, escaped for the textarea it is shown in
+	$info = '+++'. PHP_EOL;
+	$info.= 'SERVER INFO:'. PHP_EOL;
+	$info.= 'OS:           '. PHP_OS . PHP_EOL;
+	$info.= 'Server:       '. (isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '') . PHP_EOL;
+	$info.= 'PHP:          '. PHP_VERSION . PHP_EOL;
+	$info.= 'MySQL:        '. fvm_get_mysql_version() . PHP_EOL;
+	$info.= 'CPU Cores:    '. fvm_get_servercpu() . PHP_EOL;
+	$info.= 'Server Load:  '. fvm_get_serverload() . PHP_EOL;
 	
-	echo'---'. PHP_EOL;
-	echo'SITE INFO:'. PHP_EOL;
-	echo'Site Path:    '. ABSPATH . PHP_EOL;
-	echo'Hostname:     '. $_SERVER['SERVER_NAME'] . PHP_EOL;
-	echo'DB Data Size:          '. fvm_format_php_size(fvm_get_mysql_data_usage()) . PHP_EOL;
-	echo'DB Index Size:         '. fvm_format_php_size(fvm_get_mysql_index_usage()) . PHP_EOL;
+	$info.= '---'. PHP_EOL;
+	$info.= 'SITE INFO:'. PHP_EOL;
+	$info.= 'Site Path:    '. ABSPATH . PHP_EOL;
+	$info.= 'Hostname:     '. (isset($_SERVER['SERVER_NAME']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME'])) : '') . PHP_EOL;
+	$info.= 'DB Data Size:          '. fvm_format_php_size(fvm_get_mysql_data_usage()) . PHP_EOL;
+	$info.= 'DB Index Size:         '. fvm_format_php_size(fvm_get_mysql_index_usage()) . PHP_EOL;
 
-	echo'---'. PHP_EOL;
-	echo'LIMITS:'. PHP_EOL;
-	echo'PHP Max Exec Time:     '. fvm_get_php_max_execution(). PHP_EOL;
-	echo'PHP Memory Limit:      '. fvm_format_php_size(fvm_get_php_memory_limit()) . PHP_EOL;
-	echo'PHP Max Upload Size:   '. fvm_format_php_size(fvm_get_php_upload_max()) . PHP_EOL;
-	echo'PHP Max Post Size:     '. fvm_format_php_size(fvm_get_php_post_max()) . PHP_EOL;
-	echo'MySQL Max Packet Size: '. fvm_format_php_size(fvm_get_mysql_max_allowed_packet()) . PHP_EOL;
-	echo'MySQL Max Connections: '. fvm_get_mysql_max_allowed_connections() . PHP_EOL;
-	echo'+++';
+	$info.= '---'. PHP_EOL;
+	$info.= 'LIMITS:'. PHP_EOL;
+	$info.= 'PHP Max Exec Time:     '. fvm_get_php_max_execution(). PHP_EOL;
+	$info.= 'PHP Memory Limit:      '. fvm_format_php_size(fvm_get_php_memory_limit()) . PHP_EOL;
+	$info.= 'PHP Max Upload Size:   '. fvm_format_php_size(fvm_get_php_upload_max()) . PHP_EOL;
+	$info.= 'PHP Max Post Size:     '. fvm_format_php_size(fvm_get_php_post_max()) . PHP_EOL;
+	$info.= 'MySQL Max Packet Size: '. fvm_format_php_size(fvm_get_mysql_max_allowed_packet()) . PHP_EOL;
+	$info.= 'MySQL Max Connections: '. fvm_get_mysql_max_allowed_connections() . PHP_EOL;
+	$info.= '+++';
+	echo esc_textarea($info);
 }
 
 
@@ -248,9 +251,8 @@ if(!function_exists('fvm_get_serverload')) {
         if(PHP_OS != 'WINNT' && PHP_OS != 'WIN32') {
 			clearstatcache();
             if(@file_exists('/proc/loadavg') ) {
-                if ($fh = @fopen( '/proc/loadavg', 'r' )) {
-                    $data = @fread( $fh, 6 );
-                    @fclose( $fh );
+                $data = @file_get_contents( '/proc/loadavg', false, null, 0, 6 );
+                if ($data !== false) {
                     $load_avg = explode( " ", $data );
                     $server_load = trim($load_avg[0]);
                 }
